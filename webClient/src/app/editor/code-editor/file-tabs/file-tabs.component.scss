@@ -26,17 +26,19 @@
         }
         .changed-file {
           text-align: center;
-          line-height: 24px;
+          line-height: 12px;
           font-size: 12px;
           width: 12px;
           height: 12px;
           color: #3f51b5;
         }
         .close-file {
-          text-align: right;
-          line-height: 24px;
-          font-size: 16px;
           flex-grow: 2;
+          text-align: right;
+          .mat-icon {
+            line-height: 24px;
+            font-size: 16px;
+          }
         }
       }
     }
