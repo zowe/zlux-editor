@@ -8,20 +8,25 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, Output, EventEmitter, Directive, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, Directive, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
+import { PerfectScrollbarComponent, PerfectScrollbarDirective } from '../../../../../node_modules/ngx-perfect-scrollbar';
 
 @Component({
   selector: 'app-file-tabs',
   templateUrl: './file-tabs.component.html',
   styleUrls: ['./file-tabs.component.scss']
 })
-export class FileTabsComponent implements OnInit {
+export class FileTabsComponent implements OnInit, AfterViewInit {
 
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
   @Output() select = new EventEmitter<ProjectContext>();
+  @ViewChild('containerRef') containerRef: ElementRef;
+  @ViewChild('ps') ps: PerfectScrollbarComponent;
+
+  private scrollbarOffset = 0;
 
   private scrollConfig = {
     wheelPropagation: true,
@@ -33,8 +38,40 @@ export class FileTabsComponent implements OnInit {
   ngOnInit() {
   }
 
+  ngAfterViewInit() {
+    let containerEle: HTMLElement = this.containerRef.nativeElement;
+
+    containerEle.addEventListener('wheel', (e: WheelEvent) => {
+      this.wheelHandler(e);
+    });
+
+    console.log(this.ps);
+  }
+
   clickHandler(e: Event, item: ProjectContext) {
     this.select.next(item);
+  }
+
+  wheelHandler(event: WheelEvent) {
+    let containerEle: HTMLElement = this.containerRef.nativeElement;
+    let directive: PerfectScrollbarDirective = this.ps.directiveRef;
+    let position = directive.position();
+    let positionAbsolute = directive.position(true);
+
+    this.scrollbarOffset += -event.wheelDeltaY;
+    if (event.wheelDeltaY < 0) {
+      if (position.x !== 'end') {
+        // if scrollbar is not in the end
+        this.ps.directiveRef.scrollToLeft(this.scrollbarOffset);
+      }
+    } else {
+      if (positionAbsolute.x !== 0) {
+        // if scrollbar is not at the left
+        this.ps.directiveRef.scrollToLeft(this.scrollbarOffset);
+      }
+    }
+    // this.ps.directiveRef.scrollToRight(<number>position.x + event.wheelDeltaY);
+    console.log('wheel', event);
   }
 }
 
