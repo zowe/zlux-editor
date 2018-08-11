@@ -25,6 +25,7 @@ export class FileTabsComponent implements OnInit {
 
   private scrollConfig = {
     wheelPropagation: true,
+    suppressScrollY: true,
   };
 
   constructor() { }
