@@ -23,10 +23,19 @@ export const MENU = [
             {
                 name: 'group-end'
             },
+            // TODO: Un-comment to enable open project dialog in menu
             // {
             //     name: 'Open Project',
             //     action: {
             //         name: 'openProject',
+            //         params: [],
+            //     },
+            // },
+            // TODO: Un-comment to enable open dataset dialog in menu
+            // {
+            //     name: 'Open Dataset',
+            //     action: {
+            //         name: 'openDataset',
             //         params: [],
             //     },
             // },

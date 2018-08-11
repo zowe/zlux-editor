@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 import { OpenProjectComponent } from './open-project/open-project.component';
+import { OpenDataSetComponent } from './open-dataset/open-dataset.component';
 import { AboutProjectComponent } from './about-project/about-project.component';
 import { HttpService } from '../http/http.service';
 import { OpenFolderComponent } from './open-folder/open-folder.component';
@@ -32,6 +33,7 @@ import { LanguageServerComponent } from './language-server/language-server.compo
     ],
     declarations: [
         OpenProjectComponent,
+        OpenDataSetComponent,
         AboutProjectComponent,
         OpenFolderComponent,
         NewFileComponent,
@@ -41,6 +43,7 @@ import { LanguageServerComponent } from './language-server/language-server.compo
     providers: [HttpService],
     entryComponents: [
         OpenProjectComponent,
+        OpenDataSetComponent,
         AboutProjectComponent,
         OpenFolderComponent,
         NewFileComponent,
