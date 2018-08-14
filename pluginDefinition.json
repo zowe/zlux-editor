@@ -1,7 +1,7 @@
 {
-  "identifier": "com.rs.mvd.editor",
-  "apiVersion": "1.0",
-  "pluginVersion": "1.0",
+  "identifier": "org.zowe.editor",
+  "apiVersion": "1.0.0",
+  "pluginVersion": "1.0.0",
   "pluginType": "application",
   "webContent": {
     "framework": "angular2",
@@ -11,7 +11,7 @@
       "imageSrc": "assets/icon.png"
     },
     "descriptionKey": "MyPluginDescription",
-    "descriptionDefault": "GIZA Editor",
+    "descriptionDefault": "Zowe Editor",
     "isSingleWindowApp": true,
     "defaultWindowStyle": {
       "width": 1600,
