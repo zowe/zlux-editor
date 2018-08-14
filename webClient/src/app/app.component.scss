@@ -1,0 +1,46 @@
+// component style
+:host {
+  display: block;
+  height: 100%;
+  padding-top: 32px;
+  .header {
+    margin-top: -32px;
+    app-nav {
+      display: block;
+    }
+    app-menu-bar {
+      display: block;
+    }
+  }
+  main.main-frame {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+::ng-deep {
+  // Global style
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+//    font-family: "Helvetica", "Arial", sans-serif;
+  }
+  html,
+  body {
+    width: 100%;
+    height: 100%;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+    {
+    display: inline;
+  }
+  li {
+    list-style: none;
+  }
+}

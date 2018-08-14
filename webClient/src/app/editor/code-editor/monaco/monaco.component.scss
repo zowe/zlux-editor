@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  height: 100%;
+  #monaco-editor-container {
+    height: 100%;
+    .monaco-code-editor {
+      position: relative;
+      height: 100%;
+      ::ng-deep .editor-container {
+        background-color: #212121;
+        height: 100%;
+      }
+    }
+    ::ng-deep .highlight-line {
+      background-color: yellow;
+      color: black;
+    }
+  }
+}

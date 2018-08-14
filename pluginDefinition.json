@@ -1,0 +1,21 @@
+{
+  "identifier": "com.rs.mvd.editor",
+  "apiVersion": "1.0",
+  "pluginVersion": "1.0",
+  "pluginType": "application",
+  "webContent": {
+    "framework": "angular2",
+    "launchDefinition": {
+      "pluginShortNameKey": "editorTitle",
+      "pluginShortNameDefault": "Editor",
+      "imageSrc": "assets/icon.png"
+    },
+    "descriptionKey": "MyPluginDescription",
+    "descriptionDefault": "GIZA Editor",
+    "isSingleWindowApp": true,
+    "defaultWindowStyle": {
+      "width": 1600,
+      "height": 800
+    }
+  }
+}

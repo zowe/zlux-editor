@@ -1,0 +1,4 @@
+{
+  "contents": "<tree-root [nodes]=\"nodes\" [options]=\"options\" (activate)=\"nodeActivate($event)\"></tree-root>",
+  "language": "html"
+}
