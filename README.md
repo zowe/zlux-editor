@@ -13,7 +13,7 @@ There is an Angular module in "webClient" folder. Go to this folder and run ```n
 
 ## Build
 
-Run ```npm run build``` and you will find a folder named "web" in root directory. Then this application is able to run in Giza.
+Run ```npm run build``` and you will find a folder named "web" in root directory. Then this application is able to run in a zLUX environment.
 
 This program and the accompanying materials are
 made available under the terms of the Eclipse Public License v2.0 which accompanies
