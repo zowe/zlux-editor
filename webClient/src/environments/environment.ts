@@ -9,6 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Endpoints } from '../app/shared/model/endpoints';
+const pluginDef = require('../../../pluginDefinition.json');
 
 // The file contents for the current environment will overwrite these during build.
 // The build system defaults to the dev environment which uses `environment.ts`, but if you do
@@ -40,7 +41,7 @@ export const ENDPOINTS: Endpoints = {
   xmlFile: './mock/xmlFile.json',
   asmFile: './mock/file.json',
   htmlFile: './mock/htmlFile.json',
-  project: '../../com.rs.mvd.ide/web/mock/project.json',
+  project: `../../${pluginDef.identifier}/web/mock/project.json`,
   projectFile: 'http://rs22:5000/datasets/{name}/members',
   file: 'http://rs22:5000/datasets/{dataset}/members/{member}',
   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',

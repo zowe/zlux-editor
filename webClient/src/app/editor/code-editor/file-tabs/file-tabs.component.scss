@@ -11,31 +11,34 @@
       justify-content: start;
       height: 100%;
       .tabs-file {
-        display: inline-block;
+        display: flex;
         flex-shrink: 0;
         flex-basis: 150px;
         line-height: 22px;
         padding: 5px 10px;
         color: #e0e0e0;
         border-right: 1px solid #212121;
+        background-color: #303030;
         cursor: pointer;
+        align-items: center;
         &.active {
           border-bottom: 3px solid #3f51b5;
         }
         .changed-file {
           text-align: center;
-          line-height: 24px;
+          line-height: 12px;
           font-size: 12px;
-          float: right;
           width: 12px;
           height: 12px;
           color: #3f51b5;
         }
         .close-file {
+          flex-grow: 2;
           text-align: right;
-          line-height: 24px;
-          font-size: 16px;
-          float: right;
+          .mat-icon {
+            line-height: 24px;
+            font-size: 16px;
+          }
         }
       }
     }
