@@ -27,7 +27,7 @@ var config = {
     'filename': '[name].js',
   },
   'module': {
-    'loaders': [{
+    'rules': [{
         test: /\.svg$/,
         loader: 'svg-inline-loader'
       },

@@ -17,7 +17,7 @@ import { Subscription } from 'rxjs/Subscription';
 export class MonacoConfig {
   subscription: Subscription = null;
   config = {
-    baseUrl: '../../com.rs.mvd.ide/web/assets', // configure base path for monaco editor
+    baseUrl: '../../org.zowe.editor/web/assets', // configure base path for monaco editor
     defaultOptions: { scrollBeyondLastLine: false }, // pass default options to be used
     onMonacoLoad: this.onLoad.bind(this),
   };
