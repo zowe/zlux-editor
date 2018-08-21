@@ -49,17 +49,28 @@ export class ProjectTreeComponent implements OnInit {
       },
     },
     getChildren: (node: TreeNode) => {
-      // let requestUrl: string = this.utils.formatUrl(ENDPOINTS.projectFile, { name: node.data.name });
-      // convert path to adjust url. If path is start with '/' then remove it.
-      let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
-      let requestUrl: string = this.utils.formatUrl(ENDPOINTS.openUnixDirectory, { path: `${targetPath}/${node.data.fileName}` });
-      return this.httpService.get(requestUrl).toPromise().then((file: any) => {
-        let fileStructure = this.dataAdapter.convertDirectoryList(file);
-        return fileStructure.map(f => {
-          f.parent = node.data;
-          return f;
+      if (node.data.isDataset) {
+        let requestUrl: string = this.utils.formatUrl(ENDPOINTS.datasetMemberList, {dataset: node.data.path.trim()});
+        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
+          let struct = this.dataAdapter.convertDatasetMemberList(file);
+          return struct.map(f => {
+            f.parent = node.data;
+            return f;
+          });
         });
-      });
+      } else {
+        // let requestUrl: string = this.utils.formatUrl(ENDPOINTS.projectFile, { name: node.data.name });
+        // convert path to adjust url. If path is start with '/' then remove it.
+        let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
+        let requestUrl: string = this.utils.formatUrl(ENDPOINTS.openUnixDirectory, { path: `${targetPath}/${node.data.fileName}` });
+        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
+          let fileStructure = this.dataAdapter.convertDirectoryList(file);
+          return fileStructure.map(f => {
+            f.parent = node.data;
+            return f;
+          });
+        });
+      }
     }
   };
 
@@ -102,20 +113,34 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
+      console.log(dirName);
       if (dirName != null && dirName !== '') {
-        // start get project structure
-        dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
-        let requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixDirectory, { path: dirName });
-        this.httpService.get(requestUrl)
-          .subscribe((response: any) => {
-            // TODO: nodes should check project context once the component is loaded.
-            this.nodes = this.dataAdapter.convertDirectoryList(response);
-            this.editorControl.setProjectNode(this.nodes);
-            this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
-          }, e => {
-            let error = e.json().error;
-            this.snackBarService.open(`Directory ${dirName} is not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
-          });
+        if (dirName[0] == '/') {
+          // start get project structure
+          dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
+          let requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixDirectory, { path: dirName });
+          this.httpService.get(requestUrl)
+            .subscribe((response: any) => {
+              // TODO: nodes should check project context once the component is loaded.
+              this.nodes = this.dataAdapter.convertDirectoryList(response);
+              this.editorControl.setProjectNode(this.nodes);
+              this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
+            }, e => {
+              let error = e.json().error;
+              this.snackBarService.open(`Directory ${dirName} is not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
+            });
+        } else {
+          // dataset
+          let requestUrl = this.utils.formatUrl(ENDPOINTS.datasetList, {dataset: dirName})
+          this.httpService.get(requestUrl)
+            .subscribe((response: any) => {
+              this.nodes = this.dataAdapter.convertDatasetList(response);
+              this.editorControl.setProjectNode(this.nodes);
+              this.editorControl.initProjectContext(dirName, this.nodes);
+            }, e => {
+              // TODO
+            });
+        }
       }
     });
   }

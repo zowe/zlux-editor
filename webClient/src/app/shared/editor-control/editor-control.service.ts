@@ -128,6 +128,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         id: '-1',
         name: projectName,
         hasChildren: true,
+        isDataset: false
       },
       opened: false,
       active: false,
@@ -377,6 +378,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       name: name,
       fileName: name,
       hasChildren: false,
+      isDataset: false // TODO
     };
     let fileContext = <ProjectContext>this.generateProjectContext(fileStructure, rootContext);
     fileContext.temp = true;

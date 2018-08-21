@@ -20,6 +20,7 @@ export interface ProjectStructure {
     parent?: string;
     path?: string;
     fileName?: string;
+    isDataset: boolean;
 }
 
 /*

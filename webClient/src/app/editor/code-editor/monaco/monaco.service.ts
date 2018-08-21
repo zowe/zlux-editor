@@ -78,8 +78,14 @@ export class MonacoService {
         // let parentName = fileNode.parent ? fileNode.parent.name : fileNode.model.parent;
         // requestUrl = this.utils.formatUrl(ENDPOINTS.file, { dataset: parentName, member: fileNode.name });
         // this.httpService.get(requestUrl).subscribe((response: any) => {
-        requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixFile, { directory: filePath, file: fileNode.model.fileName });        
-        _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
+        if (fileNode.model.isDataset) {
+          requestUrl = this.utils.formatUrl(ENDPOINTS.datasetContents, { dataset: filePath });        
+          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+        } else {
+          requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixFile, { directory: filePath, file: fileNode.model.fileName });        
+          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
+        }
+
       } else {
         _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
       }
