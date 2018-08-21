@@ -14,10 +14,12 @@ import { EditorServiceInstance } from '../../../shared/editor-control/editor-con
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs/Subscription';
 
+const pluginDef = require('../../../../../../pluginDefinition.json');
+
 export class MonacoConfig {
   subscription: Subscription = null;
   config = {
-    baseUrl: '../../org.zowe.editor/web/assets', // configure base path for monaco editor
+    baseUrl: `../../${pluginDef.identifier}/web/assets`, // configure base path for monaco editor
     defaultOptions: { scrollBeyondLastLine: false }, // pass default options to be used
     onMonacoLoad: this.onLoad.bind(this),
   };

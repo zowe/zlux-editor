@@ -9,20 +9,21 @@
   Copyright Contributors to the Zowe Project.
 -->
 <div class="main-container">
-  <div class="gz-activity-bar">
-    <div *ngFor="let item of activityBar; index as i;" class="gz-activity-button" [ngClass]="getActivityButtonClasses(item)"
-      (click)="switchActivity(i)">
-      <mat-icon>{{item.icon}}</mat-icon>
-    </div>
-  </div>
-  <aside class="gz-tree">
-    <div class="section-container" [ngClass]="{'active':this.activityBar[0].active}">
-      <div class="section-title">
-        File Explorer
+  <div class="container-left">
+    <div class="gz-activity-bar">
+      <div *ngFor="let item of activityBar; index as i;" class="gz-activity-button" [ngClass]="getActivityButtonClasses(item)"
+        (click)="switchActivity(i)">
+        <mat-icon>{{item.icon}}</mat-icon>
       </div>
-      <app-project-tree></app-project-tree>
     </div>
-    <!-- <div class="section-container" [ngClass]="{'active':this.activityBar[1].active}">
+    <div class="gz-tree">
+      <div class="section-container" [ngClass]="{'active':this.activityBar[0].active}">
+        <div class="section-title">
+          File Explorer
+        </div>
+        <app-project-tree></app-project-tree>
+      </div>
+      <!-- <div class="section-container" [ngClass]="{'active':this.activityBar[1].active}">
       <div class="section-title">
         Search
       </div>
@@ -61,7 +62,8 @@
         </div>
       </perfect-scrollbar>
     </div> -->
-  </aside>
+    </div>
+  </div>
   <div class="gz-editor">
     <app-code-editor></app-code-editor>
   </div>

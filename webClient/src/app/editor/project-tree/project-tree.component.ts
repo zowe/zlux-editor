@@ -87,7 +87,7 @@ export class ProjectTreeComponent implements OnInit {
         let requestUrl = this.utils.formatUrl(ENDPOINTS.projectStructure, { name: projectName });
         this.httpService.get(requestUrl)
           .subscribe((response: any) => {
-            // TODO: nodes should check project context once the component is loaded.
+            // TODO: "nodes" should check project context once the component is loaded.
             // TODO: if there is a file in root directory 'has children' can't be true
             this.nodes = response.datasets.map(r => {
               return {
@@ -108,7 +108,7 @@ export class ProjectTreeComponent implements OnInit {
         let requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixDirectory, { path: dirName });
         this.httpService.get(requestUrl)
           .subscribe((response: any) => {
-            // TODO: nodes should check project context once the component is loaded.
+            // TODO: "nodes" should check project context once the component is loaded.
             this.nodes = this.dataAdapter.convertDirectoryList(response);
             this.editorControl.setProjectNode(this.nodes);
             this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
@@ -117,6 +117,12 @@ export class ProjectTreeComponent implements OnInit {
             this.snackBarService.open(`Directory ${dirName} is not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
           });
       }
+    });
+    this.editorControl.openDataset.subscribe(dirName => {
+     // TODO: reference openDirectory
+     // 1, Request dataset list from server
+     // 2, The the response and convert fetched data with data adapter (need add logic to adapter)
+     // 3, Pass formated data to nodes. All set!
     });
   }
   ngOnInit() {

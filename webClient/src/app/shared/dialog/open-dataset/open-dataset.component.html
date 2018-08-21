@@ -1,4 +1,5 @@
 
+
 <!-- 
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -8,21 +9,20 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<h2 mat-dialog-title>New File</h2>
+<h2 mat-dialog-title>Open Dataset</h2>
 <mat-dialog-content>
-  File Name:
+  Dataset Name:
   <mat-form-field>
-    <input id="name" name="name" required #name="ngModel" matInput type="text" placeholder="Name"
-      [(ngModel)]="value">
-    <button mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
-      <mat-icon>close</mat-icon>
-    </button>
+      <input matInput type="text" placeholder="Dataset" [(ngModel)]="value">
+      <button mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
+        <mat-icon>close</mat-icon>
+      </button>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-dialog-close class="right">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="name.invalid">Create</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="!value">Open</button>
 </mat-dialog-actions>
 
 <!-- 

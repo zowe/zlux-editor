@@ -40,7 +40,7 @@
 //   xmlFile: './mock/xmlFile.json',
 //   asmFile: './mock/file.json',
 //   htmlFile: './mock/htmlFile.json',
-//   project: '../../com.rs.mvd.ide/web/mock/project.json',
+//   project: '../../com.rs.mvd.editor/web/mock/project.json',
 //   projectFile: 'http://rs22:5000/datasets/{name}/members',
 //   file: 'http://rs22:5000/datasets/{dataset}/members/{member}',
 //   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
