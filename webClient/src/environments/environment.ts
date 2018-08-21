@@ -51,6 +51,9 @@ export const ENDPOINTS: Endpoints = {
   openUnixFile: '/unixFileContents/{directory}/{file}',
   updateUnixFile: '/unixFileContents/{directory}/{file}',
   saveUnixFile: '/unixFileContents/{directory}/{file}',
+  datasetList: '/datasetMetadata/name/{dataset}?detail=true',
+  datasetMemberList: '/datasetMetadata/name/{dataset}?listMembers=true',
+  datasetContents: '/datasetContents/{dataset}'
 };
 
 /*

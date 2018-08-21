@@ -25,6 +25,9 @@ export interface Endpoints {
     openUnixFile: string;
     updateUnixFile: string;
     saveUnixFile: string;
+    datasetList: string;
+    datasetMemberList: string;
+    datasetContents: string;
 }
 
 /*

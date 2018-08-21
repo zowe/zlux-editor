@@ -36,6 +36,38 @@ export class DataAdapterService {
         hasChildren: entry.directory,
         path: eFilePath,
         fileName: eFileName,
+        isDataset: false
+      };
+    });
+  }
+
+  convertDatasetList(responseData: any): ProjectStructure[] {
+    console.log(responseData);
+    let entries = responseData.datasets;
+    return entries.map((entry: any) => {
+      let pds = entry.dsorg != null && entry.dsorg.isPDSDir;
+      return <ProjectStructure>{
+        id: _.uniqueId(),
+        name: entry.name.trim(),
+        hasChildren: pds,
+        path: entry.name.trim(),
+        fileName: entry.name.trim(),
+        isDataset: true
+      };
+    });
+  }
+
+  convertDatasetMemberList(responseData: any): ProjectStructure[] {
+    let entries = responseData.datasets;
+    let path = entries[0].name;
+    return entries[0].members.map((entry: any) => {
+      return <ProjectStructure>{
+        id: _.uniqueId(),
+        name: entry.name.trim(),
+        hasChildren: false,
+        path: path.trim() + "(" + entry.name.trim() + ")",
+        fileName: path.trim() + "(" + entry.name.trim() + ")",
+        isDataset: true
       };
     });
   }
@@ -43,6 +75,12 @@ export class DataAdapterService {
   convertFileContent(responseData: any): { contents: string } {
     return {
       contents: responseData,
+    };
+  }
+
+  convertDatasetContent(responseData: any): { contents: string } {
+    return {
+      contents: JSON.parse(responseData).records.join("\n")
     };
   }
 }
