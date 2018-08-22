@@ -1,5 +1,5 @@
 {
-  "name": "giza-ide-front",
+  "name": "org.zowe.editor.webclient",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {

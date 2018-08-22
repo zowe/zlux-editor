@@ -74,7 +74,7 @@ export const MENU = [
         name: 'Help',
         children: [
             {
-                name: 'About Giza Editor',
+                name: 'About Zowe Editor',
                 action: {
                     name: 'aboutUS',
                     params: [],

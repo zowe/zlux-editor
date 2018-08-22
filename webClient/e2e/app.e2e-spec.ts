@@ -10,7 +10,7 @@
 */
 import { AppPage } from './app.po';
 
-describe('giza-ide-front App', () => {
+describe('org.zowe.editor App', () => {
   let page: AppPage;
 
   beforeEach(() => {
