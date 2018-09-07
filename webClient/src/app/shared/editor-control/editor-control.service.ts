@@ -3,9 +3,9 @@
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
@@ -271,6 +271,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
 
     let requestUrl = ENDPOINTS.saveUnixFile;
+    /* Adding default query parameters.
+    * This is a temporary fix so that the API
+    * changes can be merged without breaking
+    * this app. */
+    requestUrl += "?sourceEncoding=UTF-8&targetEncoding=IBM-1047&forceOverwrite=true"
     let fileDir;
     if (!path) {
       fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
@@ -289,8 +294,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     let fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
     requestUrl = this.utils.formatUrl(requestUrl, { directory: fileDir, file: fileName });
-    // this.http.put(requestUrl, { user: 'ts6131', file: _activeFile.model.contents }).subscribe(r => {
-    this.ngHttp.put(requestUrl, _activeFile.model.contents).subscribe(r => {
+    /* Adding base64 encode */
+    var encodedFileContents = new Buffer(_activeFile.model.contents).toString('base64');
+    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {
       this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: 2000, panelClass: 'center' });
       // send buffer saved event
       this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
@@ -629,8 +635,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
