@@ -19,6 +19,7 @@ import { OpenFolderComponent } from './open-folder/open-folder.component';
 import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
+import { TagComponent } from './tag/tag.component';
 @NgModule({
     imports: [
         CommonModule,
@@ -36,7 +37,8 @@ import { LanguageServerComponent } from './language-server/language-server.compo
         OpenFolderComponent,
         NewFileComponent,
         SaveToComponent,
-        LanguageServerComponent
+        LanguageServerComponent,
+        TagComponent
     ],
     providers: [HttpService],
     entryComponents: [
@@ -45,7 +47,8 @@ import { LanguageServerComponent } from './language-server/language-server.compo
         OpenFolderComponent,
         NewFileComponent,
         SaveToComponent,
-        LanguageServerComponent
+        LanguageServerComponent,
+        TagComponent
     ]
 })
 export class DialogModule { }

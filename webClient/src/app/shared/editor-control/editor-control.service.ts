@@ -23,6 +23,7 @@ import { SnackBarService } from '../snack-bar.service';
 import { Observer } from 'rxjs/Observer';
 import { Http } from '@angular/http';
 import * as _ from 'lodash';
+import { MatDialog } from '@angular/material';
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -40,7 +41,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
-  public saveAllFile: EventEmitter<any> = new EventEmitter();
+  //public saveAllFile: EventEmitter<any> = new EventEmitter();
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
@@ -80,6 +81,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     private http: HttpService,
     private ngHttp: Http,
     private snackBar: SnackBarService,
+    private dialog: MatDialog,
   ) {
     EditorServiceInstance.next(this);
   }
@@ -258,47 +260,184 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
-  saveFileHandler(context?: ProjectContext, path?: string): Observable<void> {
+  public getStringEncoding(ccsid: number): string | null {
+    let s: string | null;
+    switch(ccsid) {
+      case 0: 
+        s = "UNTAGGED";
+        break;
+      case -1:  
+        s = "BINARY";
+        break;
+      case 819: 
+        s = "ISO-8859-1";
+        break;
+      case 1047: 
+        s = "IBM-1047";
+        break;     
+      case 1208: 
+        s = "UTF-8";  
+        break;
+      case 1200: 
+        s = "UTF-16"; 
+        break;
+      case 1201: 
+        s = "UTF-16-BE";  
+        break;
+      case 1202: 
+        s = "UTF-16-LE";
+        break;
+      default: 
+        s = null;
+    }
+    return s;
+  }
+  
+  getIntEncoding(ccsid: string): number | undefined {
+    let x: number;
+    switch(ccsid) {
+      case "UNTAGGED": 
+        x = 0;
+        break;
+      case "BINARY":  
+        x = -1;
+        break;
+      case "ISO-8859-1": 
+        x = 819;
+        break;
+      case "IBM-1047": 
+        x = 1047;
+        break;     
+      case "UTF-8": 
+        x = 1208;        
+        break;
+      case "UTF-16": 
+        x = 1200;
+        break;
+      case "UTF-16-BE": 
+        x = 1201;
+        break;
+      case "UTF-16-LE": 
+        x = 1202;
+        break;
+      default: 
+        x = undefined;
+    }
+    return x;    
+  }
+  
+  saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
     let _activeFile: ProjectContext;
     let _observer: Observer<void>;
     let _observable: Observable<void>;
+    
+    /* A new file is not "untagged"
+     * in this case. I'm referring to
+     * a file as untagged if it is currently
+     * untagged in USS.
+     */
+    let isUntagged: boolean;
 
     if (context != null) {
       _activeFile = context;
     } else {
       _activeFile = _openFile.filter(file => file.active === true)[0];
     }
-
+    
     let requestUrl = ENDPOINTS.saveUnixFile;
-    /* Adding default query parameters.
-    * This is a temporary fix so that the API
-    * changes can be merged without breaking
-    * this app. */
-    requestUrl += "?sourceEncoding=UTF-8&targetEncoding=IBM-1047&forceOverwrite=true"
+    
+    /* The code editor is visualizing
+     * always in UTF-8.
+     */
+    let sourceEncoding = "UTF-8"
+    
+    /* If the file is untagged */
+    if (this.getStringEncoding(_activeFile.model.encoding) === "UNTAGGED") {
+      isUntagged = true;
+    }
+    
+    /* If the user selected an encoding, we
+     * we use it.
+     */
+    let targetEncoding: string;
+    if (results || isUntagged) {
+      targetEncoding = results.encoding;
+    }
+    /* Use the encoding of the file (tag) */
+    else {
+      targetEncoding = this.getStringEncoding(_activeFile.model.encoding);
+    }
+    
+    /* Set the request URL using the proper encodings.
+     * We are defaulting overwrite to true, but in
+     * future enhancements, we should really check
+     * in the case of it being a new file.
+     */
+    requestUrl += "?sourceEncoding=" + sourceEncoding + 
+                  "&targetEncoding=" + targetEncoding + 
+                  "&forceOverwrite=true";            
+    
+    let fileName;
     let fileDir;
-    if (!path) {
+    
+    /* If the file already exists or it's
+     * untagged, then we can use it's current
+     * file properties.
+     */
+    if (!results || isUntagged) {
       fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
-    } else {
-      fileDir = ['/', '\\'].indexOf(path.substring(0, 1)) > -1 ?
-        path.substring(1) :
-        path;
+      fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
+      requestUrl = this.utils.formatUrl(requestUrl, { directory: fileDir, file: fileName });
     }
-
+    
+    /* The file is newly created, so
+     * we are using the data returned
+     * from the dialog.
+     */
+    else {
+      /* If the user started it with a slash
+       * remove it for when the URL is formatted.
+       * This should be validated in the dialog
+       * in future enhancements.
+       */
+      if (results.directory.charAt(0) === '/') {
+        results.directory.substr(1);
+      }
+      requestUrl = this.utils.formatUrl(requestUrl, { directory: results.directory, file: results.fileName });
+    }
 
     _observable = new Observable((observer) => {
       _observer = observer;
     });
 
-    let fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-    requestUrl = this.utils.formatUrl(requestUrl, { directory: fileDir, file: fileName });
-    /* Adding base64 encode */
+    /* We must BASE64 encode the contents
+     * of the file before it is sent
+     * to the server.
+     */
     var encodedFileContents = new Buffer(_activeFile.model.contents).toString('base64');
+    
+    /* Send the HTTP PUT request to the server
+     * to save the file.
+     */
     this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {
+      
+      /* It was a new file, we
+       * can set the new fileName. */
+      if (results && !isUntagged) {
+        _activeFile.name = results.fileName;
+        _activeFile.model.name = results.fileName;
+        _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+      }
+      
+      /* This will probably need to be changed
+       * for the sake of accessibility.
+       */
       this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: 2000, panelClass: 'center' });
-      // send buffer saved event
+      
+      /* Send buffer saved event */
       this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
       let fileList = this.openFileList.getValue()
         .map(file => {
@@ -311,32 +450,36 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (_observer != null) { _observer.next(null); }
     }, e => {
       let error = e.json().error;
+      
+      /* This will probably need to be changed
+       * for the sake of accessibility.
+       */
       this.snackBar.open(`${error}`, 'Close', { duration: 2000, panelClass: 'center' });
     });
 
     return _observable;
   }
 
-  saveAllFileHandler() {
-    const _openFile = this.openFileList.getValue();
-    let promiseList = [];
-    let requestUrl = ENDPOINTS.saveFile;
+  //saveAllFileHandler() {
+    //const _openFile = this.openFileList.getValue();
+    //let promiseList = [];
+    //let requestUrl = ENDPOINTS.saveFile;
 
-    for (let file of _openFile) {
-      let saveUrl = this.utils.formatUrl(requestUrl, { dataset: file.parent.name, member: file.name });
-      let savePromise = this.http.put(saveUrl, { contents: file.model.contents }).toPromise();
-      promiseList.push(savePromise);
-    }
+    //for (let file of _openFile) {
+      //let saveUrl = this.utils.formatUrl(requestUrl, { dataset: file.parent.name, member: file.name });
+      //let savePromise = this.http.put(saveUrl, { contents: file.model.contents }).toPromise();
+      //promiseList.push(savePromise);
+    //}
 
-    Promise.all(promiseList).then(r => {
-      this.snackBar.open(`All Saved!`, 'Close', { duration: 2000, panelClass: 'center' });
-      let fileList = this.openFileList.getValue().map(file => {
-        file.changed = false;
-        return file;
-      });
-      this.openFileList.next(fileList);
-    });
-  }
+    //Promise.all(promiseList).then(r => {
+      //this.snackBar.open(`All Saved!`, 'Close', { duration: 2000, panelClass: 'center' });
+      //let fileList = this.openFileList.getValue().map(file => {
+        //file.changed = false;
+        //return file;
+      //});
+      //this.openFileList.next(fileList);
+    //});
+  //}
 
   deleteFileHandler(context?: ProjectContext, force?: boolean): Observable<void> {
     let targetFile = context ? context : this.fetchActiveFile();
@@ -406,6 +549,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     //   observer.next(<ProjectContext>fileContext);
     // });
   }
+  
   /* ============= ZLUX code editor implement ============= */
   /* ============= Class IEditor ============= */
   /**

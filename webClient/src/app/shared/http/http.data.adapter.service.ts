@@ -30,13 +30,15 @@ export class DataAdapterService {
       let lastIndex = entry.path.lastIndexOf('/');
       let eFileName = entry.path.substring(lastIndex + 1);
       let eFilePath = entry.path.substring(0, lastIndex);
+      let eEncoding = entry.ccsid;
       return <ProjectStructure>{
         id: _.uniqueId(),
         name: entry.name,
         hasChildren: entry.directory,
         path: eFilePath,
         fileName: eFileName,
-        isDataset: false
+        isDataset: false,
+        encoding: eEncoding
       };
     });
   }

@@ -63,39 +63,39 @@ export class MonacoComponent implements OnInit, OnChanges {
 
   keyBinds(editor: any) {
     let self = this;
-    editor.addAction({
+    //editor.addAction({
       // An unique identifier of the contributed action.
-      id: 'save-all',
+      //id: 'save-all',
 
       // A label of the action that will be presented to the user.
-      label: 'Save All',
+      //label: 'Save All',
 
       // An optional array of keybindings for the action.
-      keybindings: [
+      //keybindings: [
         // tslint:disable-next-line:no-bitwise
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
+        //monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
         // chord
         // tslint:disable-next-line:no-bitwise
         // monaco.KeyMod.chord(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M)
-      ],
+      //],
 
       // A precondition for this action.
-      precondition: null,
+      //precondition: null,
 
       // A rule to evaluate on top of the precondition in order to dispatch the keybindings.
-      keybindingContext: null,
+      //keybindingContext: null,
 
-      contextMenuGroupId: 'file',
+      //contextMenuGroupId: 'file',
 
-      contextMenuOrder: 1.1,
+      //contextMenuOrder: 1.1,
 
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convenience
-      run: function (ed) {
-        self.editorControl.saveAllFile.emit();
-        return null;
-      }
-    });
+      //run: function (ed) {
+        //self.editorControl.saveAllFile.emit();
+        //return null;
+      //}
+    //});
     editor.addAction({
       // An unique identifier of the contributed action.
       id: 'save',
@@ -106,7 +106,7 @@ export class MonacoComponent implements OnInit, OnChanges {
       // An optional array of keybindings for the action.
       keybindings: [
         // tslint:disable-next-line:no-bitwise
-        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Alt | monaco.KeyCode.KEY_S
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
         // chord
         // tslint:disable-next-line:no-bitwise
         // monaco.KeyMod.chord(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M)

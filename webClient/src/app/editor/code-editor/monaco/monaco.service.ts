@@ -21,6 +21,7 @@ import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
+import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 
 @Injectable()
 export class MonacoService {
@@ -52,9 +53,9 @@ export class MonacoService {
       }
     });
 
-    this.editorControl.saveAllFile.subscribe(() => {
-      this.saveAllFile();
-    });
+    //this.editorControl.saveAllFile.subscribe(() => {
+      //this.saveAllFile();
+    //});
   }
 
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
@@ -153,38 +154,101 @@ export class MonacoService {
     }
   }
 
+  preSaveCheck(fileContext?: ProjectContext): boolean {
+    let _activeFile: ProjectContext = fileContext;
+    let canBeISO = true;
+    let i = 0;
+    let fileContents = _activeFile.model.contents;
+    for (i; i < fileContents.length; i++) {
+      if (fileContents[i].charCodeAt(0) > 127) {
+        canBeISO = false;
+        break;
+      }
+    }
+    return canBeISO;
+  }
+  
   saveFile(fileContext: ProjectContext): Observable<void> {
     return new Observable((obs) => {
-      if (!fileContext.temp) {
+      
+      /* If the file is not new, and the encoding 
+       * has already been set inside of USS via
+       * chtag.
+       */
+      if (!fileContext.temp && 
+          fileContext.model.encoding != undefined &&
+          fileContext.model.encoding != null && 
+          fileContext.model.encoding != 0
+          ){
         this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
-      } else {
-        let saveRef = this.dialog.open(SaveToComponent, {
-          width: '500px',
-          data: { file: fileContext.name }
-        });
-        saveRef.afterClosed().subscribe(result => {
+      }
+      /* The file is new or is untagged,
+       * so we must prompt a dialog.
+       */
+      else {
+        /* Issue a presave check to see if the
+         * file can be saved as ISO-8859-1,
+         * perhaps this should be done in real
+         * time as an enhancement.
+         */
+        let x = this.preSaveCheck(fileContext);
+        
+        /* The file is temporary, which means that
+         * it was never tagged.
+         */
+        if (fileContext.temp) {
+          /* Open up a dialog with the standard,
+           * "save as" format.
+           */
+          let saveRef = this.dialog.open(SaveToComponent, {
+            width: '500px',
+            data: { canBeISO: x }
+          });
+          saveRef.afterClosed().subscribe(result => {
           if (result) {
             this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
           }
-        });
+          });
+        }
+        /* The file was never tagged, so we should
+         * ask the user if they would like to tag
+         * it.
+         */
+        else {
+          /* Open up a dialog asking if the user
+           * wants to tag their file. Again,
+           * we are checking if ISO-8859-1 is
+           * an option.
+           */
+          let saveRef = this.dialog.open(TagComponent, {
+            width: '500px',
+            data: { canBeISO: x,
+                    fileName: fileContext.model.fileName }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+          }
+          });
+        }
       }
     });
   }
 
-  saveAllFile() {
-    let unsavedFile = this.editorControl.openFileList.getValue().filter((file: ProjectContext) => file.changed);
+  //saveAllFile() {
+    //let unsavedFile = this.editorControl.openFileList.getValue().filter((file: ProjectContext) => file.changed);
     // if (unsavedFile[0]) {
     //   let sub = this.saveFile(unsavedFile[0]).subscribe(() => {
     //     sub.unsubscribe();
     //     this.saveAllFile();
     //   });
     // }
-    for (let file of unsavedFile) {
-      let sub = this.saveFile(file).subscribe(() => {
-        sub.unsubscribe();
-      });
-    }
-  }
+    //for (let file of unsavedFile) {
+      //let sub = this.saveFile(file).subscribe(() => {
+        //sub.unsubscribe();
+      //});
+    //}
+  //}
 
   generateUri(editorFile: ProjectStructure): string {
     // have to use lowercase here!

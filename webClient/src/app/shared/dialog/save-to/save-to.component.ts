@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialogRef } from '@angular/material';
 import { MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
@@ -16,15 +17,26 @@ import { MAT_DIALOG_DATA } from '@angular/material';
   templateUrl: './save-to.component.html',
   styleUrls: ['./save-to.component.scss']
 })
-export class SaveToComponent implements OnInit {
+export class SaveToComponent {
+  private results = {
+    directory: '',
+    fileName: '',
+    encoding: '',
+  };
+  
+  private options: string[];
 
-  private value = '';
-
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { }
-
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
+    if (this.data.canBeISO === false) {
+      this.options = ['UTF-8'];
+    }
+    else {
+      this.options = ['UTF-8','ISO-8859-1','IBM-1047'];
+    }
+  }
+  
   ngOnInit() {
   }
-
 }
 
 /*
