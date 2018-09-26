@@ -8,21 +8,31 @@
   
   Copyright Contributors to the Zowe Project.
 */
-export interface ProjectStructure {
-    id: string;
-    name: string;
-    ext?: string;
-    language?: string;
-    children?: ProjectStructure[];
-    hasChildren: boolean;
-    contents?: string;
-    line?: number;
-    parent?: string;
-    path?: string;
-    fileName?: string;
-    isDataset: boolean;
-    encoding?: number;
-}
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { TagComponent } from './tag.component';
+
+describe('TagComponent', () => {
+  let component: TagComponent;
+  let fixture: ComponentFixture<TagComponent>;
+
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [ TagComponent ]
+    })
+    .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TagComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
 
 /*
   This program and the accompanying materials are

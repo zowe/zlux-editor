@@ -8,18 +8,9 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<h2 mat-dialog-title>Save As</h2>
+<h2 mat-dialog-title>Untagged File Found</h2>
 <mat-dialog-content>
-  Directory:
-  <mat-form-field>
-    <input matInput type="text" placeholder="Enter a directory" [(ngModel)]="results.directory">
-  </mat-form-field>
-  <p></p>
-  File Name:
-  <mat-form-field>
-    <input matInput type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName">
-  </mat-form-field>
-  <p></p>
+  <p> <b>{{data.fileName}}</b> is currently untagged. Please select a tag for it in USS. </p>
   Encoding:
   <mat-form-field>
     <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding">

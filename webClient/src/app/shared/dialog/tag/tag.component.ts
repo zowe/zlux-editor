@@ -8,20 +8,33 @@
   
   Copyright Contributors to the Zowe Project.
 */
-export interface ProjectStructure {
-    id: string;
-    name: string;
-    ext?: string;
-    language?: string;
-    children?: ProjectStructure[];
-    hasChildren: boolean;
-    contents?: string;
-    line?: number;
-    parent?: string;
-    path?: string;
-    fileName?: string;
-    isDataset: boolean;
-    encoding?: number;
+import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialogRef } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material';
+
+@Component({
+  selector: 'app-tag',
+  templateUrl: './tag.component.html',
+  styleUrls: ['./tag.component.scss']
+})
+export class TagComponent {
+  private results = {
+    encoding: '',
+  };
+  
+  private options: string[];
+
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
+    if (this.data.canBeISO === false) {
+      this.options = ['UTF-8'];
+    }
+    else {
+      this.options = ['UTF-8','ISO-8859-1','IBM-1047'];
+    }
+  }
+  
+  ngOnInit() {
+  }
 }
 
 /*

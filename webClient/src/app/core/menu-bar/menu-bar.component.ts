@@ -138,9 +138,9 @@ export class MenuBarComponent implements OnInit {
     let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
   }
 
-  saveAll() {
-    this.editorControl.saveAllFile.emit();
-  }
+  //saveAll() {
+   // this.editorControl.saveAllFile.emit();
+  //}
 
   aboutUS() {
     let openProjectRef = this.dialog.open(AboutProjectComponent, {
@@ -217,6 +217,8 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
+    this.editorControl.createFile("new_file");
+    /*
     let newFileRef = this.dialog.open(NewFileComponent, {
       width: '500px'
     });
@@ -226,6 +228,7 @@ export class MenuBarComponent implements OnInit {
         this.editorControl.createFile(result);
       }
     });
+    */
   }
 
   languageServerSetting() {

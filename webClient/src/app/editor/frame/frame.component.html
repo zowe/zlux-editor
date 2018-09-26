@@ -9,12 +9,12 @@
   Copyright Contributors to the Zowe Project.
 -->
 <div class="main-container">
-  <div class="gz-activity-bar">
+  <!--<div class="gz-activity-bar">
     <div *ngFor="let item of activityBar; index as i;" class="gz-activity-button" [ngClass]="getActivityButtonClasses(item)"
       (click)="switchActivity(i)">
       <mat-icon>{{item.icon}}</mat-icon>
     </div>
-  </div>
+  </div>-->
   <aside class="gz-tree">
     <div class="section-container" [ngClass]="{'active':this.activityBar[0].active}">
       <div class="section-title">

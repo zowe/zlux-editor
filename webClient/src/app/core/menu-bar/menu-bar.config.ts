@@ -46,16 +46,16 @@ export const MENU = [
                     name: 'saveFile',
                     params: [],
                 },
-                keyMap: '[Ctrl+Alt+S]',
-            },
-            {
-                name: 'Save All',
-                action: {
-                    name: 'saveAll',
-                    params: [],
-                },
                 keyMap: '[Ctrl+S]',
             },
+            //{
+            //    name: 'Save All',
+            //    action: {
+            //        name: 'saveAll',
+            //        params: [],
+            //    },
+            //    keyMap: '[Ctrl+S]',
+            //},
         ],
     },
     {
