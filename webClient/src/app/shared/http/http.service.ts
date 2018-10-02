@@ -10,7 +10,7 @@
 */
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
-import { Observable } from 'rxjs/observable';
+import { Observable } from 'rxjs/Observable';
 import { catchError, retry, map } from 'rxjs/operators';
 
 @Injectable()
