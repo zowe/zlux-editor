@@ -21,7 +21,7 @@
 <mat-dialog-actions>
   <button mat-button mat-dialog-close class="right">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="!value">Open</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="value[0] != '/'">Open</button>
 </mat-dialog-actions>
 
 <!-- 

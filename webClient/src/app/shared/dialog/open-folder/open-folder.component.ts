@@ -21,7 +21,7 @@ import { ENDPOINTS } from '../../../../environments/environment';
 export class OpenFolderComponent implements OnInit {
 
   private fetching = false;
-  private value = '';
+  private value = '/';
 
   constructor(private http: HttpService, private dialogRef: MatDialogRef<OpenFolderComponent>) { }
 
