@@ -127,7 +127,7 @@ export class ProjectTreeComponent implements OnInit {
               this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
             }, e => {
               let error = e.json().error;
-              this.snackBarService.open(`Directory ${dirName} is not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
+              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
             });
         } else {
           // dataset

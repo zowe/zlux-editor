@@ -634,7 +634,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (context.model && context.model.contents) {
         next(context.model.contents);
       } else {
-        error(new Error(`Content is not exist in ${context.name}`));
+        error(new Error(`Content does not exist in ${context.name}`));
       }
     });
     return observe;
