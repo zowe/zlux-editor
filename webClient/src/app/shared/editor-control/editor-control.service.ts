@@ -456,6 +456,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
        */
       this.snackBar.open(`${error}`, 'Close', { duration: 2000, panelClass: 'center' });
     });
+    this.openDirectory.next(results.directory);
 
     return _observable;
   }
