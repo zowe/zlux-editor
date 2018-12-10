@@ -36,7 +36,7 @@ export class ProjectTreeComponent implements OnInit {
 
   nodes: ProjectStructure[];
   options = {
-    animateExpand: true,
+    animateExpand: false,
     actionMapping: {
       mouse: {
         // dblClick: (tree, node, $event) => {
