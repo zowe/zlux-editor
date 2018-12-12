@@ -9,7 +9,6 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
-import { ENDPOINTS } from '../../../../environments/environment';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
 import { ProjectContext } from '../../../shared/model/project-context';
@@ -76,14 +75,11 @@ export class MonacoService {
       let _observable;
 
       if (reload) {
-        // let parentName = fileNode.parent ? fileNode.parent.name : fileNode.model.parent;
-        // requestUrl = this.utils.formatUrl(ENDPOINTS.file, { dataset: parentName, member: fileNode.name });
-        // this.httpService.get(requestUrl).subscribe((response: any) => {
         if (fileNode.model.isDataset) {
-          requestUrl = this.utils.formatUrl(ENDPOINTS.datasetContents, { dataset: filePath });        
+          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
         } else {
-          requestUrl = this.utils.formatUrl(ENDPOINTS.openUnixFile, { directory: filePath, file: fileNode.model.fileName });        
+          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', filePath+'/'+fileNode.model.fileName);
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
         }
 

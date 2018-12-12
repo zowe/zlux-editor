@@ -19,21 +19,6 @@ export const environment = {
   production: false
 };
 
-// export const ENDPOINTS: Endpoints = {
-//   projectStructure: 'http://rs22:5000/projects/{name}',
-//   jsonFile: './mock/jsonFile.json',
-//   xmlFile: './mock/xmlFile.json',
-//   asmFile: './mock/file.json',
-//   htmlFile: './mock/htmlFile.json',
-//   project: './mock/project.json',
-//   projectFile: 'http://rs22:5000/datasets/{name}/members',
-//   file: 'http://rs22:5000/datasets/{dataset}/members/{member}',
-//   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
-//   searchInFile: 'http://rs22:5000/projects/{project}/search?pattern={pattern}',
-//   diagram: 'http://wal-vm-db2zos1:5000/genflow',
-//   jobs: 'http://rs22:5000/jobs',
-// };
-
 export const ENDPOINTS: Endpoints = {
   projectStructure: 'http://rs22:5000/projects/{name}',
   jsonFile: './mock/jsonFile.json',
@@ -46,14 +31,7 @@ export const ENDPOINTS: Endpoints = {
   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
   searchInFile: 'http://rs22:5000/projects/GCE/search?pattern={pattern}',
   diagram: 'http://wal-vm-db2zos1:5000/genflow',
-  jobs: 'http://rs22:5000/jobs',
-  openUnixDirectory: '/unixfile/contents/{path}',
-  openUnixFile: '/unixfile/contents/{directory}/{file}',
-  updateUnixFile: '/unixfile/contents/{directory}/{file}',
-  saveUnixFile: '/unixfile/contents/{directory}/{file}',
-  datasetList: '/datasetMetadata/name/{dataset}?detail=true',
-  datasetMemberList: '/datasetMetadata/name/{dataset}?listMembers=true',
-  datasetContents: '/datasetContents/{dataset}'
+  jobs: 'http://rs22:5000/jobs'
 };
 
 /*

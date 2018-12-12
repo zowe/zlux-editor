@@ -21,13 +21,6 @@ export interface Endpoints {
     searchInFile: string;
     diagram: string;
     jobs: string;
-    openUnixDirectory: string;
-    openUnixFile: string;
-    updateUnixFile: string;
-    saveUnixFile: string;
-    datasetList: string;
-    datasetMemberList: string;
-    datasetContents: string;
 }
 
 /*
