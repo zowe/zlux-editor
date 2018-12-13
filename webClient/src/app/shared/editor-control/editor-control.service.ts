@@ -447,6 +447,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           return file;
         });
       this.openFileList.next(fileList);
+      this.openDirectory.next(results.directory);
       if (_observer != null) { _observer.next(null); }
     }, e => {
       let error = e.json().error;
@@ -455,6 +456,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
        * for the sake of accessibility.
        */
       this.snackBar.open(`${error}`, 'Close', { duration: 2000, panelClass: 'center' });
+      this.openDirectory.next(results.directory);
     });
 
     return _observable;
