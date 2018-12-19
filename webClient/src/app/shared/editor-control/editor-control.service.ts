@@ -16,7 +16,6 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
 import { Subscription } from 'rxjs/Subscription';
-import { ENDPOINTS } from '../../../environments/environment';
 import { UtilsService } from '../utils.service';
 import { HttpService } from '../http/http.service';
 import { SnackBarService } from '../snack-bar.service';
@@ -345,7 +344,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       _activeFile = _openFile.filter(file => file.active === true)[0];
     }
     
-    let requestUrl = ENDPOINTS.saveUnixFile;
+    let requestUrl: string;
     
     /* The code editor is visualizing
      * always in UTF-8.
@@ -368,16 +367,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     else {
       targetEncoding = this.getStringEncoding(_activeFile.model.encoding);
     }
-    
-    /* Set the request URL using the proper encodings.
-     * We are defaulting overwrite to true, but in
-     * future enhancements, we should really check
-     * in the case of it being a new file.
-     */
-    requestUrl += "?sourceEncoding=" + sourceEncoding + 
-                  "&targetEncoding=" + targetEncoding + 
-                  "&forceOverwrite=true";            
-    
     let fileName;
     let fileDir;
     
@@ -390,7 +379,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
       fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-      requestUrl = this.utils.formatUrl(requestUrl, { directory: fileDir, file: fileName });
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, undefined, true);      
     }
     
     /* The file is newly created, so
@@ -406,7 +395,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (results.directory.charAt(0) === '/') {
         results.directory.substr(1);
       }
-      requestUrl = this.utils.formatUrl(requestUrl, { directory: results.directory, file: results.fileName });
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding, undefined, true);
     }
 
     _observable = new Observable((observer) => {
