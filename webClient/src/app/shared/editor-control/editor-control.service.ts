@@ -435,15 +435,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
       
       /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, undefined, true, undefined, undefined);
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, 
+                                                  undefined, true, undefined, undefined);
       sessionID = 0;
       
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, undefined, true, sessionID, true);   
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, 
+                                                    undefined, true, sessionID, true);   
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
-        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 'Close', { duration: 2000,   panelClass: 'center' });
+        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                           'Close', { duration: 2000,   panelClass: 'center' });
       });  
     }
     
@@ -462,15 +465,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
       
       /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, undefined, undefined, undefined, true, undefined, undefined);
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, undefined, undefined,
+                                                  undefined, true, undefined, undefined);
       sessionID = 0;
       
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding, undefined, true, sessionID, true);  
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding,
+                                                    undefined, true, sessionID, true);  
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
-        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 'Close', { duration: 2000,   panelClass: 'center' });
+        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                           'Close', { duration: 2000,   panelClass: 'center' });
       }); 
     }
 
