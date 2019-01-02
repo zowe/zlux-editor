@@ -325,83 +325,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return x;    
   }
   
-  saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
-    const _openFile = this.openFileList.getValue();
-    let _activeFile: ProjectContext;
-    let _observer: Observer<void>;
-    let _observable: Observable<void>;
-    
-    /* A new file is not "untagged"
-     * in this case. I'm referring to
-     * a file as untagged if it is currently
-     * untagged in USS.
-     */
-    let isUntagged: boolean;
-
-    if (context != null) {
-      _activeFile = context;
-    } else {
-      _activeFile = _openFile.filter(file => file.active === true)[0];
-    }
-    
-    let requestUrl: string;
-    
-    /* The code editor is visualizing
-     * always in UTF-8.
-     */
-    let sourceEncoding = "UTF-8"
-    
-    /* If the file is untagged */
-    if (this.getStringEncoding(_activeFile.model.encoding) === "UNTAGGED") {
-      isUntagged = true;
-    }
-    
-    /* If the user selected an encoding, we
-     * we use it.
-     */
-    let targetEncoding: string;
-    if (results || isUntagged) {
-      targetEncoding = results.encoding;
-    }
-    /* Use the encoding of the file (tag) */
-    else {
-      targetEncoding = this.getStringEncoding(_activeFile.model.encoding);
-    }
-    let fileName;
-    let fileDir;
-    
-    /* If the file already exists or it's
-     * untagged, then we can use it's current
-     * file properties.
-     */
-    if (!results || isUntagged) {
-      fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
-        _activeFile.model.path.substring(1) :
-        _activeFile.model.path;
-      fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, undefined, true);      
-    }
-    
-    /* The file is newly created, so
-     * we are using the data returned
-     * from the dialog.
-     */
-    else {
-      /* If the user started it with a slash
-       * remove it for when the URL is formatted.
-       * This should be validated in the dialog
-       * in future enhancements.
-       */
-      if (results.directory.charAt(0) === '/') {
-        results.directory.substr(1);
-      }
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding, undefined, true);
-    }
-
-    _observable = new Observable((observer) => {
-      _observer = observer;
-    });
-
+  doSaving(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
+          _observer: Observer<void>, _observable: Observable<void>) {
     /* We must BASE64 encode the contents
      * of the file before it is sent
      * to the server.
@@ -447,6 +372,113 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.snackBar.open(`${error}`, 'Close', { duration: 2000, panelClass: 'center' });
       this.openDirectory.next(results.directory);
     });
+  }
+  
+  saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
+    const _openFile = this.openFileList.getValue();
+    let _activeFile: ProjectContext;
+    let _observer: Observer<void>;
+    let _observable: Observable<void>;
+    let sessionID: number;
+    
+    /* A new file is not "untagged"
+     * in this case. I'm referring to
+     * a file as untagged if it is currently
+     * untagged in USS.
+     */
+    let isUntagged: boolean;
+
+    if (context != null) {
+      _activeFile = context;
+    } else {
+      _activeFile = _openFile.filter(file => file.active === true)[0];
+    }
+    
+    let requestUrl: string;
+    
+    /* The code editor is visualizing
+     * always in UTF-8.
+     */
+    let sourceEncoding = "UTF-8"
+    
+    /* If the file is untagged */
+    if (this.getStringEncoding(_activeFile.model.encoding) === "UNTAGGED") {
+      isUntagged = true;
+    }
+    
+    /* If the user selected an encoding, we
+     * we use it.
+     */
+    let targetEncoding: string;
+    if (results || isUntagged) {
+      targetEncoding = results.encoding;
+    }
+    /* Use the encoding of the file (tag) */
+    else {
+      targetEncoding = this.getStringEncoding(_activeFile.model.encoding);
+    }
+    let fileName;
+    let fileDir;
+    
+    _observable = new Observable((observer) => {
+      _observer = observer;
+    });
+    
+    /* If the file already exists or it's
+     * untagged, then we can use it's current
+     * file properties.
+     */
+    if (!results || isUntagged) {
+      fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
+        _activeFile.model.path.substring(1) :
+        _activeFile.model.path;
+      fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
+      
+      /* Request to get sessionID */
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, 
+                                                  undefined, true, undefined, undefined);
+      sessionID = 0;
+      
+      this.ngHttp.put(requestUrl, null).subscribe(r => {
+        sessionID = r.json().sessionID;
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, 
+                                                    undefined, true, sessionID, true);   
+        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+      }, e => {
+        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                           'Close', { duration: 2000,   panelClass: 'center' });
+      });  
+    }
+    
+    /* The file is newly created, so
+     * we are using the data returned
+     * from the dialog.
+     */
+    else {
+      /* If the user started it with a slash
+       * remove it for when the URL is formatted.
+       * This should be validated in the dialog
+       * in future enhancements.
+       */
+      if (results.directory.charAt(0) === '/') {
+        results.directory.substr(1);
+      }
+      
+      /* Request to get sessionID */
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, undefined, undefined,
+                                                  undefined, true, undefined, undefined);
+      sessionID = 0;
+      
+      this.ngHttp.put(requestUrl, null).subscribe(r => {
+        sessionID = r.json().sessionID;
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding,
+                                                    undefined, true, sessionID, true);  
+        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+      }, e => {
+        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                           'Close', { duration: 2000,   panelClass: 'center' });
+      }); 
+    }
 
     return _observable;
   }
