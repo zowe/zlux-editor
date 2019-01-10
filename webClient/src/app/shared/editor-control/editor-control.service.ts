@@ -8,7 +8,7 @@
 
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
 import { ProjectStructure } from '../model/editor-project';
@@ -23,6 +23,7 @@ import { Observer } from 'rxjs/Observer';
 import { Http } from '@angular/http';
 import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -81,6 +82,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     private ngHttp: Http,
     private snackBar: SnackBarService,
     private dialog: MatDialog,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
     EditorServiceInstance.next(this);
   }
@@ -163,8 +165,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       file.active = false;
     }
     if (fileContext) {
-      fileContext.opened ? console.warn(`File ${fileContext.name} already open.`) : fileContext.opened = true;
-      fileContext.active ? console.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
+      fileContext.opened ? this.log.warn(`File ${fileContext.name} already open.`) : fileContext.opened = true;
+      fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
     currentOpenFileList.push(fileContext);
@@ -172,8 +174,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    !fileContext.opened ? console.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
-    !fileContext.active ? console.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
+    !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
+    !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     this._openFileList.next(this._openFileList.getValue().filter((file) => file.model.id !== fileContext.model.id));
   }

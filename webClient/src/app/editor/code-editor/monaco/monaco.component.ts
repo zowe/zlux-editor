@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
@@ -17,6 +17,7 @@ import {
 import { MonacoService } from './monaco.service';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -31,7 +32,8 @@ export class MonacoComponent implements OnInit, OnChanges {
   constructor(
     private monacoService: MonacoService,
     private editorControl: EditorControlService,
-    private languageService: LanguageServerService) {
+    private languageService: LanguageServerService,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {
   }
 
   ngOnInit() {
@@ -141,13 +143,13 @@ export class MonacoComponent implements OnInit, OnChanges {
         if (lang === language && connExist.indexOf(language) < 0) {
           this.listenTo(language);
         } else {
-          console.log(`${language} server already started!`);
+          this.log.warn(`${language} server already started!`);
         }
       } else {
         if (connExist.indexOf(language) < 0) {
           this.listenTo(language);
         } else {
-          console.log(`${language} server already started!`);
+          this.log.warn(`${language} server already started!`);
         }
       }
     }
@@ -174,7 +176,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     const langWebSocket = this.createWebSocket(langUrl);
     const langService = createMonacoServices(this.editorControl.editor.getValue());
 
-    console.log(`Start listen to ${lang} server`);
+    this.log.info(`Connecting to ${lang} server`);
 
     listen({
       webSocket: langWebSocket,
