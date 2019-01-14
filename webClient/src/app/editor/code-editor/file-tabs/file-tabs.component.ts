@@ -8,9 +8,10 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, Output, EventEmitter, Directive, HostListener } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, Directive, HostListener, Inject } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-file-tabs',
@@ -44,12 +45,13 @@ export class FileTabsComponent implements OnInit {
 export class MouseMiddleClickDirective {
   @Input('fileContext') fileContext: ProjectContext;
   @HostListener('click', ['$event']) onMouseMiddleClick($event: Event) {
-    console.log($event);
+    this.log.debug(`Click. Event=${$event}`);
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);
   }
-  constructor(private editorControl: EditorControlService) { }
+  constructor(private editorControl: EditorControlService,
+              @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }
 }
 
 /*

@@ -8,13 +8,16 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { ProjectDef } from '../model/project';
 import { ProjectStructure } from '../model/editor-project';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import * as _ from 'lodash';
 
 @Injectable()
 export class DataAdapterService {
+
+  constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {}
 
   convertProjectList(responseData: any): ProjectDef[] {
     return [{
@@ -44,7 +47,7 @@ export class DataAdapterService {
   }
 
   convertDatasetList(responseData: any): ProjectStructure[] {
-    console.log(responseData);
+    this.log.debug(`Dataset response=`,responseData);
     let entries = responseData.datasets;
     return entries.map((entry: any) => {
       let pds = entry.dsorg != null && entry.dsorg.isPDSDir;

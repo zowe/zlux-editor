@@ -22,12 +22,9 @@ export class MonacoConfig {
     onMonacoLoad: this.onLoad.bind(this),
   };
 
-  constructor() { }
-
   onLoad() {
     let self = this;
     // here monaco object will be available as window.monaco use this function to extend monaco editor functionalities.
-    console.log((<any>window).monaco);
 
     monaco.languages.register({
       id: 'hlasm',

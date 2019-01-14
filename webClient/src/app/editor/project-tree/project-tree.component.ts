@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import { Response } from '@angular/http';
 import { MatDialog } from '@angular/material';
 import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
@@ -23,6 +23,7 @@ import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-project-tree',
@@ -85,7 +86,8 @@ export class ProjectTreeComponent implements OnInit {
     private dialog: MatDialog,
     private editorControl: EditorControlService,
     private snackBarService: SnackBarService,
-    private codeEditorService: EditorService) {
+    private codeEditorService: EditorService,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {
 
     this.editorControl.projectNode.subscribe((nodes) => {
       this.nodes = nodes;
@@ -113,7 +115,7 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      console.log(dirName);
+      this.log.debug(`Open Dir=${dirName}`);
       if (dirName != null && dirName !== '') {
         if (dirName[0] == '/') {
           // start get project structure
@@ -177,7 +179,7 @@ export class ProjectTreeComponent implements OnInit {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
-        console.log('file loaded through project explorer.');
+        this.log.debug(`file loaded through project explorer.`);
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
     }

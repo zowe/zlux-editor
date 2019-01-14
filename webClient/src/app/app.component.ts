@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-root',
@@ -17,6 +18,10 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'app';
+  
+  constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {
+    this.log.debug(`Monaco object=`,(<any>window).monaco);
+  }
 }
 
 /*
