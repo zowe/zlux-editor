@@ -437,13 +437,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
       
       /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, 
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, 
                                                   undefined, true, undefined, undefined);
       sessionID = 0;
       
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, 
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, 
                                                     undefined, true, sessionID, true);   
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
