@@ -32,7 +32,9 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
  * @export
  * @class EditorControlService
  */
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
@@ -634,6 +636,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     this.openFileEmitter.emit(targetBuffer);
     return resultOpenObs;
+  }
+
+  loadDirectory(path: string) {
+    this.log.debug('Loading directory=',path);
+    this.openDirectory.next(path);
   }
   /**
      * Save a buffer into a file.
