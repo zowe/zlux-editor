@@ -34,8 +34,7 @@ export class CodeEditorComponent implements OnInit {
     lightbulb: {
       enabled: true
     },
-    theme: 'vs-dark',
-    fontFamily: 'monaco'
+    theme: 'vs-dark'
   };
 
   public editorFile: { context: ProjectContext, reload: boolean, line?: number };
