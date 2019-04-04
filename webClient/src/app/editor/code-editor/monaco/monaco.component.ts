@@ -53,6 +53,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
+    /* disable for now...
     this.editorControl.connToLS.subscribe((lang) => {
       this.connectToLanguageServer(lang);
     });
@@ -61,6 +62,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     });
 
     this.connectToLanguageServer();
+    */
   }
 
   keyBinds(editor: any) {

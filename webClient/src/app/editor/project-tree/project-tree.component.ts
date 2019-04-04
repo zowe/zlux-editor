@@ -115,37 +115,46 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      this.log.debug(`Open Dir=${dirName}`);
-      if (dirName != null && dirName !== '') {
-        if (dirName[0] == '/') {
-          // start get project structure
-          dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
-          let requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', dirName);
-          this.httpService.get(requestUrl)
-            .subscribe((response: any) => {
-              // TODO: nodes should check project context once the component is loaded.
-              this.nodes = this.dataAdapter.convertDirectoryList(response);
-              this.editorControl.setProjectNode(this.nodes);
-              this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
-            }, e => {
-              let error = e.json().error;
-              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
-            });
-        } else {
-          // dataset
-          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
-          this.httpService.get(requestUrl)
-            .subscribe((response: any) => {
-              this.nodes = this.dataAdapter.convertDatasetList(response);
-              this.editorControl.setProjectNode(this.nodes);
-              this.editorControl.initProjectContext(dirName, this.nodes);
-            }, e => {
-              // TODO
-            });
-        }
-      }
+      this.loadDirectoryIntoTree(dirName);
     });
   }
+  
+  public loadDirectoryIntoTree(dirName:string) {
+    this.log.debug(`Open Dir=${dirName}`);
+    if (dirName != null && dirName !== '') {
+      if (dirName[0] == '/') {
+        // start get project structure
+        dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
+        let requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', dirName);
+        this.httpService.get(requestUrl)
+          .subscribe((response: any) => {
+            // TODO: nodes should check project context once the component is loaded.
+            this.nodes = this.dataAdapter.convertDirectoryList(response);
+            this.editorControl.setProjectNode(this.nodes);
+            this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
+          }, e => {
+            try {
+              let error = e.json().error;
+              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
+            } catch (err) {
+              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: 2000, panelClass: 'center' });
+            }
+          });
+      } else {
+        // dataset
+        let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
+        this.httpService.get(requestUrl)
+          .subscribe((response: any) => {
+            this.nodes = this.dataAdapter.convertDatasetList(response);
+            this.editorControl.setProjectNode(this.nodes);
+            this.editorControl.initProjectContext(dirName, this.nodes);
+          }, e => {
+            // TODO
+          });
+      }
+    }
+  }
+  
   ngOnInit() {
   }
 
@@ -179,6 +188,7 @@ export class ProjectTreeComponent implements OnInit {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
+        this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
