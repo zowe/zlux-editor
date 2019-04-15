@@ -8,25 +8,19 @@
   
   Copyright Contributors to the Zowe Project.
 -->
+<!--
 <div class="open-project" *ngIf="!nodes">
   <span>Open a directory to start your journey!</span>
   <button mat-raised-button class="button-open" color="primary" (click)="openDirectory()">Open Directory</button>
 </div>
-<perfect-scrollbar [config]="scrollConfig" [disabled]="false">
-  <tree-root #tree [nodes]="nodes" [options]="options" (activate)="nodeActivate($event)" (loadNodeChildren)="treeUpdate($event)">
-    <ng-template #treeNodeWrapperTemplate let-node let-index="index">
-      <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
-        <!-- <tree-node-expander [node]="node"></tree-node-expander> -->
-        <mat-icon class="tree-icon" (click)="nodeClickHandler(node, $event)">{{nodeIcon(node)}}</mat-icon>
-        <div class="node-content-wrapper" [class.node-content-wrapper-active]="node.isActive" [class.node-content-wrapper-focused]="node.isFocused"
-          (click)="nodeClickHandler(node, $event)" (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
-          (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node" [treeDragEnabled]="node.allowDrag()">
-          <tree-node-content [node]="node" [index]="index"></tree-node-content>
-        </div>
-      </div>
-    </ng-template>
-  </tree-root>
-</perfect-scrollbar>
+-->
+<div class="explorer-container">
+  <zlux-file-explorer
+  (nodeClick)="onNodeClick($event)"
+  >
+  </zlux-file-explorer>
+</div>
+
 
 <!-- 
   This program and the accompanying materials are

@@ -118,6 +118,7 @@ export class ProjectTreeComponent implements OnInit {
       this.log.debug(`Open Dir=${dirName}`);
       if (dirName != null && dirName !== '') {
         if (dirName[0] == '/') {
+          console.log("Getting contents!");
           // start get project structure
           dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
           let requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', dirName);
@@ -175,8 +176,29 @@ export class ProjectTreeComponent implements OnInit {
     });
   }
 
+  onNodeClick($event:any){
+    console.log($event);
+    if ($event.directory == false) {
+      //let nodeData: ProjectStructure = new ProjectStructure();
+      const nodeData: ProjectStructure = {
+        encoding: $event.ccsid,
+        hasChildren: false,
+        fileName: $event.name,
+        id: $event.id + 1,
+        isDataset: false,
+        name: $event.name,
+        path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
+    };
+  
+      this.editorControl.openFile('', nodeData).subscribe(x => {
+        this.log.debug(`file loaded through project explorer.`);
+      });
+    } else { }
+  }
+
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
+      console.log($event);
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`file loaded through project explorer.`);
