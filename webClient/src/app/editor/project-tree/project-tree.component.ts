@@ -177,7 +177,6 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   onNodeClick($event:any){
-    console.log($event);
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
@@ -191,7 +190,7 @@ export class ProjectTreeComponent implements OnInit {
     };
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
-        this.log.debug(`file loaded through project explorer.`);
+        this.log.debug(`File loaded through File Explorer.`);
       });
     } else { }
   }
