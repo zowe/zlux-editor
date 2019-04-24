@@ -135,9 +135,9 @@ export class ProjectTreeComponent implements OnInit {
           }, e => {
             try {
               let error = e.json().error;
-              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
+              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 6000, panelClass: 'center' });
             } catch (err) {
-              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: 2000, panelClass: 'center' });
+              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: 6000, panelClass: 'center' });
             }
           });
       } else {

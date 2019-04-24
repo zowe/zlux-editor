@@ -450,7 +450,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: 2000,   panelClass: 'center' });
+                           'Close', { duration: 10000,   panelClass: 'center' });
       });  
     }
     
@@ -480,7 +480,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: 2000,   panelClass: 'center' });
+                           'Close', { duration: 10000,   panelClass: 'center' });
       }); 
     }
 
