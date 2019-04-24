@@ -23,6 +23,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
+import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 
 @Component({
   selector: 'app-menu-bar',
@@ -217,7 +218,7 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
-    this.editorControl.createFile("new_file");
+    this.editorControl.createFile("(new)");
     /*
     let newFileRef = this.dialog.open(NewFileComponent, {
       width: '500px'
@@ -229,6 +230,20 @@ export class MenuBarComponent implements OnInit {
       }
     });
     */
+  }
+
+  deleteFile() {
+    let deleteFileRef = this.dialog.open(DeleteFileComponent, {
+      width: '500px'
+    });
+
+    deleteFileRef.afterClosed().subscribe(result => {
+      if (result) {
+        //this.editorControl.createFile(result);
+        console.log("deleting: " + result);
+      }
+    });
+    //this.editorControl.deleteFileHandler();
   }
 
   languageServerSetting() {
