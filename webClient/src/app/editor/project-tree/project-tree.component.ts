@@ -152,6 +152,10 @@ export class ProjectTreeComponent implements OnInit {
       //   }
       // }
     });
+
+    this.editorControl.deleteFile.subscribe(pathAndName => {
+      this.fileExplorer.deleteFile(pathAndName);
+    });
   }
   ngOnInit() {
   }
@@ -205,6 +209,7 @@ export class ProjectTreeComponent implements OnInit {
 
   onNodeClick($event:any){
     if ($event.directory == false) {
+      //console.log("Hello");
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
         encoding: $event.ccsid,

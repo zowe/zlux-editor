@@ -16,6 +16,7 @@ import { OpenProjectComponent } from './open-project/open-project.component';
 import { AboutProjectComponent } from './about-project/about-project.component';
 import { HttpService } from '../http/http.service';
 import { OpenFolderComponent } from './open-folder/open-folder.component';
+import { DeleteFileComponent } from './delete-file/delete-file.component';
 import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
@@ -35,6 +36,7 @@ import { TagComponent } from './tag/tag.component';
         OpenProjectComponent,
         AboutProjectComponent,
         OpenFolderComponent,
+        DeleteFileComponent,
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,
@@ -45,6 +47,7 @@ import { TagComponent } from './tag/tag.component';
         OpenProjectComponent,
         AboutProjectComponent,
         OpenFolderComponent,
+        DeleteFileComponent,
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,

@@ -239,11 +239,10 @@ export class MenuBarComponent implements OnInit {
 
     deleteFileRef.afterClosed().subscribe(result => {
       if (result) {
-        //this.editorControl.createFile(result);
         console.log("deleting: " + result);
+        this.editorControl.deleteFile.next(result);
       }
     });
-    //this.editorControl.deleteFileHandler();
   }
 
   languageServerSetting() {
