@@ -12,6 +12,7 @@
 var path = require('path');
 var webpackConfig = require('webpack-config');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 // const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 if (process.env.MVD_DESKTOP_DIR == null) {
@@ -67,6 +68,10 @@ var config = {
         }
       },
     ]),
+    new CompressionPlugin({
+      threshold: 100000,
+      minRatio: 0.8
+    })
     // new MonacoWebpackPlugin()
   ]
 };

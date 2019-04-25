@@ -27,7 +27,7 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
-  styleUrls: ['./menu-bar.component.scss']
+  styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
 export class MenuBarComponent implements OnInit {
   private menuList: any = MENU;

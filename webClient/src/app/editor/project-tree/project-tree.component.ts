@@ -24,11 +24,12 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { B64Decoder } from '../../shared/b64-decoder';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss']
+  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
 export class ProjectTreeComponent implements OnInit {
 
@@ -63,8 +64,12 @@ export class ProjectTreeComponent implements OnInit {
         // let requestUrl: string = this.utils.formatUrl(ENDPOINTS.projectFile, { name: node.data.name });
         // convert path to adjust url. If path is start with '/' then remove it.
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
-        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents', `${targetPath}/${node.data.fileName}`);
-        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
+        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                                `${targetPath}/${node.data.fileName}`,
+                                                                {responseType: 'b64'});
+                                                                
+        return this.httpService.get(requestUrl).toPromise().then((b64File: any) => {
+          const file = B64Decoder(b64File);
           let fileStructure = this.dataAdapter.convertDirectoryList(file);
           return fileStructure.map(f => {
             f.parent = node.data;

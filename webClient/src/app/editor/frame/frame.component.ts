@@ -22,7 +22,7 @@ import * as _ from 'lodash';
 @Component({
   selector: 'app-frame',
   templateUrl: './frame.component.html',
-  styleUrls: ['./frame.component.scss']
+  styleUrls: ['./frame.component.scss',  '../../../styles.scss']
 })
 export class FrameComponent implements OnInit {
 
