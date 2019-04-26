@@ -1,0 +1,8 @@
+{
+  "messageDuration": {
+    "short": 2000,
+    "medium": 6000,
+    "long": 10000,
+    "extraLong": 20000
+  }
+}
