@@ -24,6 +24,9 @@ import { Http } from '@angular/http';
 import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { ZluxEditorConfig } from "../zlux-editor-config";
+
+let config: ZluxEditorConfig = require('../zlux-editor-config.json');
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -353,7 +356,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: 2000, panelClass: 'center' });
+      this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: config.messageDuration.short, panelClass: 'center' });
       
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
@@ -373,7 +376,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${error}`, 'Close', { duration: 2000, panelClass: 'center' });
+      this.snackBar.open(`${error}`, 'Close', { duration: config.messageDuration.short, panelClass: 'center' });
       this.openDirectory.next(results.directory);
     });
   }
@@ -450,7 +453,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: 10000,   panelClass: 'center' });
+                           'Close', { duration: config.messageDuration.long,   panelClass: 'center' });
       });  
     }
     
@@ -480,7 +483,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: 10000,   panelClass: 'center' });
+                           'Close', { duration: config.messageDuration.long,   panelClass: 'center' });
       }); 
     }
 
