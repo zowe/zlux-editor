@@ -142,11 +142,6 @@ export class MenuBarComponent implements OnInit {
    // this.editorControl.saveAllFile.emit();
   //}
 
-  // aboutUS() {
-  //   let openProjectRef = this.dialog.open(AboutProjectComponent, {
-  //     width: '500px'
-  //   });
-
   //   openProjectRef.afterClosed().subscribe(result => {
   //   });
   // }
