@@ -142,14 +142,14 @@ export class MenuBarComponent implements OnInit {
    // this.editorControl.saveAllFile.emit();
   //}
 
-  aboutUS() {
-    let openProjectRef = this.dialog.open(AboutProjectComponent, {
-      width: '500px'
-    });
+  // aboutUS() {
+  //   let openProjectRef = this.dialog.open(AboutProjectComponent, {
+  //     width: '500px'
+  //   });
 
-    // openProjectRef.afterClosed().subscribe(result => {
-    // });
-  }
+  //   openProjectRef.afterClosed().subscribe(result => {
+  //   });
+  // }
 
   menuLabel(item) {
     return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
