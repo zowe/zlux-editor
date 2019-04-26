@@ -27,6 +27,8 @@
   >
   </zlux-file-explorer>
 </div>
+<!-- The below "dataset-container" will eventually be truncated as Dataset viewing capability 
+improves in the File Explorer. Keeping this structure here in the mean time for datasets. -->
 <div class="dataset-container" *ngIf="showDatasets">
   <perfect-scrollbar [config]="scrollConfig" [disabled]="false">
     <tree-root #tree [nodes]="nodes" [options]="options" (activate)="nodeActivate($event)" (loadNodeChildren)="treeUpdate($event)">
