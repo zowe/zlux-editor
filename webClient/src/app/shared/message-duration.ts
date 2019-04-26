@@ -8,17 +8,14 @@
   Copyright Contributors to the Zowe Project.
 */
 
-// config for the editor for any shared values that are needed for the editor
-export interface ZluxEditorConfig {
-  messageDuration: MessageDurations;
-  // presumably more will be added here so this won't be so strangely small
-}
+export class MessageDuration {
+  static Short: number = 2000;
 
-interface MessageDurations {
-  short: number;
-  medium: number;
-  long: number;
-  extraLong: number;
+  static Medium: number = 6000;
+
+  static Long: number = 10000;
+
+  static ExtraLong: number = 20000;
 }
 
 /*

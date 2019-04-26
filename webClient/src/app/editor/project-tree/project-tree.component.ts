@@ -24,9 +24,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { ZluxEditorConfig } from "../../shared/zlux-editor-config";
-
-let config: ZluxEditorConfig = require('../../shared/zlux-editor-config.json');
+import { MessageDuration } from "../../shared/message-duration";
 
 @Component({
   selector: 'app-project-tree',
@@ -138,9 +136,9 @@ export class ProjectTreeComponent implements OnInit {
           }, e => {
             try {
               let error = e.json().error;
-              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: config.messageDuration.medium, panelClass: 'center' });
+              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
             } catch (err) {
-              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: config.messageDuration.medium, panelClass: 'center' });
+              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
             }
           });
       } else {
