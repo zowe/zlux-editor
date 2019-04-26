@@ -65,12 +65,10 @@ export class ProjectTreeComponent implements OnInit {
         // convert path to adjust url. If path is start with '/' then remove it.
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
         let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                                `${targetPath}/${node.data.fileName}`,
-                                                                {responseType: 'b64'});
+                                                                `${targetPath}/${node.data.fileName}`);
                                                                 
-        return this.httpService.get(requestUrl).toPromise().then((b64File: any) => {
-          const file = B64Decoder(b64File);
-          let fileStructure = this.dataAdapter.convertDirectoryList(file);
+        return this.httpService.get(requestUrl).toPromise().then((dirList: any) => {
+          let fileStructure = this.dataAdapter.convertDirectoryList(dirList);
           return fileStructure.map(f => {
             f.parent = node.data;
             return f;
