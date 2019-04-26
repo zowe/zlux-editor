@@ -23,17 +23,6 @@ export const MENU = [
             {
                 name: 'group-end'
             },
-            {
-                name: 'Delete File',
-                action: {
-                    name: 'deleteFile',
-                    params: [],
-                },
-                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
-            },              // to be rethinked.
-            {
-                name: 'group-end'
-            },
             // {
             //     name: 'Open Project',
             //     action: {
@@ -45,6 +34,13 @@ export const MENU = [
                 name: 'Open Directory',
                 action: {
                     name: 'openDirectory',
+                    params: [],
+                },
+            },
+            {
+                name: 'Open Datasets',
+                action: {
+                    name: 'openDatasets',
                     params: [],
                 },
             },
@@ -67,6 +63,17 @@ export const MENU = [
             //    },
             //    keyMap: '[Ctrl+S]',
             //},
+            {
+                name: 'group-end'
+            },
+            {
+                name: 'Delete File',
+                action: {
+                    name: 'deleteFile',
+                    params: [],
+                },
+                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+            },              // to be rethinked.
         ],
     },
     {

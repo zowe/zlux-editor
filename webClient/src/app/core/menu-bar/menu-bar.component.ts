@@ -14,6 +14,7 @@ import { MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
+import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { NewFileComponent } from '../../shared/dialog/new-file/new-file.component';
 import { LanguageServerComponent } from '../../shared/dialog/language-server/language-server.component';
 import { AboutProjectComponent } from '../../shared/dialog/about-project/about-project.component';
@@ -105,6 +106,19 @@ export class MenuBarComponent implements OnInit {
       if (result) {
         this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
+      }
+    });
+  }
+
+  openDatasets() {
+    let openDirRef = this.dialog.open(OpenDatasetComponent, {
+      width: '500px'
+    });
+
+    openDirRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.editorControl.projectName = result;
+        this.editorControl.openDataset.next(result);
       }
     });
   }
@@ -239,7 +253,7 @@ export class MenuBarComponent implements OnInit {
 
     deleteFileRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log("deleting: " + result);
+        console.log("Deleting: " + result);
         this.editorControl.deleteFile.next(result);
       }
     });

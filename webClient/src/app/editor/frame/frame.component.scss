@@ -55,15 +55,18 @@
       }
     }
     .gz-tree {
-      width: 300px;
+      width: fit-content;
+      max-width: 300px;
       height: 100%;
-      color: #e0e0e0;
+      color: white;
       background-color: #303030; // float: left;
       // margin-left: -300px;
       flex: 0 0 230px;
       .section-container {
+        min-width: 315px;
         padding-top: 36px;
         overflow-y: auto;
+        overflow-x: hidden;
         display: none;
         &.active {
           display: block;
