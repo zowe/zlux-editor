@@ -163,6 +163,7 @@ export class ProjectTreeComponent implements OnInit {
       this.fileExplorer.deleteFile(pathAndName);
     });
   }
+  
   ngOnInit() {
   }
 
@@ -258,6 +259,7 @@ export class ProjectTreeComponent implements OnInit {
       console.log($event);
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
+        this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
       });
       // this.editorControl.openFileEmitter.emit(nodeData);

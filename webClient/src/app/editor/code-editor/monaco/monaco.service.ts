@@ -104,38 +104,51 @@ export class MonacoService {
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
     return new Observable((obs) => {
-      const _editor = this.editorControl.editorCore.getValue().editor;
-      fileNode.model.contents = file['contents'];
-      this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
-        let fileLang = 'plaintext';
-        if (file['language']) {
-          fileLang = file['language'];
-        } else if (fileNode.model.language) {
-          fileLang = fileNode.model.language;
-        } else if (supportLanguages[0]) {
-          fileLang = supportLanguages[0];
-        }
-        // sync language to context
-        fileNode.model.language = fileLang;
-        const model = {
-          value: file['contents'],
-          language: fileLang,
-          // language: 'json',
-          uri: this.generateUri(fileNode.model),
-        };
-        const duplicate: boolean = this.fileDuplicateChecker(model.uri);
-        let newModel;
-        if (!duplicate) {
-          newModel = _editor.createModel(model.value, model.language, model.uri);
-        } else {
-          newModel = _editor.getModel(model.uri);
-        }
-        newModel.onDidChangeContent((e: any) => {
-          this.fileContentChangeHandler(e, fileNode, newModel);
+      let coreSubscription = this.editorControl.editorCore
+        .subscribe((value)=> {
+          if (value && value.editor) {
+            const editorCore = value.editor;
+            //getValue().editor;
+
+            fileNode.model.contents = file['contents'];
+            this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
+              let fileLang = 'plaintext';
+              if (file['language']) {
+                fileLang = file['language'];
+              } else if (fileNode.model.language) {
+                fileLang = fileNode.model.language;
+              } else if (supportLanguages[0]) {
+                fileLang = supportLanguages[0];
+              }
+              // sync language to context
+              fileNode.model.language = fileLang;
+              const model = {
+                value: file['contents'],
+                language: fileLang,
+                // language: 'json',
+                uri: this.generateUri(fileNode.model),
+              };
+              const duplicate: boolean = this.fileDuplicateChecker(model.uri);
+              let newModel;
+              if (!duplicate) {
+                newModel = editorCore.createModel(model.value, model.language, model.uri);
+              } else {
+                newModel = editorCore.getModel(model.uri);
+              }
+              newModel.onDidChangeContent((e: any) => {
+                this.fileContentChangeHandler(e, fileNode, newModel);
+              });
+              let editorSubscription = this.editorControl.editor.subscribe((value)=> {
+                if (value) {
+                  value.setModel(newModel);
+                  editorSubscription.unsubscribe();
+                  obs.next();
+                }
+              });
+            });
+            coreSubscription.unsubscribe();
+          }
         });
-        this.editorControl.editor.getValue().setModel(newModel);
-        obs.next();
-      });
     });
   }
 
