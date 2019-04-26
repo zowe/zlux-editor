@@ -16,7 +16,6 @@ import { OpenProjectComponent } from '../../shared/dialog/open-project/open-proj
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { NewFileComponent } from '../../shared/dialog/new-file/new-file.component';
 import { LanguageServerComponent } from '../../shared/dialog/language-server/language-server.component';
-import { AboutProjectComponent } from '../../shared/dialog/about-project/about-project.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
 import { UtilsService } from '../../shared/utils.service';
@@ -141,15 +140,6 @@ export class MenuBarComponent implements OnInit {
   //saveAll() {
    // this.editorControl.saveAllFile.emit();
   //}
-
-  aboutUS() {
-    let openProjectRef = this.dialog.open(AboutProjectComponent, {
-      width: '500px'
-    });
-
-    // openProjectRef.afterClosed().subscribe(result => {
-    // });
-  }
 
   menuLabel(item) {
     return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
