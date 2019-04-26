@@ -14,7 +14,7 @@ import { LanguageServerService } from '../../language-server/language-server.ser
 @Component({
   selector: 'app-language-server',
   templateUrl: './language-server.component.html',
-  styleUrls: ['./language-server.component.scss']
+  styleUrls: ['./language-server.component.scss',  '../../../../styles.scss']
 })
 export class LanguageServerComponent implements OnInit {
   private settings = {

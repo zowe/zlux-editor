@@ -79,7 +79,9 @@ export class MonacoService {
           requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
         } else {
-          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', filePath+'/'+fileNode.model.fileName);
+          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                      filePath+'/'+fileNode.model.fileName,
+                                                      { responseType: 'b64' });
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
         }
 

@@ -16,7 +16,7 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 @Component({
   selector: 'app-file-tabs',
   templateUrl: './file-tabs.component.html',
-  styleUrls: ['./file-tabs.component.scss']
+  styleUrls: ['./file-tabs.component.scss',  '../../../../styles.scss']
 })
 export class FileTabsComponent implements OnInit {
 

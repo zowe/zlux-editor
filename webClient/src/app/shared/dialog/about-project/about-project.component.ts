@@ -13,7 +13,7 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-about-project',
   templateUrl: './about-project.component.html',
-  styleUrls: ['./about-project.component.scss']
+  styleUrls: ['./about-project.component.scss',  '../../../../styles.scss']
 })
 export class AboutProjectComponent implements OnInit {
 
