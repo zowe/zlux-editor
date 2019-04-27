@@ -18,7 +18,10 @@ import { UtilsService } from './shared/utils.service';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: [
+              '../styles.scss',
+              './app.component.scss'
+              ]
 })
 export class AppComponent {
   title = 'app';
@@ -58,7 +61,7 @@ export class AppComponent {
       let nodeData;
       if (!isDataset) {
         let uri = ZoweZLUX.uriBroker.unixFileUri('contents', data.name.substring(0,lastSlash));
-        this.log.info(`I will be executing uri=${uri}, and looking for filename=${data.name.substring(lastSlash+1)}`);
+        this.log.debug(`I will be executing uri=${uri}, and looking for filename=${data.name.substring(lastSlash+1)}`);
         this.httpService.get(uri)
           .subscribe((response: any) => {
             let nodes = this.dataAdapter.convertDirectoryList(response);

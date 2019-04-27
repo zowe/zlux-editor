@@ -17,7 +17,6 @@ import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder
 import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { NewFileComponent } from '../../shared/dialog/new-file/new-file.component';
 import { LanguageServerComponent } from '../../shared/dialog/language-server/language-server.component';
-import { AboutProjectComponent } from '../../shared/dialog/about-project/about-project.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
 import { UtilsService } from '../../shared/utils.service';
@@ -30,7 +29,7 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
-  styleUrls: ['./menu-bar.component.scss']
+  styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
 export class MenuBarComponent implements OnInit {
   private menuList: any = MENU;
@@ -159,14 +158,9 @@ export class MenuBarComponent implements OnInit {
    // this.editorControl.saveAllFile.emit();
   //}
 
-  aboutUS() {
-    let openProjectRef = this.dialog.open(AboutProjectComponent, {
-      width: '500px'
-    });
-
-    // openProjectRef.afterClosed().subscribe(result => {
-    // });
-  }
+  //   openProjectRef.afterClosed().subscribe(result => {
+  //   });
+  // }
 
   menuLabel(item) {
     return `${item.name} ${item.keyMap ? item.keyMap : ''}`;

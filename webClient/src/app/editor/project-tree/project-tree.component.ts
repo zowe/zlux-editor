@@ -27,11 +27,12 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileBrowserUSSComponent } from '@zlux/file-explorer/src/app/components/filebrowseruss/filebrowseruss.component';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
 import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
+import { B64Decoder } from '../../shared/b64-decoder';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss']
+  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
 export class ProjectTreeComponent implements OnInit {
 
@@ -71,9 +72,11 @@ export class ProjectTreeComponent implements OnInit {
         // let requestUrl: string = this.utils.formatUrl(ENDPOINTS.projectFile, { name: node.data.name });
         // convert path to adjust url. If path is start with '/' then remove it.
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
-        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents', `${targetPath}/${node.data.fileName}`);
-        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
-          let fileStructure = this.dataAdapter.convertDirectoryList(file);
+        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                                `${targetPath}/${node.data.fileName}`);
+                                                                
+        return this.httpService.get(requestUrl).toPromise().then((dirList: any) => {
+          let fileStructure = this.dataAdapter.convertDirectoryList(dirList);
           return fileStructure.map(f => {
             f.parent = node.data;
             return f;

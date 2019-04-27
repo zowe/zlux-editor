@@ -14,7 +14,6 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 import { OpenProjectComponent } from './open-project/open-project.component';
 import { OpenDatasetComponent } from './open-dataset/open-dataset.component';
-import { AboutProjectComponent } from './about-project/about-project.component';
 import { HttpService } from '../http/http.service';
 import { OpenFolderComponent } from './open-folder/open-folder.component';
 import { DeleteFileComponent } from './delete-file/delete-file.component';
@@ -36,7 +35,6 @@ import { TagComponent } from './tag/tag.component';
     declarations: [
         OpenProjectComponent,
         OpenDatasetComponent,
-        AboutProjectComponent,
         OpenFolderComponent,
         DeleteFileComponent,
         NewFileComponent,
@@ -48,7 +46,6 @@ import { TagComponent } from './tag/tag.component';
     entryComponents: [
         OpenProjectComponent,
         OpenDatasetComponent,
-        AboutProjectComponent,
         OpenFolderComponent,
         DeleteFileComponent,
         NewFileComponent,
