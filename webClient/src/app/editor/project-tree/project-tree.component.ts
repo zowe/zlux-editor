@@ -256,7 +256,6 @@ export class ProjectTreeComponent implements OnInit {
 
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
-      console.log($event);
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);

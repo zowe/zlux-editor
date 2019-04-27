@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -25,6 +25,7 @@ import { SnackBarService } from '../../shared/snack-bar.service';
 import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-menu-bar',
@@ -43,6 +44,7 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
     // add monaco languages support to menu
     let languageMenu = {
@@ -253,7 +255,7 @@ export class MenuBarComponent implements OnInit {
 
     deleteFileRef.afterClosed().subscribe(result => {
       if (result) {
-        console.log("Deleting: " + result);
+        this.log.debug("Deleting: " + result);
         this.editorControl.deleteFile.next(result);
       }
     });
