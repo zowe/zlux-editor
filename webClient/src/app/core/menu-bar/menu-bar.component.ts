@@ -141,10 +141,6 @@ export class MenuBarComponent implements OnInit {
    // this.editorControl.saveAllFile.emit();
   //}
 
-  //   openProjectRef.afterClosed().subscribe(result => {
-  //   });
-  // }
-
   menuLabel(item) {
     return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
   }
