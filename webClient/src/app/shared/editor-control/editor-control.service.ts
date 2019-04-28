@@ -39,6 +39,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
+  public openDataset: EventEmitter<string> = new EventEmitter();
+  public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -555,7 +557,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
       return new Observable(obs => obs.next(null));
     } else {
-      throw new Error('File parent not exist! This may caused by you want a delete a root context.');
+      throw new Error('File parent does not exist! This may have been caused by you wanting to a delete a root context.');
     }
   }
 

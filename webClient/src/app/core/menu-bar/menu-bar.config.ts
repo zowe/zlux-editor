@@ -18,8 +18,8 @@ export const MENU = [
                     name: 'createFile',
                     params: [],
                 },
-                keyMap: '[Ctrl+N]',
-            },
+                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+            },              // to be rethinked.
             {
                 name: 'group-end'
             },
@@ -38,6 +38,13 @@ export const MENU = [
                 },
             },
             {
+                name: 'Open Datasets',
+                action: {
+                    name: 'openDatasets',
+                    params: [],
+                },
+            },
+            {
                 name: 'group-end'
             },
             {
@@ -46,8 +53,8 @@ export const MENU = [
                     name: 'saveFile',
                     params: [],
                 },
-                keyMap: '[Ctrl+S]',
-            },
+                keyMap: '', // [Ctrl+S] won't work due to browser conflicts. Keybindings will need
+            },              // to be rethinked.
             //{
             //    name: 'Save All',
             //    action: {
@@ -56,6 +63,17 @@ export const MENU = [
             //    },
             //    keyMap: '[Ctrl+S]',
             //},
+            {
+                name: 'group-end'
+            },
+            {
+                name: 'Delete File',
+                action: {
+                    name: 'deleteFile',
+                    params: [],
+                },
+                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+            },              // to be rethinked.
         ],
     },
     {

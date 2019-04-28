@@ -8,12 +8,13 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
+import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { NewFileComponent } from '../../shared/dialog/new-file/new-file.component';
 import { LanguageServerComponent } from '../../shared/dialog/language-server/language-server.component';
 import { HttpService } from '../../shared/http/http.service';
@@ -22,6 +23,8 @@ import { UtilsService } from '../../shared/utils.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
+import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-menu-bar',
@@ -40,6 +43,7 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
     // add monaco languages support to menu
     let languageMenu = {
@@ -103,6 +107,19 @@ export class MenuBarComponent implements OnInit {
       if (result) {
         this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
+      }
+    });
+  }
+
+  openDatasets() {
+    let openDirRef = this.dialog.open(OpenDatasetComponent, {
+      width: '500px'
+    });
+
+    openDirRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.editorControl.projectName = result;
+        this.editorControl.openDataset.next(result);
       }
     });
   }
@@ -207,7 +224,7 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
-    this.editorControl.createFile("new_file");
+    this.editorControl.createFile("(new)");
     /*
     let newFileRef = this.dialog.open(NewFileComponent, {
       width: '500px'
@@ -219,6 +236,19 @@ export class MenuBarComponent implements OnInit {
       }
     });
     */
+  }
+
+  deleteFile() {
+    let deleteFileRef = this.dialog.open(DeleteFileComponent, {
+      width: '500px'
+    });
+
+    deleteFileRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.log.debug("Deleting: " + result);
+        this.editorControl.deleteFile.next(result);
+      }
+    });
   }
 
   languageServerSetting() {

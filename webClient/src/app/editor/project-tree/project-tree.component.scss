@@ -10,7 +10,7 @@
 */
 :host {
   .open-project {
-    color: #e0e0e0;
+    color: white;
     font-size: 12px;
     padding: 8px 10px;
     .button-open {
@@ -172,6 +172,17 @@
     tree-node-checkbox {
       padding: 1px;
     }
+  }
+  
+  .explorer-container {
+    margin-left: -5px;
+    margin-top: 5px;
+    //padding-bottom: 100px;
+  }
+
+  .dataset-container { //Note: This is temporary and will be removed when Dataset functionality for Explorer gets better.
+    padding-left: 10px;
+    padding-top: 10px;
   }
 }
 
