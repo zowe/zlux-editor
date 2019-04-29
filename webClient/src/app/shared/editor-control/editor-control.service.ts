@@ -763,14 +763,45 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
    */
   getRecommendedHighlightingModesForBuffer(buffer: ZLUX.EditorBufferHandle): Observable<string[]> {
     return new Observable<string[]>((obs) => {
-      let bufferExt = this.utils.fileExtension(buffer.name);
+      let bufferExt = this.utils.fileExtension(buffer.name).toLowerCase();
+      const fullName = buffer.model.isDataset ? buffer.model.fileName : buffer.name
+      const parenIndex = fullName.indexOf('(');
+      const isPds = buffer.model.isDataset && ( parenIndex != -1);
+      const name = isPds ? fullName.substring(0,parenIndex).toLowerCase() : fullName.toLowerCase();
       let results: string[] = [];
+      //TODO there is precedence to observe. File keywords wins, but not implemented yet.
+      // Consider if you have an ASM.JCLLIB dataset
       this._editorCore.subscribe(monaco => {
         if (monaco != null) {
           let languages = monaco.languages.getLanguages();
+          if (buffer.model.isDataset) {
+            for (let i = 0; i < languages.length; i++) {
+              let lang = languages[i];
+              for (let extension of lang.extensions) {
+                if (name.indexOf(extension)!=-1 || name.indexOf(`${extension}.`) != -1) {
+                  results.push(lang.id);
+                  i = languages.length;
+                  break;
+                }
+              }
+            }
+          } else {
+            for (let lang of languages) {
+              if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
+                results.push(lang.id);
+                break;
+              }
+            }
+          }
           for (let lang of languages) {
-            if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
-              results.push(lang.id);
+            if (lang.filenamePatterns) {
+              for (let pattern of lang.filenamePatterns) {
+                let regex = new RegExp(pattern);
+                if (regex.test(name)) {
+                  results.push(lang.id);
+                  break;
+                }
+              }
             }
           }
           obs.next(results);
