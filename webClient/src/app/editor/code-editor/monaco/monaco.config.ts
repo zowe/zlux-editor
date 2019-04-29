@@ -14,6 +14,102 @@ import { EditorServiceInstance } from '../../../shared/editor-control/editor-con
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs/Subscription';
 
+const HLASM_LANG = {
+  id: 'hlasm',
+  // firstLine: 
+  extensions: ['.ass', '.asm', '.hlsm', '.hlasm'],
+  aliases: ['ASSEMBLY', 'assembly', 'hlsm', 'hlasm'],
+  mimetypes: ['application/hlasm']
+};
+
+const JCL_LANG = {
+  id: 'jcl',
+  extensions: ['.jcl', '.cntl'],
+  filenamePatterns: ['\\.jcl\\.','\\.jcl','\\.cntl','\\.cntl\\.'],
+  aliases: ['JCL', 'jcl'],
+  mimetypes: ['application/jcl']
+};
+
+const HLASM_HILITE = {
+  // Set defaultToken to invalid to see what you do not tokenize yet
+  // defaultToken: 'invalid',
+  ignoreCase: true,
+
+  // The main tokenizer for our languages
+  tokenizer: {
+    root: [
+      [/^\*.*$/, { token: 'comment', next: '@popall' }],
+      [/^[\w&#$@]+\s+/, { token: 'type', next: '@operator' }],
+      [/^[\s]{9}/, { token: 'default', next: '@operator' }],
+      [/^[\s]{15}/, { token: 'default', next: '@operands' }]
+    ],
+    operator: [
+      [/[\w&#$@]+\s*$/, { token: 'keyword', next: '@popall' }],
+      [/[\w&#$@]+\s+/, { token: 'keyword', next: '@operands' }]
+    ],
+    operands: [
+      [/\'[^\']+\'\s*$/, { token: 'string', next: '@popall' }],
+      [/\s*$/, { token: 'default', next: '@popall' }],
+      [/,\s*$/, { token: 'default', next: '@popall' }],
+      [/[\(\)\w&#$@]+\s*$/, { token: 'default', next: '@popall' }],
+      [/,[\(\)\w&#$@]+\s*$/, { token: 'default', next: '@popall' }],
+      [/,\s+[^X]*$/, { token: 'comment', next: '@popall' }],
+      [/\s+[\(\)\s\w&#$@]+\s*$/, { token: 'comment', next: '@popall' }],
+
+      [/,/, { token: 'default', next: '@cont' }],
+      [/[kldtn]'[\(\)\w&#$]+/, { token: 'number', next: '@cont' }],
+      [/'[^']+'/, { token: 'string', next: '@cont' }],
+      [/[\w&#$@]+=/, { token: 'variable.name', next: '@value' }]
+    ],
+    cont: [
+      [/\s*[X]$/, { token: 'keyword', next: '@pop' }],
+      [/\s+[\s\.\/\(\)\w&#$@]+$/, { token: 'comment', next: '@popall' }],
+      [/\)\s*$/, { token: 'default', next: '@popall' }],
+      [/\(/, { token: 'default', next: '@operands' }],
+      [/\)/, { token: 'default', next: '@operands' }],
+      [/'[^\']+\'\s*/, { token: 'string', next: '@cont' }],
+      [/[kldtn]\'[\(\)\w&#$@]+/, { token: 'number', next: '@cont' }],
+      [/[\w&#$@]+=/, { token: 'variable.name', next: '@value' }],
+      [/[\.\/\(\)\w&#$@]+$/, { token: 'default', next: '@popall' }],
+      [/[\.\/\(\)\w&#$@]+/, { token: 'default', next: '@operands' }]
+    ],
+    comment: [
+      [/.*$/, { token: 'comment', next: '@popall' }]
+    ],
+    value: [
+      [/[\-\.\/\(\)\w&#$@]+$/, { token: 'default', next: '@popall' }],
+      [/'[^']+'\s*/, { token: 'string', next: '@operands' }],
+      [/[kldtn]\'[\(\)\w&#$@]+/, { token: 'number', next: '@operands' }],
+      [/[\-\.\/\(\)\w&#$@]+/, { token: 'default', next: '@operands' }]
+    ]
+  }
+};
+
+const JCL_HILITE = {
+// Set defaultToken to invalid to see what you do not tokenize yet
+// defaultToken: 'invalid',
+  ignoreCase: true,
+
+// The main tokenizer for our languages
+  tokenizer: {
+    root: [
+      [/^\/\/\*.*$/, { token: 'comment' }],
+      [/^\/\*.*$/, { token: 'comment' }],
+      [/^\/\/(\S+)?/, { token: 'type', next: '@operator' }]
+    ],
+    operator: [
+      [/\s+\S+/, { token: 'keyword', next: '@operands' }]
+    ],
+    operands: [
+      [/^(\/\/)(\s+)/, ['type', 'default']],
+      [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
+      [/'[^']+'/, { token: 'string' }],
+      [/[^\s,]+=/, { token: 'variable.name' }],
+      [/[^,]\s*$/, { token: 'default', next: '@popall' }]
+    ]
+  }
+};
+
 export class MonacoConfig {
   subscription: Subscription = null;
   config = {
@@ -24,101 +120,12 @@ export class MonacoConfig {
 
   onLoad() {
     let self = this;
-    // here monaco object will be available as window.monaco use this function to extend monaco editor functionalities.
+    // This step only happens once per editor load, not once per file load. It happens before language menu is generated
+    monaco.languages.register(HLASM_LANG);
+    monaco.languages.register(JCL_LANG);
 
-    monaco.languages.register({
-      id: 'hlasm',
-      extensions: ['.ass', '.asm', '.hlsm', '.hlasm'],
-      aliases: ['ASSEMBLY', 'assembly', 'hlsm', 'hlasm'],
-      mimetypes: ['application/hlasm'],
-    });
-
-    monaco.languages.register({
-      id: 'jcl',
-      extensions: ['.jcl'],
-      aliases: ['JCL', 'jcl'],
-      mimetypes: ['application/jcl'],
-    });
-
-    monaco.languages.setMonarchTokensProvider('hlasm', <any>{
-      // Set defaultToken to invalid to see what you do not tokenize yet
-      // defaultToken: 'invalid',
-      ignoreCase: true,
-
-      // The main tokenizer for our languages
-      tokenizer: {
-        root: [
-          [/^\*.*$/, { token: 'comment', next: '@popall' }],
-          [/^[\w&#$@]+\s+/, { token: 'type', next: '@operator' }],
-          [/^[\s]{9}/, { token: 'default', next: '@operator' }],
-          [/^[\s]{15}/, { token: 'default', next: '@operands' }],
-        ],
-        operator: [
-          [/[\w&#$@]+\s*$/, { token: 'keyword', next: '@popall' }],
-          [/[\w&#$@]+\s+/, { token: 'keyword', next: '@operands' }]
-        ],
-        operands: [
-          [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
-          [/\s*$/, { token: 'default', next: '@popall' }],
-          [/,\s*$/, { token: 'default', next: '@popall' }],
-          [/[\(\)\w&#$@]+\s*$/, { token: 'default', next: '@popall' }],
-          [/,[\(\)\w&#$@]+\s*$/, { token: 'default', next: '@popall' }],
-          [/,\s+[^X]*$/, { token: 'comment', next: '@popall' }],
-          [/\s+[\(\)\s\w&#$@]+\s*$/, { token: 'comment', next: '@popall' }],
-
-          [/,/, { token: 'default', next: '@cont' }],
-          [/[kldtn]'[\(\)\w&#$]+/, { token: 'number', next: '@cont' }],
-          [/'[^']+'/, { token: 'string', next: '@cont' }],
-          [/[\w&#$@]+=/, { token: 'variable.name', next: '@value' }],
-        ],
-        cont: [
-          [/\s*[X]$/, { token: 'keyword', next: '@pop' }],
-          [/\s+[\s\.\/\(\)\w&#$@]+$/, { token: 'comment', next: '@popall' }],
-          [/\)\s*$/, { token: 'default', next: '@popall' }],
-          [/\(/, { token: 'default', next: '@operands' }],
-          [/\)/, { token: 'default', next: '@operands' }],
-          [/'[^']+'\s*/, { token: 'string', next: '@cont' }],
-          [/[kldtn]'[\(\)\w&#$@]+/, { token: 'number', next: '@cont' }],
-          [/[\w&#$@]+=/, { token: 'variable.name', next: '@value' }],
-          [/[\.\/\(\)\w&#$@]+$/, { token: 'default', next: '@popall' }],
-          [/[\.\/\(\)\w&#$@]+/, { token: 'default', next: '@operands' }],
-        ],
-        comment: [
-          [/.*$/, { token: 'comment', next: '@popall' }],
-        ],
-        value: [
-          [/[\-\.\/\(\)\w&#$@]+$/, { token: 'default', next: '@popall' }],
-          [/'[^']+'\s*/, { token: 'string', next: '@operands' }],
-          [/[kldtn]'[\(\)\w&#$@]+/, { token: 'number', next: '@operands' }],
-          [/[\-\.\/\(\)\w&#$@]+/, { token: 'default', next: '@operands' }],
-        ],
-      }
-    });
-
-    monaco.languages.setMonarchTokensProvider('jcl', <any>{
-      // Set defaultToken to invalid to see what you do not tokenize yet
-      // defaultToken: 'invalid',
-      ignoreCase: true,
-
-      // The main tokenizer for our languages
-      tokenizer: {
-        root: [
-          [/^\/\/\*.*$/, { token: 'comment' }],
-          [/^\/\*.*$/, { token: 'comment' }],
-          [/^\/\/(\S+)?/, { token: 'type', next: '@operator' }],
-        ],
-        operator: [
-          [/\s+\S+/, { token: 'keyword', next: '@operands' }]
-        ],
-        operands: [
-          [/^(\/\/)(\s+)/, ['type', 'default']],
-          [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
-          [/'[^']+'/, { token: 'string' }],
-          [/[^\s,]+=/, { token: 'variable.name' }],
-          [/[^,]\s*$/, { token: 'default', next: '@popall' }]
-        ],
-      }
-    });
+    monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
+    monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
 
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
