@@ -8,12 +8,13 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
+import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { NewFileComponent } from '../../shared/dialog/new-file/new-file.component';
 import { LanguageServerComponent } from '../../shared/dialog/language-server/language-server.component';
 import { HttpService } from '../../shared/http/http.service';
@@ -22,6 +23,8 @@ import { UtilsService } from '../../shared/utils.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
+import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Component({
   selector: 'app-menu-bar',
@@ -40,18 +43,29 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
     // add monaco languages support to menu
-    let languageMenu = {
+    let languageSelectionMenu = {
       name: 'Language',
       children: []
     };
 
     this.editorControl.editorCore.subscribe((monaco) => {
-      // TODO: check language active status when open a file but not use directive in template
       if (monaco != null) {
-        languageMenu.children = monaco.languages.getLanguages()
-          .map(language => ({
+        //This is triggered after monaco initializes & is loaded with configuration items
+        languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
+          let name1 = lang1.aliases[0].toLowerCase();
+          let name2 = lang2.aliases[0].toLowerCase();
+          if (name1 < name2) {
+            return -1;
+          } else if (name1 > name2) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }).map(language => {
+          return {
             name: language.aliases[0],
             type: 'checkbox',
             action: {
@@ -62,9 +76,10 @@ export class MenuBarComponent implements OnInit {
               name: 'languageActiveCheck',
               params: [language.id],
             }
-          }));
+          }});
         let existItem = this.menuList.filter(m => m.name === 'Language');
-        existItem.length > 0 ? existItem.children = languageMenu.children : this.menuList.splice(-1, 0, languageMenu);
+        existItem.length > 0 ? existItem.children = languageSelectionMenu.children
+          : this.menuList.splice(-1, 0, languageSelectionMenu);
       }
     });
 
@@ -76,6 +91,8 @@ export class MenuBarComponent implements OnInit {
   ngOnInit() {
   }
 
+  //this is dumb because everything is local to this file.
+  //It needs to be anonymous functions given editorControl, monaco, and fileNode
   menuAction(actionName: string, actionParams: any[]): any {
     if (actionName != null) {
       return this[actionName].apply(this, actionParams != null ? actionParams : []);
@@ -103,6 +120,19 @@ export class MenuBarComponent implements OnInit {
       if (result) {
         this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
+      }
+    });
+  }
+
+  openDatasets() {
+    let openDirRef = this.dialog.open(OpenDatasetComponent, {
+      width: '500px'
+    });
+
+    openDirRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.editorControl.projectName = result;
+        this.editorControl.openDataset.next(result);
       }
     });
   }
@@ -140,10 +170,6 @@ export class MenuBarComponent implements OnInit {
   //saveAll() {
    // this.editorControl.saveAllFile.emit();
   //}
-
-  //   openProjectRef.afterClosed().subscribe(result => {
-  //   });
-  // }
 
   menuLabel(item) {
     return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
@@ -211,7 +237,7 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
-    this.editorControl.createFile("new_file");
+    this.editorControl.createFile("(new)");
     /*
     let newFileRef = this.dialog.open(NewFileComponent, {
       width: '500px'
@@ -223,6 +249,19 @@ export class MenuBarComponent implements OnInit {
       }
     });
     */
+  }
+
+  deleteFile() {
+    let deleteFileRef = this.dialog.open(DeleteFileComponent, {
+      width: '500px'
+    });
+
+    deleteFileRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.log.debug("Deleting: " + result);
+        this.editorControl.deleteFile.next(result);
+      }
+    });
   }
 
   languageServerSetting() {
