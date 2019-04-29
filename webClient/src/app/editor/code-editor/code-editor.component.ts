@@ -29,11 +29,19 @@ export class CodeEditorComponent implements OnInit {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
 
+  //TODO load from configservice
   public options = {
     glyphMargin: true,
     lightbulb: {
       enabled: true
     },
+    codeLense: true,
+    iconsInSuggestions: true,
+    minimap: {
+      enabled: false
+    },
+    suggestOnTriggerCharacters: true,
+    quickSuggestions: true,
     theme: 'vs-dark'
   };
 
@@ -82,6 +90,7 @@ export class CodeEditorComponent implements OnInit {
     }
   }
 
+  //TODO this is causing the error of nothing showing up when a tab is closed
   closeFile(fileContext: ProjectContext) {
     this.editorFile = undefined;
     this.codeEditorService.closeFile(fileContext);
