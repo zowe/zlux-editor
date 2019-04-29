@@ -17,7 +17,7 @@ import {
 import { MonacoService } from './monaco.service';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
-import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -33,10 +33,12 @@ export class MonacoComponent implements OnInit, OnChanges {
     private monacoService: MonacoService,
     private editorControl: EditorControlService,
     private languageService: LanguageServerService,
-    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
   }
 
   ngOnInit() {
+
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -53,7 +55,10 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
-    /* disable for now...
+    this.viewportEvents.resized.subscribe(()=> {
+      editor.layout()
+    });
+      /* disable for now...
     this.editorControl.connToLS.subscribe((lang) => {
       this.connectToLanguageServer(lang);
     });
