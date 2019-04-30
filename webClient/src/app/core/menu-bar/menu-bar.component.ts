@@ -23,6 +23,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
+import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
@@ -178,18 +179,18 @@ export class MenuBarComponent implements OnInit {
   graphicDiagram() {
     let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
     if (!file) {
-      this.snackBar.open(`Please open a file before you generate a diagram.`, 'Close', { duration: 2000, panelClass: 'center' });
+      this.snackBar.open(`Please open a file before you generate a diagram.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
     }
     this.http.post(ENDPOINTS.diagram, { member: file.name, content: file.model.contents }).subscribe(r => {
       window.open(r.url, '_blank');
     });
-    this.snackBar.open(`A new window will open after the diagram generated`, 'Close', { duration: 2000, panelClass: 'center' });
+    this.snackBar.open(`A new window will open after the diagram generated`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
   }
 
   submitJob() {
     let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
     if (!file || (file.model.language !== 'jcl')) {
-      this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: 2000, panelClass: 'center' });
+      this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
     } this.http.post(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {
       let jobId = r.jobid;
       const input = document.createElement('input');
@@ -204,7 +205,7 @@ export class MenuBarComponent implements OnInit {
         `Please copy this job id (${jobId}) and check it in terminal.`,
         'Copy',
         {
-          duration: 5000, panelClass: 'center'
+          duration: MessageDuration.ExtraLong, panelClass: 'center'
         });
       // get snack bar button
       const button = document.getElementsByClassName('mat-simple-snackbar-action')[0];
