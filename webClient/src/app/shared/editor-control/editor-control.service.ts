@@ -46,6 +46,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
   //public saveAllFile: EventEmitter<any> = new EventEmitter();
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();

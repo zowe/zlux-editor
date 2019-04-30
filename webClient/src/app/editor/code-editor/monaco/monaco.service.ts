@@ -127,7 +127,6 @@ export class MonacoService {
               const model = {
                 value: file['contents'],
                 language: fileLang,
-                // language: 'json',
                 uri: this.generateUri(fileNode.model),
               };
               const duplicate: boolean = this.fileDuplicateChecker(model.uri);
@@ -143,6 +142,8 @@ export class MonacoService {
               let editorSubscription = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
                   value.setModel(newModel);
+                  console.log('set the lang');
+                  this.editorControl.initializedFile.next(fileNode);
                   editorSubscription.unsubscribe();
                   obs.next();
                 }
