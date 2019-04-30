@@ -23,25 +23,27 @@ function UTF8ArrayToString (bytes: Uint8Array):string {
 
   for (let part, len = bytes.length, index = 0; index < len; index++) {
     part = bytes[index];
-    str += String.fromCharCode(
-      part > 251 && part < 254 && index + 5 < len ? /* six bytes */
-        /* (part - 252 << 30) may be not so safe in ECMAScript! So...: */
-        (part - 252) * 1073741824 + (bytes[++index] - 128 << 24) + (bytes[++index] - 128 << 18)
-        + (bytes[++index] - 128 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
-      
+    const charCode =  part > 251 && part < 254 && index + 5 < len ? /* six bytes */
+      /* (part - 252 << 30) may be not so safe in ECMAScript! So...: */
+      (part - 252) * 1073741824 + (bytes[++index] - 128 << 24) + (bytes[++index] - 128 << 18)
+      + (bytes[++index] - 128 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
+    
       : part > 247 && part < 252 && index + 4 < len ? /* five bytes */
-        (part - 248 << 24) + (bytes[++index] - 128 << 18) + (bytes[++index] - 128 << 12)
-        + (bytes[++index] - 128 << 6) + bytes[++index] - 128
-      
+      (part - 248 << 24) + (bytes[++index] - 128 << 18) + (bytes[++index] - 128 << 12)
+      + (bytes[++index] - 128 << 6) + bytes[++index] - 128
+    
       : part > 239 && part < 248 && index + 3 < len ? /* four bytes */
-        (part - 240 << 18) + (bytes[++index] - 128 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
+      (part - 240 << 18) + (bytes[++index] - 128 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
       : part > 223 && part < 240 && index + 2 < len ? /* three bytes */
-        (part - 224 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
+      (part - 224 << 12) + (bytes[++index] - 128 << 6) + bytes[++index] - 128
       : part > 191 && part < 224 && index + 1 < len ? /* two bytes */
-        (part - 192 << 6) + bytes[++index] - 128
+      (part - 192 << 6) + bytes[++index] - 128
       : /* part < 127 ? */ /* one byte */
-        part
-    );
+      part;
+    if ((index + 2) < len || charCode != 0) {
+      str += String.fromCharCode(charCode);
+    }
+
   }
 
   return str;
