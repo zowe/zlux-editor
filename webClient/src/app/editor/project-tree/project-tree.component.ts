@@ -24,17 +24,25 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { MessageDuration } from "../../shared/message-duration";
+import { FileBrowserUSSComponent } from '@zlux/file-explorer/src/app/components/filebrowseruss/filebrowseruss.component';
+import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
+import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
+import { B64Decoder } from '../../shared/b64-decoder';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss']
+  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
 export class ProjectTreeComponent implements OnInit {
 
   @ViewChild(TreeComponent)
   private tree: TreeComponent;
+
+  @ViewChild(ZluxFileExplorerComponent)
+  private fileExplorer: ZluxFileExplorerComponent;
+
+  private showDatasets: Boolean;
 
   nodes: ProjectStructure[];
   options = {
@@ -64,9 +72,11 @@ export class ProjectTreeComponent implements OnInit {
         // let requestUrl: string = this.utils.formatUrl(ENDPOINTS.projectFile, { name: node.data.name });
         // convert path to adjust url. If path is start with '/' then remove it.
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
-        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents', `${targetPath}/${node.data.fileName}`);
-        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
-          let fileStructure = this.dataAdapter.convertDirectoryList(file);
+        let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                                `${targetPath}/${node.data.fileName}`);
+                                                                
+        return this.httpService.get(requestUrl).toPromise().then((dirList: any) => {
+          let fileStructure = this.dataAdapter.convertDirectoryList(dirList);
           return fileStructure.map(f => {
             f.parent = node.data;
             return f;
@@ -94,6 +104,8 @@ export class ProjectTreeComponent implements OnInit {
       this.nodes = nodes;
     });
 
+    this.showDatasets = false;
+
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {
         // start get project structure
@@ -116,47 +128,105 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      this.loadDirectoryIntoTree(dirName);
+      //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
+      // Will be removed when Dataset functionality for Explorer gets better.
+        this.fileExplorer.showUss();
+        this.fileExplorer.updateDirectory(dirName);
+        this.showDatasets = false;
+    });
+
+    this.editorControl.openDataset.subscribe(dirName => {
+      if (dirName != null && dirName !== '') {
+        if (dirName[0] == '/') {
+          //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
+          // Will be removed when Dataset functionality for Explorer gets better.
+            this.fileExplorer.showUss();
+            this.fileExplorer.updateDirectory(dirName);
+            this.showDatasets = false;
+        } else { //Datasets
+          //Note: This temporary hack is used to show datasets using the original slower Editor structure.
+          // Will be removed when Dataset functionality for Explorer gets better.
+            this.fileExplorer.hideExplorers();
+            this.showDatasets = true;
+
+          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
+          this.httpService.get(requestUrl)
+            .subscribe((response: any) => {
+              this.nodes = this.dataAdapter.convertDatasetList(response);
+              this.editorControl.setProjectNode(this.nodes);
+              this.editorControl.initProjectContext(dirName, this.nodes);
+            }, e => {
+              // TODO
+            });
+        }
+      }
+    });
+
+    this.editorControl.deleteFile.subscribe(pathAndName => {
+      this.fileExplorer.deleteFile(pathAndName);
     });
   }
   
-  public loadDirectoryIntoTree(dirName:string) {
-    this.log.debug(`Open Dir=${dirName}`);
-    if (dirName != null && dirName !== '') {
-      if (dirName[0] == '/') {
-        // start get project structure
-        dirName = ['/', '\\'].indexOf(dirName.substring(0, 1)) > -1 ? dirName.substring(1) : dirName;
-        let requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', dirName);
-        this.httpService.get(requestUrl)
-          .subscribe((response: any) => {
-            // TODO: nodes should check project context once the component is loaded.
-            this.nodes = this.dataAdapter.convertDirectoryList(response);
-            this.editorControl.setProjectNode(this.nodes);
-            this.editorControl.initProjectContext(this.utils.getFolderName(dirName), this.nodes);
-          }, e => {
-            try {
-              let error = e.json().error;
-              this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
-            } catch (err) {
-              this.snackBarService.open(`${dirName} is not a directory.`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
-            }
-          });
-      } else {
-        // dataset
-        let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
-        this.httpService.get(requestUrl)
-          .subscribe((response: any) => {
-            this.nodes = this.dataAdapter.convertDatasetList(response);
-            this.editorControl.setProjectNode(this.nodes);
-            this.editorControl.initProjectContext(dirName, this.nodes);
-          }, e => {
-            // TODO
-          });
-      }
-    }
-  }
-  
   ngOnInit() {
+  }
+
+  onCopyClick($event: any){
+    // Todo: Create right click menu functionality.
+  }
+
+  onDatasetSelect() {
+    this.fileExplorer.hideExplorers();
+    this.showDatasets = true;
+  }
+
+  onDeleteClick($event: any){
+    // Todo: Create right click menu functionality.
+  }
+
+  onNewFileClick($event: any){
+    // Todo: Create right click menu functionality.
+  }
+
+  onNewFolderClick($event: any){
+    // Todo: Create right click menu functionality.
+  }
+
+  onNodeClick($event:any){
+    if ($event.directory == false) {
+      //let nodeData: ProjectStructure = new ProjectStructure();
+      const nodeData: ProjectStructure = {
+        encoding: $event.ccsid,
+        hasChildren: false,
+        fileName: $event.name,
+        id: $event.id + 1,
+        isDataset: false,
+        name: $event.name,
+        path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
+    };
+  
+      this.editorControl.openFile('', nodeData).subscribe(x => {
+        this.log.debug(`File loaded through File Explorer.`);
+      });
+    } else { }
+  }
+
+  onPathChanged($event: any) {
+    // Currently, we check for when the path's changed for Dataset viewing, so we only need to treat
+    // it within a dataset context. This will probably be removed along with other hacks for temporarily
+    // keeping the original dataset viewer.
+    this.fileExplorer.hideExplorers();
+    this.showDatasets = true;
+    this.editorControl.projectName = $event;
+    this.editorControl.openDataset.next($event);
+  }
+
+  onRenameClick($event: any) {
+    // Todo: Create right click menu functionality.
+  }
+
+  onUssSelect() {
+    this.fileExplorer.showUss();
+    this.showDatasets = false;
   }
 
   openProject() {
@@ -179,6 +249,8 @@ export class ProjectTreeComponent implements OnInit {
 
     openDirectoryRef.afterClosed().subscribe(result => {
       if (result) {
+        this.showDatasets = false;
+        this.fileExplorer.showUss();
         this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }

@@ -13,6 +13,7 @@ import { ProjectDef } from '../model/project';
 import { ProjectStructure } from '../model/editor-project';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import * as _ from 'lodash';
+import { B64Decoder } from '../b64-decoder';
 
 @Injectable()
 export class DataAdapterService {
@@ -77,9 +78,9 @@ export class DataAdapterService {
     });
   }
 
-  convertFileContent(responseData: any): { contents: string } {
+  convertFileContent(b64ResponseData: any): { contents: string } {
     return {
-      contents: responseData,
+      contents: B64Decoder(b64ResponseData),
     };
   }
 

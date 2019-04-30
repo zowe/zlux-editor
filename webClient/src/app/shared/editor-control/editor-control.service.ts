@@ -40,6 +40,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
+  public openDataset: EventEmitter<string> = new EventEmitter();
+  public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -438,16 +440,22 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
       fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-      
+      const forceOverwrite = true;
       /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, sourceEncoding, targetEncoding, 
-                                                  undefined, true, undefined, undefined);
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                  fileDir+'/'+fileName,
+                                                  { sourceEncoding,
+                                                    targetEncoding,
+                                                    forceOverwrite });
       sessionID = 0;
       
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', fileDir+'/'+fileName, undefined, undefined, 
-                                                    undefined, true, sessionID, true);   
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                    fileDir+'/'+fileName,
+                                                    { sessionID,
+                                                      forceOverwrite,
+                                                      lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
@@ -470,14 +478,20 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
       
       /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, sourceEncoding, targetEncoding,
-                                                  undefined, true, undefined, undefined);
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                  results.directory+'/'+results.fileName,
+                                                  { sourceEncoding,
+                                                    targetEncoding,
+                                                    forceOverwrite: true });
       sessionID = 0;
       
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', results.directory+'/'+results.fileName, undefined, undefined,
-                                                    undefined, true, sessionID, true);  
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                    results.directory+'/'+results.fileName,
+                                                    { forceOverwrite: true,
+                                                      sessionID,
+                                                      lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
@@ -544,7 +558,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
       return new Observable(obs => obs.next(null));
     } else {
-      throw new Error('File parent not exist! This may caused by you want a delete a root context.');
+      throw new Error('File parent does not exist! This may have been caused by you wanting to a delete a root context.');
     }
   }
 
@@ -750,14 +764,45 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
    */
   getRecommendedHighlightingModesForBuffer(buffer: ZLUX.EditorBufferHandle): Observable<string[]> {
     return new Observable<string[]>((obs) => {
-      let bufferExt = this.utils.fileExtension(buffer.name);
+      let bufferExt = this.utils.fileExtension(buffer.name).toLowerCase();
+      const fullName = buffer.model.isDataset ? buffer.model.fileName : buffer.name
+      const parenIndex = fullName.indexOf('(');
+      const isPds = buffer.model.isDataset && ( parenIndex != -1);
+      const name = isPds ? fullName.substring(0,parenIndex).toLowerCase() : fullName.toLowerCase();
       let results: string[] = [];
+      //TODO there is precedence to observe. File keywords wins, but not implemented yet.
+      // Consider if you have an ASM.JCLLIB dataset
       this._editorCore.subscribe(monaco => {
         if (monaco != null) {
           let languages = monaco.languages.getLanguages();
+          if (buffer.model.isDataset) {
+            for (let i = 0; i < languages.length; i++) {
+              let lang = languages[i];
+              for (let extension of lang.extensions) {
+                if (name.indexOf(extension)!=-1 || name.indexOf(`${extension}.`) != -1) {
+                  results.push(lang.id);
+                  i = languages.length;
+                  break;
+                }
+              }
+            }
+          } else {
+            for (let lang of languages) {
+              if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
+                results.push(lang.id);
+                break;
+              }
+            }
+          }
           for (let lang of languages) {
-            if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
-              results.push(lang.id);
+            if (lang.filenamePatterns) {
+              for (let pattern of lang.filenamePatterns) {
+                let regex = new RegExp(pattern);
+                if (regex.test(name)) {
+                  results.push(lang.id);
+                  break;
+                }
+              }
             }
           }
           obs.next(results);

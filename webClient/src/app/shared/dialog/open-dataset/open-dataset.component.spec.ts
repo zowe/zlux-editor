@@ -10,21 +10,21 @@
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AboutProjectComponent } from './about-project.component';
+import { OpenDatasetComponent } from './open-dataset.component';
 
-describe('AboutProjectComponent', () => {
-  let component: AboutProjectComponent;
-  let fixture: ComponentFixture<AboutProjectComponent>;
+describe('OpenDatasetComponent', () => {
+  let component: OpenDatasetComponent;
+  let fixture: ComponentFixture<OpenDatasetComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ AboutProjectComponent ]
+      declarations: [ OpenDatasetComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(AboutProjectComponent);
+    fixture = TestBed.createComponent(OpenDatasetComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

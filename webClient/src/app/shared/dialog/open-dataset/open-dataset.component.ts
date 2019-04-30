@@ -1,5 +1,5 @@
 
-<!-- 
+/*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
@@ -7,17 +7,29 @@
   SPDX-License-Identifier: EPL-2.0
   
   Copyright Contributors to the Zowe Project.
--->
-<h2 mat-dialog-title>About Zowe Editor</h2>
-<mat-dialog-content>
-  Zowe Editor is design by: Pinhong Ma, Yongjun Sun, Xinran Jiang, Jie Wei & Zhuangzhuang Liu.
-</mat-dialog-content>
-<mat-dialog-actions>
-  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="true">OK</button>
-</mat-dialog-actions>
+*/
+import { Component, OnInit } from '@angular/core';
+import { MatDialogRef } from '@angular/material';
+import { HttpService } from '../../http/http.service';
+import { ENDPOINTS } from '../../../../environments/environment';
 
-<!-- 
+@Component({
+  selector: 'app-open-dataset',
+  templateUrl: './open-dataset.component.html',
+  styleUrls: ['./open-dataset.component.scss']
+})
+export class OpenDatasetComponent implements OnInit {
+
+  private fetching = false;
+  private value = '';
+
+  constructor(private http: HttpService, private dialogRef: MatDialogRef<OpenDatasetComponent>) { }
+
+  ngOnInit() {
+  }
+}
+
+/*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
@@ -25,4 +37,4 @@
   SPDX-License-Identifier: EPL-2.0
   
   Copyright Contributors to the Zowe Project.
--->
+*/
