@@ -27,6 +27,35 @@ import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
+
+const languageMenus = {
+  'javascript': [{name:'DESTROY',
+                  action: {
+                    functionString:`
+                    console.log("My context=",context);
+                    context.editor.model.setValue("HAHA GOODBYE TEXT");`, params:[]}, keyMap: 'Alt+D'},
+                 {name:'Crop',
+                  action: {
+                    functionString:`
+                    const selection = context.editor.cursor.getSelection();
+                    context.log.info('selection=',selection);
+                    if (selection) {
+                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
+                    }`, params:[]}, keyMap: 'Alt+C'},
+                 {name:'Is Dataset?',
+                  action: {
+                    functionString:`
+                    const model = context.controller.fetchActiveFile().model;
+                    context.log.info('My model=',model);
+                    const isDataset = model.isDataset;
+                    const fullName = isDataset ? model.fileName : model.name;
+                    context.controller.snackBar.open(isDataset ? fullName+' is a dataset!'
+                                                     : fullName+' is NOT a dataset.', 'Close',
+                                                     { duration: 3000, panelClass: 'center' });
+                  `, params:[]}, keyMap: ''}
+                 ]
+}
+
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
@@ -34,8 +63,13 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 })
 export class MenuBarComponent implements OnInit {
   private menuList: any = MENU;
-  private menuActive: any = false;
-
+  private currentLang: string | undefined;
+  private fileCount: number = 0;
+  private languageSelectionMenu: any = {
+    name: 'Language',
+    children: []
+  };
+  
   constructor(
     private http: HttpService,
     private editorControl: EditorControlService,
@@ -46,16 +80,31 @@ export class MenuBarComponent implements OnInit {
     private snackBar: SnackBarService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
-    // add monaco languages support to menu
-    let languageSelectionMenu = {
-      name: 'Language',
-      children: []
-    };
+
+    this.editorControl.selectFile.subscribe((fileContext)=> {
+      if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+    });
+
+    this.editorControl.initializedFile.subscribe((fileContext)=> {
+      this.showLanguageMenu(fileContext.model.language);
+      this.fileCount++;
+      console.log(`fileCount now=`,this.fileCount);
+    });
+
+    this.editorControl.closeFile.subscribe(()=> {
+      this.fileCount--;
+      console.log(`fileCount now=`,this.fileCount);
+      this.removeLanguageMenu();
+    });
+
+    this.editorControl.changeLanguage.subscribe((obj:{context: any, language: string})=> {
+      this.showLanguageMenu(obj.language);
+    });
 
     this.editorControl.editorCore.subscribe((monaco) => {
       if (monaco != null) {
         //This is triggered after monaco initializes & is loaded with configuration items
-        languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
+        this.languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
           let name1 = lang1.aliases[0].toLowerCase();
           let name2 = lang2.aliases[0].toLowerCase();
           if (name1 < name2) {
@@ -70,17 +119,15 @@ export class MenuBarComponent implements OnInit {
             name: language.aliases[0],
             type: 'checkbox',
             action: {
-              name: 'setEditorLanguage',
-              params: [language.id],
+              internalName: 'setEditorLanguage',
+              params: [language.id]
             },
             active: {
-              name: 'languageActiveCheck',
-              params: [language.id],
+              internalName: 'languageActiveCheck',
+              params: [language.id]
             }
-          }});
-        let existItem = this.menuList.filter(m => m.name === 'Language');
-        existItem.length > 0 ? existItem.children = languageSelectionMenu.children
-          : this.menuList.splice(-1, 0, languageSelectionMenu);
+          }
+        });
       }
     });
 
@@ -89,14 +136,74 @@ export class MenuBarComponent implements OnInit {
     // });
   }
 
+  removeLanguageMenu() {
+    const removeSelectionMenu = this.fileCount===0;
+    for (let i = 0; i < this.menuList.length; i++) {
+      if (this.currentLang && this.menuList[i].name === this.currentLang) {
+        this.menuList.splice(i,1);
+        if (!removeSelectionMenu) {
+          break;
+        }
+        i = -1;
+      } else if (removeSelectionMenu && this.menuList[i].name === 'Language') {
+        this.menuList.splice(i,1);
+        i = -1;
+      }  
+    }
+  }
+
+  showLanguageMenu(language) {
+    let menus = [];
+    if (this.fileCount===0) {//will become 1 after
+      //add language selection menu, too
+      menus.push(this.languageSelectionMenu);
+    }
+
+    if (language) {
+      this.removeLanguageMenu();
+      
+      let menuChildren = languageMenus[language];
+      if (menuChildren) {
+        menus.push({
+          name: language,
+          children: menuChildren
+        });
+        this.currentLang = language;
+      }
+    }
+    if (menus.length>0) {
+      this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+    }
+  }
+  
   ngOnInit() {
   }
 
-  //this is dumb because everything is local to this file.
-  //It needs to be anonymous functions given editorControl, monaco, and fileNode
-  menuAction(actionName: string, actionParams: any[]): any {
-    if (actionName != null) {
-      return this[actionName].apply(this, actionParams != null ? actionParams : []);
+  menuAction(menuItem: any): any {
+    if (!menuItem) {
+      return;
+    }
+    if (menuItem.internalName != null) {
+      return this[menuItem.internalName].apply(this, menuItem.params ? menuItem.params : []);
+    } else {
+      if (!menuItem.func) {
+        if (menuItem.functionString) {
+          menuItem.func = new Function('context', menuItem.functionString);
+        } else {
+          console.warn(`Cant continue, no function to execute.`);
+          return;
+        }
+      }
+      const editor = this.editorControl.editor.getValue();
+      if (editor) {
+        //TODO do we also need fileNode?
+        menuItem.func({
+          editor: editor,
+          controller: this.editorControl,
+          log: this.log
+          }, ...menuItem.params);
+      }
+      return;
     }
   }
 

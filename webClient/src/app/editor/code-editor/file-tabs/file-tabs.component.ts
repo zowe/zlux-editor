@@ -55,6 +55,7 @@ export class MouseMiddleClickDirective {
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);
+    this.editorControl.closeFile.next(this.fileContext);
   }
   constructor(private editorControl: EditorControlService,
               @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }

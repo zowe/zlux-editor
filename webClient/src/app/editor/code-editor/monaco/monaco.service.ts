@@ -57,6 +57,11 @@ export class MonacoService {
     //});
   }
 
+  /*
+     Tab selection tells monaco to switch its buffer, this is interpreted as an open file operation
+     But, the file may already be open, so within this we have to determine whether to fire an event
+     From the controller to say whether this is new, or just a selection change
+   */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (fileNode.temp) {
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
@@ -99,6 +104,7 @@ export class MonacoService {
             ])[0]);
             // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
           }
+          if (reload) {this.editorControl.initializedFile.next(fileNode);}
         });
       });
     }
@@ -141,7 +147,6 @@ export class MonacoService {
               const subscriber = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
                   value.setModel(newModel);
-                  this.editorControl.initializedFile.next(fileNode);
                   if (subscriber){subscriber.unsubscribe();}
                   obs.next();
                 }
