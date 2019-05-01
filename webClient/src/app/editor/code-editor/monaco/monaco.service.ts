@@ -26,7 +26,7 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 export class MonacoService {
 
   private decorations: string[] = [];
-
+  
   constructor(
     private httpService: HttpService,
     private http: Http,
@@ -106,11 +106,10 @@ export class MonacoService {
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
     return new Observable((obs) => {
-      let coreSubscription = this.editorControl.editorCore
+      const coreSubscriber = this.editorControl.editorCore
         .subscribe((value)=> {
           if (value && value.editor) {
             const editorCore = value.editor;
-            //getValue().editor;
 
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
@@ -139,17 +138,16 @@ export class MonacoService {
               newModel.onDidChangeContent((e: any) => {
                 this.fileContentChangeHandler(e, fileNode, newModel);
               });
-              let editorSubscription = this.editorControl.editor.subscribe((value)=> {
+              const subscriber = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
                   value.setModel(newModel);
-                  console.log('set the lang');
                   this.editorControl.initializedFile.next(fileNode);
-                  editorSubscription.unsubscribe();
+                  if (subscriber){subscriber.unsubscribe();}
                   obs.next();
                 }
               });
             });
-            coreSubscription.unsubscribe();
+            if (coreSubscriber) {coreSubscriber.unsubscribe();}
           }
         });
     });
