@@ -52,13 +52,15 @@ app-editor {
       }
     }
     .gz-tree {
-      width: 300px;
+      width: fit-content;
+      max-width: 315px;
       height: 100%;
       color: $gz-secondary;
       background-color: $gz-primary; // float: left;
       // margin-left: -300px;
       flex: 0 0 230px;
       .section-container {
+        min-width: 315px;
         padding-top: 36px;
         overflow: hidden;
         display: none;

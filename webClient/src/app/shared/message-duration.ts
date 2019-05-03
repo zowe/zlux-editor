@@ -1,4 +1,3 @@
-
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -8,20 +7,15 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
 
-@Component({
-  selector: 'app-nav',
-  templateUrl: './nav.component.html',
-  styleUrls: ['./nav.component.scss',  '../../../styles.scss']
-})
-export class NavComponent implements OnInit {
+export class MessageDuration {
+  static Short: number = 2000;
 
-  constructor() { }
+  static Medium: number = 6000;
 
-  ngOnInit() {
-  }
+  static Long: number = 10000;
 
+  static ExtraLong: number = 20000;
 }
 
 /*

@@ -11,11 +11,14 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-about-project',
-  templateUrl: './about-project.component.html',
-  styleUrls: ['./about-project.component.scss']
+  selector: 'app-delete-file',
+  templateUrl: './delete-file.component.html',
+  styleUrls: ['./delete-file.component.scss']
 })
-export class AboutProjectComponent implements OnInit {
+export class DeleteFileComponent implements OnInit {
+
+  private value = '';
+  private FileName_Pattern = /^([^\x00-\x1F!"$'\(\)*,\/:;<>\?\[\\\]\{\|\}\x7F\s]+)\.([a-zA-Z0-9]*)$/;
 
   constructor() { }
 

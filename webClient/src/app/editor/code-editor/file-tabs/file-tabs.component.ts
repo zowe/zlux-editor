@@ -8,29 +8,35 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, Output, EventEmitter, Directive, HostListener, Inject } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter,
+         Directive, HostListener, Inject, ViewChild } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
-import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 @Component({
   selector: 'app-file-tabs',
   templateUrl: './file-tabs.component.html',
-  styleUrls: ['./file-tabs.component.scss']
+  styleUrls: ['./file-tabs.component.scss',  '../../../../styles.scss']
 })
 export class FileTabsComponent implements OnInit {
 
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
   @Output() select = new EventEmitter<ProjectContext>();
+  @ViewChild(PerfectScrollbarComponent) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
     wheelPropagation: true,
   };
 
-  constructor() { }
+  constructor(@Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
 
   ngOnInit() {
+    this.viewportEvents.resized.subscribe(()=> {
+      this.componentRef.directiveRef.update();
+    });
   }
 
   clickHandler(e: Event, item: ProjectContext) {
