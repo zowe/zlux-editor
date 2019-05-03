@@ -30,6 +30,13 @@ const JCL_LANG = {
   mimetypes: ['application/jcl']
 };
 
+const TEST_LANG = {
+  id: 'TEST_LANGUAGE',
+  extensions: ['.editortest'],
+  aliases: ['TEST_LANGUAGE']
+};
+
+
 const HLASM_HILITE = {
   // Set defaultToken to invalid to see what you do not tokenize yet
   // defaultToken: 'invalid',
@@ -123,6 +130,7 @@ export class MonacoConfig {
     // This step only happens once per editor load, not once per file load. It happens before language menu is generated
     monaco.languages.register(HLASM_LANG);
     monaco.languages.register(JCL_LANG);
+    monaco.languages.register(TEST_LANG);
 
     monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);

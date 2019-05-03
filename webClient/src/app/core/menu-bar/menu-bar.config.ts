@@ -8,6 +8,38 @@
   
   Copyright Contributors to the Zowe Project.
 */
+
+export const DEFAULT_LANGUAGES_MENU = [
+  {
+  'TEST_LANGUAGE': [{name:'DESTROY',
+                  action: {
+                    functionString:`
+                    console.log("My context=",context);
+                    context.editor.model.setValue("HAHA GOODBYE TEXT");`, params:[]}, keyMap: 'Alt+D'},
+                 {name:'Crop',
+                  action: {
+                    functionString:`
+                    const selection = context.editor.cursor.getSelection();
+                    context.log.info('selection=',selection);
+                    if (selection) {
+                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
+                    }`, params:[]}, keyMap: 'Alt+C'},
+                 {name:'Is Dataset?',
+                  action: {
+                    functionString:`
+                    const model = context.controller.fetchActiveFile().model;
+                    context.log.info('My model=',model);
+                    const isDataset = model.isDataset;
+                    const fullName = isDataset ? model.fileName : model.name;
+                    context.controller.snackBar.open(isDataset ? fullName+' is a dataset!'
+                                                     : fullName+' is NOT a dataset.', 'Close',
+                                                     { duration: 3000, panelClass: 'center' });
+                    `, params:[]}, keyMap: ''}
+                ]
+  }
+]
+
+
 export const MENU = [
     {
         name: 'File',

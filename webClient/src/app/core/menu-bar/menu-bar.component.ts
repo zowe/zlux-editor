@@ -10,7 +10,7 @@
 */
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { MENU } from './menu-bar.config';
+import { MENU, DEFAULT_LANGUAGES_MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
@@ -26,35 +26,6 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-
-
-const languageMenus = {
-  'javascript': [{name:'DESTROY',
-                  action: {
-                    functionString:`
-                    console.log("My context=",context);
-                    context.editor.model.setValue("HAHA GOODBYE TEXT");`, params:[]}, keyMap: 'Alt+D'},
-                 {name:'Crop',
-                  action: {
-                    functionString:`
-                    const selection = context.editor.cursor.getSelection();
-                    context.log.info('selection=',selection);
-                    if (selection) {
-                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
-                    }`, params:[]}, keyMap: 'Alt+C'},
-                 {name:'Is Dataset?',
-                  action: {
-                    functionString:`
-                    const model = context.controller.fetchActiveFile().model;
-                    context.log.info('My model=',model);
-                    const isDataset = model.isDataset;
-                    const fullName = isDataset ? model.fileName : model.name;
-                    context.controller.snackBar.open(isDataset ? fullName+' is a dataset!'
-                                                     : fullName+' is NOT a dataset.', 'Close',
-                                                     { duration: 3000, panelClass: 'center' });
-                  `, params:[]}, keyMap: ''}
-                 ]
-}
 
 @Component({
   selector: 'app-menu-bar',
@@ -162,7 +133,7 @@ export class MenuBarComponent implements OnInit {
     if (language) {
       this.removeLanguageMenu();
       
-      let menuChildren = languageMenus[language];
+      let menuChildren = DEFAULT_LANGUAGES_MENU[language];
       if (menuChildren) {
         menus.push({
           name: language,
