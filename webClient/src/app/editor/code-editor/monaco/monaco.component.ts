@@ -38,7 +38,6 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-
   }
 
   ngOnChanges(changes: SimpleChanges) {

@@ -159,7 +159,12 @@ export class MonacoService {
   }
 
   closeFile(fileNode: ProjectContext) {
-    const _editor = this.editorControl.editorCore.getValue().editor;
+    const editorCore = this.editorControl.editorCore.getValue();
+    if (!editorCore) {
+      console.warn(`Editor core null on closeFile()`);
+      return;
+    }
+    const _editor = editorCore.editor;
     const models = _editor.getModels();
     const fileUri = this.generateUri(fileNode.model);
     for (const model of models) {

@@ -11,6 +11,7 @@
 import { NgxMonacoEditorConfig } from 'ngx-monaco-editor';
 import { MonacoService } from './monaco.service';
 import { EditorServiceInstance } from '../../../shared/editor-control/editor-control.service';
+
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs/Subscription';
 
@@ -29,13 +30,6 @@ const JCL_LANG = {
   aliases: ['JCL', 'jcl'],
   mimetypes: ['application/jcl']
 };
-
-const TEST_LANG = {
-  id: 'TEST_LANGUAGE',
-  extensions: ['.editortest'],
-  aliases: ['TEST_LANGUAGE']
-};
-
 
 const HLASM_HILITE = {
   // Set defaultToken to invalid to see what you do not tokenize yet
@@ -130,14 +124,22 @@ export class MonacoConfig {
     // This step only happens once per editor load, not once per file load. It happens before language menu is generated
     monaco.languages.register(HLASM_LANG);
     monaco.languages.register(JCL_LANG);
-    monaco.languages.register(TEST_LANG);
-
+    
     monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
 
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
       if (editorService != null) {
+        if (editorService._isTestLangMode) {
+          console.log(`Adding test language`);
+          editorService.registerLanguage({
+            id: 'TEST_LANGUAGE',
+            extensions: ['.editortest'],
+            aliases: ['TEST_LANGUAGE']
+          });
+        }
+
         editorService._editorCore.next((<any>window).monaco);
         if (self.subscription) { self.subscription.unsubscribe(); }
       }

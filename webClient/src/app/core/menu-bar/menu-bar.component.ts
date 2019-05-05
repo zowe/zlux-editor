@@ -10,7 +10,7 @@
 */
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { MENU, DEFAULT_LANGUAGES_MENU } from './menu-bar.config';
+import { MENU, TEST_LANGUAGE_MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
@@ -33,13 +33,15 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
 export class MenuBarComponent implements OnInit {
-  private menuList: any = MENU;
+  private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
   private languageSelectionMenu: any = {
     name: 'Language',
     children: []
   };
+
+  private languagesMenu: any = {};
   
   constructor(
     private http: HttpService,
@@ -49,9 +51,28 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
-    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
   ) {
 
+    /*
+    //Ideas: load languages at this time, if response occurs after file open, append results to monaco and try to reset it to the language
+    this.httpClient.get(ZoweZLUX.uriBroker.pluginConfigUri(this.pluginDefinition, 'languages/definitions')).subscribe(data=> {
+      monaco.languages.register(language);
+      if (language) {
+        setLanguage()
+        monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
+      }
+    });
+    this.httpClient.get(ZoweZLUX.uriBroker.pluginConfigUri(this.pluginDefinition, 'languages/menus')).subscribe(data=> {
+      
+    });
+    */
+
+    this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
+      this.resetLanguageSelectionMenu();
+    });
+    
     this.editorControl.selectFile.subscribe((fileContext)=> {
       if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
     });
@@ -59,12 +80,16 @@ export class MenuBarComponent implements OnInit {
     this.editorControl.initializedFile.subscribe((fileContext)=> {
       this.showLanguageMenu(fileContext.model.language);
       this.fileCount++;
-      console.log(`fileCount now=`,this.fileCount);
+      this.log.debug(`fileCount now=`,this.fileCount);
     });
 
     this.editorControl.closeFile.subscribe(()=> {
-      this.fileCount--;
-      console.log(`fileCount now=`,this.fileCount);
+      if (this.fileCount != 0) {
+        this.fileCount--;
+        this.log.debug(`fileCount now=`,this.fileCount);
+      } else {
+        this.log.warn(`Open file count cannot be made negative`);
+      }
       this.removeLanguageMenu();
     });
 
@@ -75,36 +100,45 @@ export class MenuBarComponent implements OnInit {
     this.editorControl.editorCore.subscribe((monaco) => {
       if (monaco != null) {
         //This is triggered after monaco initializes & is loaded with configuration items
-        this.languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
-          let name1 = lang1.aliases[0].toLowerCase();
-          let name2 = lang2.aliases[0].toLowerCase();
-          if (name1 < name2) {
-            return -1;
-          } else if (name1 > name2) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }).map(language => {
-          return {
-            name: language.aliases[0],
-            type: 'checkbox',
-            action: {
-              internalName: 'setEditorLanguage',
-              params: [language.id]
-            },
-            active: {
-              internalName: 'languageActiveCheck',
-              params: [language.id]
-            }
-          }
-        });
+        this.resetLanguageSelectionMenu();
       }
     });
 
     // this.editorControl.saveAllFile.subscribe(x => {
     //   this.saveAll();
     // });
+  }
+
+  private resetLanguageSelectionMenu() {
+    const monaco = this.editorControl.editorCore.getValue();
+    if (!monaco) {
+      this.log.warn(`Language registered without monaco present`);
+      return;
+    }
+    this.languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
+      let name1 = lang1.aliases[0].toLowerCase();
+      let name2 = lang2.aliases[0].toLowerCase();
+      if (name1 < name2) {
+        return -1;
+      } else if (name1 > name2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }).map(language => {
+      return {
+        name: language.aliases[0],
+        type: 'checkbox',
+        action: {
+          internalName: 'setEditorLanguage',
+          params: [language.id]
+        },
+        active: {
+          internalName: 'languageActiveCheck',
+          params: [language.id]
+        }
+      }
+    });
   }
 
   removeLanguageMenu() {
@@ -133,7 +167,7 @@ export class MenuBarComponent implements OnInit {
     if (language) {
       this.removeLanguageMenu();
       
-      let menuChildren = DEFAULT_LANGUAGES_MENU[language];
+      let menuChildren = this.languagesMenu[language];
       if (menuChildren) {
         menus.push({
           name: language,
@@ -148,6 +182,10 @@ export class MenuBarComponent implements OnInit {
   }
   
   ngOnInit() {
+    if (this.editorControl._isTestLangMode) {
+      this.log.info(`Adding test language menu`);
+      this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
+    }
   }
 
   menuAction(menuItem: any): any {
@@ -161,7 +199,7 @@ export class MenuBarComponent implements OnInit {
         if (menuItem.functionString) {
           menuItem.func = new Function('context', menuItem.functionString);
         } else {
-          console.warn(`Cant continue, no function to execute.`);
+          this.log.warn(`Cant do menu action, no function to execute.`);
           return;
         }
       }

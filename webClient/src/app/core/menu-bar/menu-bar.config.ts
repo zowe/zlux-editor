@@ -9,13 +9,11 @@
   Copyright Contributors to the Zowe Project.
 */
 
-export const DEFAULT_LANGUAGES_MENU = [
-  {
-  'TEST_LANGUAGE': [{name:'DESTROY',
+export const TEST_LANGUAGE_MENU = [{name:'TEST_REPLACE',
                   action: {
                     functionString:`
                     console.log("My context=",context);
-                    context.editor.model.setValue("HAHA GOODBYE TEXT");`, params:[]}, keyMap: 'Alt+D'},
+                    context.editor.model.setValue("GOODBYE TEXT");`, params:[]}, keyMap: ''},
                  {name:'Crop',
                   action: {
                     functionString:`
@@ -23,7 +21,7 @@ export const DEFAULT_LANGUAGES_MENU = [
                     context.log.info('selection=',selection);
                     if (selection) {
                       context.editor.model.setValue(context.editor.model.getValueInRange(selection));
-                    }`, params:[]}, keyMap: 'Alt+C'},
+                    }`, params:[]}, keyMap: ''},
                  {name:'Is Dataset?',
                   action: {
                     functionString:`
@@ -36,8 +34,6 @@ export const DEFAULT_LANGUAGES_MENU = [
                                                      { duration: 3000, panelClass: 'center' });
                     `, params:[]}, keyMap: ''}
                 ]
-  }
-]
 
 
 export const MENU = [
