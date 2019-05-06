@@ -43,9 +43,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openDataset: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
+  public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
   //public saveAllFile: EventEmitter<any> = new EventEmitter();
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
@@ -59,6 +61,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
 
   private _projectName = '';
+  public _isTestLangMode = false;
 
 
   /**
@@ -158,6 +161,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this._context.next(childrenContext);
     this._rootContext.next(root);
     return root;
+  }
+
+  public registerLanguage(languageDefinition, highlighter?:any) {
+    monaco.languages.register(languageDefinition);
+    if (highlighter) {
+      monaco.languages.setMonarchTokensProvider(languageDefinition.id, highlighter);
+    }
+    this.languageRegistered.next(languageDefinition);
   }
 
   public get openFileList(): BehaviorSubject<ProjectContext[]> {
