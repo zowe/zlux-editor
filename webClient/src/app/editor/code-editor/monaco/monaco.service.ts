@@ -26,7 +26,7 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 export class MonacoService {
 
   private decorations: string[] = [];
-
+  
   constructor(
     private httpService: HttpService,
     private http: Http,
@@ -57,6 +57,11 @@ export class MonacoService {
     //});
   }
 
+  /*
+     Tab selection tells monaco to switch its buffer, this is interpreted as an open file operation
+     But, the file may already be open, so within this we have to determine whether to fire an event
+     From the controller to say whether this is new, or just a selection change
+   */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
     console.log("OPENING FILE HEREEEEEE!!!!!!");
     if (fileNode.temp) {
@@ -100,6 +105,7 @@ export class MonacoService {
             ])[0]);
             // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
           }
+          if (reload) {this.editorControl.initializedFile.next(fileNode);}
         });
       });
     }
@@ -108,11 +114,10 @@ export class MonacoService {
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
     console.log("SETTING MONACO MODEL!!!!!");
     return new Observable((obs) => {
-      let coreSubscription = this.editorControl.editorCore
+      const coreSubscriber = this.editorControl.editorCore
         .subscribe((value)=> {
           if (value && value.editor) {
             const editorCore = value.editor;
-            //getValue().editor;
 
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
@@ -143,22 +148,27 @@ export class MonacoService {
               newModel.onDidChangeContent((e: any) => {
                 this.fileContentChangeHandler(e, fileNode, newModel);
               });
-              let editorSubscription = this.editorControl.editor.subscribe((value)=> {
+              const subscriber = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
                   value.setModel(newModel);
-                  editorSubscription.unsubscribe();
+                  if (subscriber){subscriber.unsubscribe();}
                   obs.next();
                 }
               });
             });
-            coreSubscription.unsubscribe();
+            if (coreSubscriber) {coreSubscriber.unsubscribe();}
           }
         });
     });
   }
 
   closeFile(fileNode: ProjectContext) {
-    const _editor = this.editorControl.editorCore.getValue().editor;
+    const editorCore = this.editorControl.editorCore.getValue();
+    if (!editorCore) {
+      console.warn(`Editor core null on closeFile()`);
+      return;
+    }
+    const _editor = editorCore.editor;
     const models = _editor.getModels();
     const fileUri = this.generateUri(fileNode.model);
     for (const model of models) {

@@ -43,6 +43,10 @@ export class AppComponent {
 
   handleLaunchOrMessageObject(data: any) {
     switch (data.type) {
+    case 'test-language':
+      this.log.info(`Setting language test mode`);
+      this.editorControl._isTestLangMode = true;
+      break;
     case 'openFile':
       //TODO should this or must this also load the directory at the time that the file is
       let lastSlash = data.name.lastIndexOf("/");

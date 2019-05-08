@@ -10,7 +10,7 @@
 */
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { MENU } from './menu-bar.config';
+import { MENU, TEST_LANGUAGE_MENU } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
@@ -33,9 +33,16 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
 export class MenuBarComponent implements OnInit {
-  private menuList: any = MENU;
-  private menuActive: any = false;
+  private menuList: any = MENU.slice(0);//clone to prevent language from persisting
+  private currentLang: string | undefined;
+  private fileCount: number = 0;
+  private languageSelectionMenu: any = {
+    name: 'Language',
+    children: []
+  };
 
+  private languagesMenu: any = {};
+  
   constructor(
     private http: HttpService,
     private editorControl: EditorControlService,
@@ -44,43 +51,56 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
-    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
   ) {
-    // add monaco languages support to menu
-    let languageSelectionMenu = {
-      name: 'Language',
-      children: []
-    };
+
+    /*
+    //Ideas: load languages at this time, if response occurs after file open, append results to monaco and try to reset it to the language
+    this.httpClient.get(ZoweZLUX.uriBroker.pluginConfigUri(this.pluginDefinition, 'languages/definitions')).subscribe(data=> {
+      monaco.languages.register(language);
+      if (language) {
+        setLanguage()
+        monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
+      }
+    });
+    this.httpClient.get(ZoweZLUX.uriBroker.pluginConfigUri(this.pluginDefinition, 'languages/menus')).subscribe(data=> {
+      
+    });
+    */
+
+    this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
+      this.resetLanguageSelectionMenu();
+    });
+    
+    this.editorControl.selectFile.subscribe((fileContext)=> {
+      if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+    });
+
+    this.editorControl.initializedFile.subscribe((fileContext)=> {
+      this.showLanguageMenu(fileContext.model.language);
+      this.fileCount++;
+      this.log.debug(`fileCount now=`,this.fileCount);
+    });
+
+    this.editorControl.closeFile.subscribe(()=> {
+      if (this.fileCount != 0) {
+        this.fileCount--;
+        this.log.debug(`fileCount now=`,this.fileCount);
+      } else {
+        this.log.warn(`Open file count cannot be made negative`);
+      }
+      this.removeLanguageMenu();
+    });
+
+    this.editorControl.changeLanguage.subscribe((obj:{context: any, language: string})=> {
+      this.showLanguageMenu(obj.language);
+    });
 
     this.editorControl.editorCore.subscribe((monaco) => {
       if (monaco != null) {
         //This is triggered after monaco initializes & is loaded with configuration items
-        languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
-          let name1 = lang1.aliases[0].toLowerCase();
-          let name2 = lang2.aliases[0].toLowerCase();
-          if (name1 < name2) {
-            return -1;
-          } else if (name1 > name2) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }).map(language => {
-          return {
-            name: language.aliases[0],
-            type: 'checkbox',
-            action: {
-              name: 'setEditorLanguage',
-              params: [language.id],
-            },
-            active: {
-              name: 'languageActiveCheck',
-              params: [language.id],
-            }
-          }});
-        let existItem = this.menuList.filter(m => m.name === 'Language');
-        existItem.length > 0 ? existItem.children = languageSelectionMenu.children
-          : this.menuList.splice(-1, 0, languageSelectionMenu);
+        this.resetLanguageSelectionMenu();
       }
     });
 
@@ -89,14 +109,110 @@ export class MenuBarComponent implements OnInit {
     // });
   }
 
-  ngOnInit() {
+  private resetLanguageSelectionMenu() {
+    const monaco = this.editorControl.editorCore.getValue();
+    if (!monaco) {
+      this.log.warn(`Language registered without monaco present`);
+      return;
+    }
+    this.languageSelectionMenu.children = monaco.languages.getLanguages().sort(function(lang1, lang2) {
+      let name1 = lang1.aliases[0].toLowerCase();
+      let name2 = lang2.aliases[0].toLowerCase();
+      if (name1 < name2) {
+        return -1;
+      } else if (name1 > name2) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }).map(language => {
+      return {
+        name: language.aliases[0],
+        type: 'checkbox',
+        action: {
+          internalName: 'setEditorLanguage',
+          params: [language.id]
+        },
+        active: {
+          internalName: 'languageActiveCheck',
+          params: [language.id]
+        }
+      }
+    });
   }
 
-  //this is dumb because everything is local to this file.
-  //It needs to be anonymous functions given editorControl, monaco, and fileNode
-  menuAction(actionName: string, actionParams: any[]): any {
-    if (actionName != null) {
-      return this[actionName].apply(this, actionParams != null ? actionParams : []);
+  removeLanguageMenu() {
+    const removeSelectionMenu = this.fileCount===0;
+    for (let i = 0; i < this.menuList.length; i++) {
+      if (this.currentLang && this.menuList[i].name === this.currentLang) {
+        this.menuList.splice(i,1);
+        if (!removeSelectionMenu) {
+          break;
+        }
+        i = -1;
+      } else if (removeSelectionMenu && this.menuList[i].name === 'Language') {
+        this.menuList.splice(i,1);
+        i = -1;
+      }  
+    }
+  }
+
+  showLanguageMenu(language) {
+    let menus = [];
+    if (this.fileCount===0) {//will become 1 after
+      //add language selection menu, too
+      menus.push(this.languageSelectionMenu);
+    }
+
+    if (language) {
+      this.removeLanguageMenu();
+      
+      let menuChildren = this.languagesMenu[language];
+      if (menuChildren) {
+        menus.push({
+          name: language,
+          children: menuChildren
+        });
+        this.currentLang = language;
+      }
+    }
+    if (menus.length>0) {
+      this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+    }
+  }
+  
+  ngOnInit() {
+    if (this.editorControl._isTestLangMode) {
+      this.log.info(`Adding test language menu`);
+      this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
+    }
+  }
+
+  menuAction(menuItem: any): any {
+    if (!menuItem) {
+      return;
+    }
+    if (menuItem.internalName != null) {
+      return this[menuItem.internalName].apply(this, menuItem.params ? menuItem.params : []);
+    } else {
+      if (!menuItem.func) {
+        if (menuItem.functionString) {
+          menuItem.func = new Function('context', menuItem.functionString);
+        } else {
+          this.log.warn(`Cant do menu action, no function to execute.`);
+          return;
+        }
+      }
+      const editor = this.editorControl.editor.getValue();
+      if (editor) {
+        //TODO do we also need fileNode?
+        menuItem.func({
+          editor: editor,
+          controller: this.editorControl,
+          log: this.log
+          }, ...menuItem.params);
+      }
+      return;
     }
   }
 
