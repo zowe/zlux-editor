@@ -58,6 +58,7 @@ export class MonacoService {
   }
 
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
+    console.log("OPENING FILE HEREEEEEE!!!!!!");
     if (fileNode.temp) {
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
@@ -105,6 +106,7 @@ export class MonacoService {
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
+    console.log("SETTING MONACO MODEL!!!!!");
     return new Observable((obs) => {
       let coreSubscription = this.editorControl.editorCore
         .subscribe((value)=> {
@@ -126,10 +128,11 @@ export class MonacoService {
               fileNode.model.language = fileLang;
               const model = {
                 value: file['contents'],
-                language: fileLang,
-                // language: 'json',
+                //language: fileLang, // Replace fileLang here to test other languages
+                 language: 'jcl',
                 uri: this.generateUri(fileNode.model),
               };
+              monaco.editor.setTheme('jcl');
               const duplicate: boolean = this.fileDuplicateChecker(model.uri);
               let newModel;
               if (!duplicate) {

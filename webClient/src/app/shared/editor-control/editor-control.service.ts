@@ -765,6 +765,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   getRecommendedHighlightingModesForBuffer(buffer: ZLUX.EditorBufferHandle): Observable<string[]> {
     return new Observable<string[]>((obs) => {
       let bufferExt = this.utils.fileExtension(buffer.name).toLowerCase();
+      console.log("CHECKING BUFFER HERE!!!!");
       const fullName = buffer.model.isDataset ? buffer.model.fileName : buffer.name
       const parenIndex = fullName.indexOf('(');
       const isPds = buffer.model.isDataset && ( parenIndex != -1);

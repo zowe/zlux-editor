@@ -152,6 +152,7 @@ export class ProjectTreeComponent implements OnInit {
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
+              console.log("GOT DATASET HERE!1");
               this.nodes = this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               this.editorControl.initProjectContext(dirName, this.nodes);
@@ -263,6 +264,7 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
+        console.log("NODE ACTIVATE STILL USED HERE");
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
     }

@@ -93,22 +93,40 @@ const JCL_HILITE = {
 // The main tokenizer for our languages
   tokenizer: {
     root: [
-      [/^\/\/\*.*$/, { token: 'comment' }],
-      [/^\/\*.*$/, { token: 'comment' }],
-      [/^\/\/(\S+)?/, { token: 'type', next: '@operator' }]
+      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
+      [/^\/\*.*$/, { token: 'jcl-comment-/*-all' }],
+      [/^\/\/(\S+)?/, { token: 'jcl-comment-/*-one', next: '@operator' }]
     ],
     operator: [
-      [/\s+\S+/, { token: 'keyword', next: '@operands' }]
+      //[/\s+\S+/, { token: 'keyword', next: '@operands' }],
+      [/(DD|EXEC|JOB)/, { token: 'jcl-operator', next: '@operands' }],
     ],
     operands: [
       [/^(\/\/)(\s+)/, ['type', 'default']],
       [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
-      [/'[^']+'/, { token: 'string' }],
+      [/'[^']+'/, { token: 'jcl-string' }],
       [/[^\s,]+=/, { token: 'variable.name' }],
       [/[^,]\s*$/, { token: 'default', next: '@popall' }]
     ]
   }
 };
+
+export type Theme = monaco.editor.IStandaloneThemeData;
+
+export const JCL_THEME: Theme = {
+  base: 'vs-dark',
+  inherit: true,
+  colors: {
+  },
+	rules: [ // The following ruleset aims to match a JCL theme similar to one in ISPF
+    { token: 'jcl-comment-//*-all', foreground: '20e5e6' }, // Light blue
+    { token: 'jcl-comment-/*-all', foreground: '50eb24' }, // Green
+    { token: 'jcl-comment-/*-one', foreground: '50eb24' }, // Green
+    { token: 'jcl-operator', foreground: 'eb2424' }, // Red
+    { token: 'jcl-string', foreground: 'fdfdfd' }, // White
+    { token: 'default', foreground: 'fdfdfd' }, // White
+	]
+}
 
 export class MonacoConfig {
   subscription: Subscription = null;
@@ -126,6 +144,8 @@ export class MonacoConfig {
 
     monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
+
+    monaco.editor.defineTheme('jcl', JCL_THEME);
 
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
