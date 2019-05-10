@@ -98,10 +98,11 @@ const JCL_HILITE = {
       [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
       //[/^\/\/.*$/, { token: 'jcl-statement-//-all', next: '@operator' }],
       [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
-      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-statement-//-one', next: '@operator' }],
+      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-statement-//-one', next: '@operator' }],
       [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
       [/^\/\//, { token: 'jcl-statement-//', next: '@operator' }],
-      [/.*/, { token: 'none-slash' }]
+      [/.*/, { token: 'none-slash' }],
+      [/[^,]$/, { token: 'default', next: '@popall' }]
     ],
     operator: [
       //[/\s+\S+/, { token: 'keyword', next: '@operands' }],
@@ -124,7 +125,7 @@ const JCL_HILITE = {
     ],
     cntl: [
       //[/( +)/, { token: 'whitespace' }],
-      [/ * /, { token: 'jcl-variable' , next: '@comments' }],
+      [/ \* /, { token: 'jcl-delimiter' , next: '@comments' }],
       [/[^,]$/, { token: 'default', next: '@popall' }]
     ],
     operands: [
@@ -132,7 +133,7 @@ const JCL_HILITE = {
       [/^( .+)/, { token: 'none-slash'}],
       [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
       [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
-      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-statement-//-one', next: '@operator' }],
+      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-statement-//-one', next: '@operator' }],
       [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
       [/'[^']+',/, { token: 'jcl-string', next: '@comments' }],
       [/'[^']+'/, { token: 'jcl-string' }],
