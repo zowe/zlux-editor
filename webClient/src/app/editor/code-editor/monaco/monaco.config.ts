@@ -88,26 +88,63 @@ const HLASM_HILITE = {
 
 const JCL_HILITE = {
 // Set defaultToken to invalid to see what you do not tokenize yet
-// defaultToken: 'invalid',
+  defaultToken: 'default',
   ignoreCase: true,
 
-// The main tokenizer for our languages
+// Expand tokenizer via: https://microsoft.github.io/monaco-editor/monarch.html
   tokenizer: {
     root: [
+      [/( +)/, { token: 'whitespace' }],
       [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
-      [/^\/\*.*$/, { token: 'jcl-comment-/*-all' }],
-      [/^\/\/(\S+)?/, { token: 'jcl-comment-/*-one', next: '@operator' }]
+      //[/^\/\/.*$/, { token: 'jcl-statement-//-all', next: '@operator' }],
+      [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
+      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-statement-//-one', next: '@operator' }],
+      [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
+      [/^\/\//, { token: 'jcl-statement-//', next: '@operator' }],
+      [/.*/, { token: 'none-slash' }]
     ],
     operator: [
       //[/\s+\S+/, { token: 'keyword', next: '@operands' }],
-      [/(DD|EXEC|JOB)/, { token: 'jcl-operator', next: '@operands' }],
+      //~!@$%^&*()_+=|\/{}[]:;"'<> ,.?/
+      //Any character except [\^$.|?*+() ( +)
+      [/( +)/, { token: 'whitespace' }],
+      [/(IF)/, { token: 'jcl-operator', next: '@if' }],
+      [/(CNTL)/, { token: 'jcl-operator', next: '@cntl' }],
+      [/(DD|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT)/, { token: 'jcl-operator', next: '@operands' }],
+      [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND)/, { token: 'jcl-operator', next: '@comments' }],
+      [/[^DJOBEXCNTLUPHXMI]/, { token: 'default', next: '@operands'}],
+      [/[^,]$/, { token: 'default', next: '@popall' }]
+      //[/..../, { token: 'default', next: '@operands' }],
+    ],
+    if: [
+      //[/( +)/, { token: 'whitespace' }],
+      [/ [^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable' }],
+      [/(THEN )/, { token: 'jcl-operator', next: '@comments' }],
+      [/[^,]$/, { token: 'default', next: '@popall' }]
+    ],
+    cntl: [
+      //[/( +)/, { token: 'whitespace' }],
+      [/ * /, { token: 'jcl-variable' , next: '@comments' }],
+      [/[^,]$/, { token: 'default', next: '@popall' }]
     ],
     operands: [
-      [/^(\/\/)(\s+)/, ['type', 'default']],
-      [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
+      //^( .+)
+      [/^( .+)/, { token: 'none-slash'}],
+      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
+      [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
+      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-statement-//-one', next: '@operator' }],
+      [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
+      [/'[^']+',/, { token: 'jcl-string', next: '@comments' }],
       [/'[^']+'/, { token: 'jcl-string' }],
-      [/[^\s,]+=/, { token: 'variable.name' }],
-      [/[^,]\s*$/, { token: 'default', next: '@popall' }]
+      [/[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
+      [/[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
+      [/(~|!|@|%|&|_|=|{|}|]|:|;|"|'|<|>|,|\[|\\|\^|\$|\.|\||\?|\*|\+|\(|\))/, { token: 'jcl-delimiter' }],
+      [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
+      [/[^,]$/, { token: 'default', next: '@popall' }]
+    ],
+    comments: [
+      [/.*/, { token: 'jcl-comment-//*-all', next: '@popall' }],
+      [/[^,]$/, { token: 'default', next: '@popall' }],
     ]
   }
 };
@@ -121,11 +158,16 @@ export const JCL_THEME: Theme = {
   },
 	rules: [ // The following ruleset aims to match a JCL theme similar to one in ISPF
     { token: 'jcl-comment-//*-all', foreground: '20e5e6' }, // Light blue
-    { token: 'jcl-comment-/*-all', foreground: '50eb24' }, // Green
-    { token: 'jcl-comment-/*-one', foreground: '50eb24' }, // Green
+    { token: 'jcl-statement-//', foreground: '50eb24' }, // Green
+    { token: 'jcl-statement-/*', foreground: '50eb24' }, // Green
+    { token: 'jcl-statement-//one', foreground: '50eb24' }, // Green
+    { token: 'jcl-statement-//-one', foreground: '50eb24' }, // Green
     { token: 'jcl-operator', foreground: 'eb2424' }, // Red
+    { token: 'jcl-delimiter', foreground: 'fffd23' }, // Yellow
     { token: 'jcl-string', foreground: 'fdfdfd' }, // White
-    { token: 'default', foreground: 'fdfdfd' }, // White
+    { token: 'jcl-variable', foreground: '50eb24' }, // Green
+    { token: 'none-slash', foreground: '815aff' }, // Blue-Purple
+    { token: 'default', foreground: '50eb24' }, // Green
 	]
 }
 

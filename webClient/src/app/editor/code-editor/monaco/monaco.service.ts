@@ -133,8 +133,8 @@ export class MonacoService {
               fileNode.model.language = fileLang;
               const model = {
                 value: file['contents'],
-                //language: fileLang, // Replace fileLang here to test other languages
-                 language: 'jcl',
+                language: fileLang, // Replace fileLang here to test other languages
+                //language: 'jcl',
                 uri: this.generateUri(fileNode.model),
               };
               monaco.editor.setTheme('jcl');
