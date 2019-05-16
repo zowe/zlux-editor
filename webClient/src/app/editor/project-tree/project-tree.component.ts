@@ -8,10 +8,13 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject, OnDestroy } from '@angular/core';
 import { Response } from '@angular/http';
 import { MatDialog } from '@angular/material';
 import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
+import { Subject } from 'rxjs/Subject';
+import { Subscription } from 'rxjs/Subscription';
+import 'rxjs/add/operator/debounceTime';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
@@ -34,7 +37,7 @@ import { B64Decoder } from '../../shared/b64-decoder';
   templateUrl: './project-tree.component.html',
   styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
-export class ProjectTreeComponent implements OnInit {
+export class ProjectTreeComponent implements OnInit, OnDestroy {
 
   @ViewChild(TreeComponent)
   private tree: TreeComponent;
@@ -43,6 +46,8 @@ export class ProjectTreeComponent implements OnInit {
   private fileExplorer: ZluxFileExplorerComponent;
 
   private showDatasets: Boolean;
+  private nodeClick: Subject<any> = new Subject<any>();
+  private subscription: Subscription = new Subscription();
 
   nodes: ProjectStructure[];
   options = {
@@ -105,6 +110,27 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.showDatasets = false;
+
+    // using debounceTime operator to make double click behave like single click
+    this.subscription.add(this.nodeClick.debounceTime(250).subscribe(($event: any) => {
+      if ($event.directory == false) {
+        //let nodeData: ProjectStructure = new ProjectStructure();
+        const nodeData: ProjectStructure = {
+          encoding: $event.ccsid,
+          hasChildren: false,
+          fileName: $event.name,
+          id: $event.id + 1,
+          isDataset: false,
+          name: $event.name,
+          path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
+        };
+
+
+        this.editorControl.openFile('', nodeData).subscribe(x => {
+          this.log.debug(`File loaded through File Explorer.`);
+        });
+      } else { }
+    }));
 
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {
@@ -198,23 +224,9 @@ export class ProjectTreeComponent implements OnInit {
     // Todo: Create right click menu functionality.
   }
 
-  onNodeClick($event:any){
-    if ($event.directory == false) {
-      //let nodeData: ProjectStructure = new ProjectStructure();
-      const nodeData: ProjectStructure = {
-        encoding: $event.ccsid,
-        hasChildren: false,
-        fileName: $event.name,
-        id: $event.id + 1,
-        isDataset: false,
-        name: $event.name,
-        path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
-    };
-  
-      this.editorControl.openFile('', nodeData).subscribe(x => {
-        this.log.debug(`File loaded through File Explorer.`);
-      });
-    } else { }
+
+  onNodeClick($event: any) {
+    this.nodeClick.next($event);
   }
 
   onPathChanged($event: any) {
@@ -320,6 +332,12 @@ export class ProjectTreeComponent implements OnInit {
         }
       }
       return 'assignment';
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 }
