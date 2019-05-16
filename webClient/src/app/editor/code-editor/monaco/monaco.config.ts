@@ -94,7 +94,7 @@ const JCL_HILITE = {
 // Expand tokenizer via: https://microsoft.github.io/monaco-editor/monarch.html
   tokenizer: {
     root: [
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/<</, { token: 'jcl-delimiter', next: '@comments'}], //Checks for <<
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
@@ -107,7 +107,7 @@ const JCL_HILITE = {
     ],
     name: [
       
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
       [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
@@ -121,7 +121,7 @@ const JCL_HILITE = {
     ],
     operator: [
       //[/( +)/, { token: 'whitespace' }],
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/!/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid JCL characters
       [/[a-z]+/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid lowercase JCL
@@ -135,7 +135,7 @@ const JCL_HILITE = {
       //[/..../, { token: 'default', next: '@operands' }],
     ],
     if: [
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/(THEN )/, { token: 'jcl-operator', next: '@comments' }],
       [/./, { token: 'jcl-variable' }],
@@ -165,7 +165,7 @@ const JCL_HILITE = {
     ],
     operands2: [ //JCL has a behavior where it will accept two sets of operands before detecting comments
                  //for certain conditions, usually when statements are continued via a ','
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
       [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
