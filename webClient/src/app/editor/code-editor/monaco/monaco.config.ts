@@ -122,7 +122,7 @@ const JCL_HILITE = {
       [/(IF)/, { token: 'jcl-operator', next: '@if' }],
       [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) +/, { token: 'jcl-operator', next: '@operands' }],
       [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND|THEN) +/, { token: 'jcl-operator', next: '@comments' }],
-      [/[^\s\\]+/, { token: 'default', next: '@operands'}],
+      [/[^\s\\a-z]+/, { token: 'default', next: '@operands'}],
       [/[^,]$/, { token: 'default', next: '@popall' }]
       //[/..../, { token: 'default', next: '@operands' }],
     ],
