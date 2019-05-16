@@ -89,63 +89,96 @@ const HLASM_HILITE = {
 const JCL_HILITE = {
 // Set defaultToken to invalid to see what you do not tokenize yet
   defaultToken: 'default',
-  ignoreCase: true,
+  ignoreCase: false,
 
 // Expand tokenizer via: https://microsoft.github.io/monaco-editor/monarch.html
   tokenizer: {
     root: [
-      [/( +)/, { token: 'whitespace' }],
-      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
-      //[/^\/\/.*$/, { token: 'jcl-statement-//-all', next: '@operator' }],
-      [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
-      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-statement-//-one', next: '@operator' }],
-      [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
-      [/^\/\//, { token: 'jcl-statement-//', next: '@operator' }],
-      [/.*/, { token: 'none-slash' }],
-      [/[^,]$/, { token: 'default', next: '@popall' }]
+      [/<</, { token: 'jcl-delimiter', next: '@comments'}], //Checks for <<
+      [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
+      [/( *)[0-9]+$/, { token: 'default' }], //Checks for linenumber + linebreak (new JCL statement)
+      [/( +)/, { token: 'whitespace' }], //Removes any previous line spaces
+      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }], //Comment lasts until end of line
+      [/^\/\*/, { token: 'jcl-statement-/*', next: '@name' }],
+      [/^\/\//, { token: 'jcl-statement-//', next: '@name' }],
+      [/.*/, { token: 'none-slash' }], //When a token doesn't match, the line is blue
+    ],
+    name: [
+      [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
+      [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
+      [/( +)/, { token: 'whitespace', next: '@operator' }], //Spaces(s) designate when to check for KEYWORDS after root
+      [/'.*'/, { token: 'jcl-string', next: '@strings' }],
+      [/!/, { token: 'jcl-invalid' }], // Checks for invalid JCL characters
+      [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
+      //[/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]/, { token: 'jcl-variable' }],
+      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      [/./, { token: 'default' }]
     ],
     operator: [
-      //[/\s+\S+/, { token: 'keyword', next: '@operands' }],
-      //~!@$%^&*()_+=|\/{}[]:;"'<> ,.?/
-      //Any character except [\^$.|?*+() ( +)
-      [/( +)/, { token: 'whitespace' }],
+      //[/( +)/, { token: 'whitespace' }],
+      [/!/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid JCL characters
+      [/[a-z]+/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid lowercase JCL
+      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter', next: '@operands'}],
       [/(IF)/, { token: 'jcl-operator', next: '@if' }],
-      [/(CNTL)/, { token: 'jcl-operator', next: '@cntl' }],
-      [/(DD|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT)/, { token: 'jcl-operator', next: '@operands' }],
-      [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND)/, { token: 'jcl-operator', next: '@comments' }],
-      [/[^DJOBEXCNTLUPHXMI]/, { token: 'default', next: '@operands'}],
+      [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) +/, { token: 'jcl-operator', next: '@operands' }],
+      [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND|THEN) +/, { token: 'jcl-operator', next: '@comments' }],
+      [/[^\s\\]+/, { token: 'default', next: '@operands'}],
       [/[^,]$/, { token: 'default', next: '@popall' }]
       //[/..../, { token: 'default', next: '@operands' }],
     ],
     if: [
       //[/( +)/, { token: 'whitespace' }],
-      [/ [^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable' }],
+      //[/ [^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable' }],
       [/(THEN )/, { token: 'jcl-operator', next: '@comments' }],
-      [/[^,]$/, { token: 'default', next: '@popall' }]
-    ],
-    cntl: [
-      //[/( +)/, { token: 'whitespace' }],
-      [/ \* /, { token: 'jcl-delimiter' , next: '@comments' }],
-      [/[^,]$/, { token: 'default', next: '@popall' }]
+      [/[^,]$/, { token: 'default', next: '@popall' }],
+      [/./, { token: 'jcl-variable' }],
     ],
     operands: [
       //^( .+)
-      [/^( .+)/, { token: 'none-slash'}],
-      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
-      [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
-      [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-statement-//-one', next: '@operator' }],
-      [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
-      [/'[^']+',/, { token: 'jcl-string', next: '@comments' }],
-      [/'[^']+'/, { token: 'jcl-string' }],
-      [/[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
-      [/[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
-      [/(~|!|@|%|&|_|=|{|}|]|:|;|"|'|<|>|,|\[|\\|\^|\$|\.|\||\?|\*|\+|\(|\))/, { token: 'jcl-delimiter' }],
-      [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
-      [/[^,]$/, { token: 'default', next: '@popall' }]
+      // [/^( .+)/, { token: 'none-slash'}],
+      // [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }],
+      // [/^\/\*/, { token: 'jcl-statement-/*', next: '@operands' }],
+      // [/^\/\/ +[^\s,=~!@%&_{}\]:;"'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-statement-//-one', next: '@operator' }],
+      // [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
+      [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
+      [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
+      [/, /, { token: 'jcl-delimiter', next: '@comments' }], //Checks for , + space (leads to comment)
+      [/'/, { token: 'jcl-string', next: '@strings' }],
+      [/!/, { token: 'jcl-invalid' }], // Checks for invalid JCL characters
+      [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
+      // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
+      // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
+      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      [/ /, { token: 'jcl-variable', next: '@comments' }],//Space leads to comments
+      [/./, { token: 'jcl-variable' }],//For everything else
+      // [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
+      // [/[^,]$/, { token: 'default', next: '@popall' }]
+    ],
+    operands2: [ //JCL has a behavior where it will accept two sets of operands before detecting comments
+                 //for certain conditions, usually when statements are continued via a ','
+      [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
+      [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
+      [/, /, { token: 'jcl-delimiter', next: '@comments' }], //Checks for , + space (leads to comment)
+      [/'/, { token: 'jcl-string', next: '@strings' }],
+      [/!/, { token: 'jcl-invalid' }], // Checks for invalid JCL characters
+      [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
+      // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
+      // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
+      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      [/ +/, { token: 'jcl-variable', next: '@operands' }],//Space leads to next operand
+      [/\//, { token: 'jcl-variable' }],
+      [/^.*/, { token: 'none-slash' }], //When a token doesn't match, the line is blue
+      [/./, { token: 'jcl-variable' }],//For everything else
     ],
     comments: [
       [/.*/, { token: 'jcl-comment-//*-all', next: '@popall' }],
       [/[^,]$/, { token: 'default', next: '@popall' }],
+    ],
+    strings: [ //Strings get their own category because Monaco doesn't seem to deal with pattern matching
+              //over line breaks, even with multiline flags. This way, we just put strings into their own loop.
+      [/.*' /, { token: 'jcl-string', next: '@comments' }], // Space after the ending (') character is a comment
+      [/.*' */, { token: 'jcl-string', next: '@operands' }], // Covers all characters in string until ending (') character
+      [/.*/, { token: 'jcl-string' }],
     ]
   }
 };
@@ -167,6 +200,8 @@ export const JCL_THEME: Theme = {
     { token: 'jcl-delimiter', foreground: 'fffd23' }, // Yellow
     { token: 'jcl-string', foreground: 'fdfdfd' }, // White
     { token: 'jcl-variable', foreground: '50eb24' }, // Green
+    { token: 'jcl-invalid', foreground: 'ffadc7', background: 'ff8173' }, // Light red, background is supposed to be "highlight" 
+    //of text but it doesn't seem to work?
     { token: 'none-slash', foreground: '815aff' }, // Blue-Purple
     { token: 'default', foreground: '50eb24' }, // Green
 	]
