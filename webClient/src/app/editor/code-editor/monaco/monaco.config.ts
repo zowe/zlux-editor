@@ -149,7 +149,7 @@ const JCL_HILITE = {
       // [/^\/\/(\S+)?/, { token: 'jcl-statement-//one', next: '@operator' }],
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
       [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
-      [/, *$/, { token: 'default', next: '@operands2' }], //Checks for end of line with a ','
+      [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/, /, { token: 'jcl-delimiter', next: '@comments' }], //Checks for , + space (leads to comment)
       [/'/, { token: 'jcl-string', next: '@strings' }],
