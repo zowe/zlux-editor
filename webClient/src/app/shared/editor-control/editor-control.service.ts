@@ -193,12 +193,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
-    this._openFileList.next(this._openFileList.getValue().filter((file) => file.model.id !== fileContext.model.id));
+    this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
     for (const file of this._openFileList.getValue()) {
-      if (file.id === fileContext.id) {
+      if (file.model.fileName === fileContext.model.fileName && file.model.path === fileContext.model.path) {
         file.opened = true;
         file.active = true;
       } else {
@@ -215,8 +215,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     if (context != null) {
       for (const node of context) {
-        // const match = fileNode.id === node.id && fileNode.name === node.name;
-        const match = fileNode.id === node.id;
+        const match = fileNode.name === node.name && fileNode.path === node.model.path;
         if (match) {
           fileContext = node;
           break;
