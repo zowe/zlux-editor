@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
 import { ProjectContext } from '../../../shared/model/project-context';
@@ -31,6 +32,7 @@ export class MonacoService {
   private decorations: string[] = [];
   
   constructor(
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private httpService: HttpService,
     private http: Http,
     private dataAdapter: DataAdapterService,
@@ -115,10 +117,12 @@ export class MonacoService {
               }
             },
             error: (err) => {
+              this.log.warn(err);
             }
           });
         },
         error: (err) => {
+          this.log.warn(`${fileNode.name} could not be opened`);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions`,
               'Close', { duration: MessageDuration.Short, panelClass: 'center' });
