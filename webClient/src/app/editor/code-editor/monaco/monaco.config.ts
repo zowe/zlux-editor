@@ -90,33 +90,46 @@ const JCL_HILITE = {
 // Set defaultToken to invalid to see what you do not tokenize yet
   defaultToken: 'default',
   ignoreCase: false,
+  
+  brackets: [ 
+  ['(',')','jcl-delimiter'], ],
 
 // Expand tokenizer via: https://microsoft.github.io/monaco-editor/monarch.html
   tokenizer: {
     root: [
+      // [/^................................................................................[^ |\n]*/, 
+      //   { token: 'jcl-invalid' }], //Checks for lines with 80+ characters
+      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }], //Comment lasts until end of line
       [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
-      [/<</, { token: 'jcl-delimiter', next: '@comments'}], //Checks for <<
+      //[/<</, { token: 'jcl-delimiter', next: '@comments'}], //Checks for << [{}()\[\]]
+      //[/[()]/, { token: 'jcl-delimiter', next: '@brackets'}], 
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
       [/( *)[0-9]+$/, { token: 'default' }], //Checks for linenumber + linebreak (new JCL statement)
       [/( +)/, { token: 'whitespace' }], //Removes any previous line spaces
-      [/^\/\/\*.*$/, { token: 'jcl-comment-//*-all' }], //Comment lasts until end of line
-      [/^\/\*/, { token: 'jcl-statement-/*', next: '@name' }],
-      [/^\/\//, { token: 'jcl-statement-//', next: '@name' }],
+      [/^\/\*/, { token: 'jcl-statement-/*', next: '@nameFirstChar' }],
+      [/^\/\//, { token: 'jcl-statement-//', next: '@nameFirstChar' }],
       [/.*/, { token: 'none-slash' }], //When a token doesn't match, the line is blue
     ],
+    nameFirstChar: [
+      [/[ ]/, { token: 'default', next: '@operator' }], //Name must start with capital or national symbols
+      [/[A-Z|@|#|$| ]/, { token: 'default', next: '@name' }], //Name must start with capital or national symbols
+      [/./, { token: 'jcl-invalid', next: '@name' }], //For everything else
+    ],
     name: [
-      
       [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
       [/( *)[0-9]+$/, { token: 'default', next: '@popall' }], //Checks for linenumber + linebreak (new JCL statement)
-      [/( +)/, { token: 'whitespace', next: '@operator' }], //Spaces(s) designate when to check for KEYWORDS after root
+      [/( +)/, { token: 'whitespace', next: '@operator' }], //Spaces(s) designate when to check for operator keywords after name
       [/'.*'/, { token: 'jcl-string', next: '@strings' }],
-      [/!/, { token: 'jcl-invalid' }], // Checks for invalid JCL characters
-      [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
+      [/[^A-Z|@|#|$|0-9]/, { token: 'jcl-invalid' }], // Checks for invalid JCL characters in names
       //[/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]/, { token: 'jcl-variable' }],
-      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      //[/(,|&|=|\^)/, { token: 'jcl-delimiter' }],
+      // [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
+      // [/\(/, { token: 'jcl-invalid' }],
+      // [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
+      // [/\)/, { token: 'jcl-invalid' }],
       [/./, { token: 'default' }]
     ],
     operator: [
@@ -125,13 +138,18 @@ const JCL_HILITE = {
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/!/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid JCL characters
       [/[a-z]+/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid lowercase JCL
-      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter', next: '@operands'}],
+      [/(,|&|=|\^)/, { token: 'jcl-delimiter', next: '@operands'}],
+      [/'/, { token: 'jcl-string', next: '@strings' }],
+      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
+      [/\(/, { token: 'jcl-invalid' }],
+      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
+      [/\)/, { token: 'jcl-invalid' }],
       [/(IF)/, { token: 'jcl-operator', next: '@if' }],
       [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) *$/, { token: 'jcl-operator', next: '@popall' }],
       [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) +/, { token: 'jcl-operator', next: '@operands' }],
       [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND|THEN) *$/, { token: 'jcl-operator', next: '@popall' }],
       [/(ENDCNTL|EXPORT|ELSE|ENDIF|PEND|THEN) +/, { token: 'jcl-operator', next: '@comments' }],
-      [/[^\s\\a-z]+/, { token: 'default', next: '@operands'}],
+      [/[^\s\\a-z(,|&|=|\^)]+/, { token: 'default', next: '@operands'}], //Matches the
       //[/..../, { token: 'default', next: '@operands' }],
     ],
     if: [
@@ -157,7 +175,11 @@ const JCL_HILITE = {
       [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
-      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      [/(,|&|=|\^)/, { token: 'jcl-delimiter' }],
+      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
+      [/\(/, { token: 'jcl-invalid' }],
+      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
+      [/\)/, { token: 'jcl-invalid' }],
       [/ /, { token: 'jcl-variable', next: '@comments' }],//Space leads to comments
       [/./, { token: 'jcl-variable' }],//For everything else
       // [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
@@ -175,7 +197,13 @@ const JCL_HILITE = {
       [/[a-z]+/, { token: 'jcl-invalid' }], // Checks for invalid lowercase JCL
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
-      [/(,|&|=|\^|\(|\))/, { token: 'jcl-delimiter' }],
+      [/(,|&|=|\^)/, { token: 'jcl-delimiter' }],
+      // [/[(]/, { token: 'jcl-delimiter', bracket: '@open' }],
+      // [/[)]/, { token: 'jcl-delimiter', bracket: '@close' }],
+      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
+      [/\(/, { token: 'jcl-invalid' }],
+      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
+      [/\)/, { token: 'jcl-invalid' }],
       [/ +/, { token: 'jcl-variable', next: '@operands' }],//Space leads to next operand
       [/\//, { token: 'jcl-variable' }],
       [/^.*/, { token: 'none-slash' }], //When a token doesn't match, the line is blue
