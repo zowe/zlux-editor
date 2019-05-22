@@ -88,7 +88,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     private utils: UtilsService,
     private http: HttpService,
     private ngHttp: Http,
-    private snackBar: SnackBarService,
+    public snackBar: SnackBarService,
     private dialog: MatDialog,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
@@ -812,13 +812,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         if (monaco != null) {
           let languages = monaco.languages.getLanguages();
           if (buffer.model.isDataset) {
-            for (let i = 0; i < languages.length; i++) {
-              let lang = languages[i];
-              for (let extension of lang.extensions) {
-                if (name.indexOf(extension)!=-1 || name.indexOf(`${extension}.`) != -1) {
-                  results.push(lang.id);
-                  i = languages.length;
-                  break;
+            //to solve asm.jcllib, search back-to-front, all langs before moving to next portion of name
+            const portions = name.split('.');
+            for (let portion of portions) {
+              for (let i = 0; i < languages.length; i++) {
+                let lang = languages[i];
+                for (let extension of lang.extensions) {
+                  if (portion === extension
+                      || portion === extension+'lib') {
+                    results.push(lang.id);
+                    i = languages.length;
+                    break;
+                  }
                 }
               }
             }

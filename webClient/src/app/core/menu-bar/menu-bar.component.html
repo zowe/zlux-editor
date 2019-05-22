@@ -14,7 +14,7 @@
       {{menu.name}}
       <div class="gz-menu-function" *ngIf="menuActive">
         <ul>
-          <li class="gz-menu-function-item" [ngClass]="{'group-line': function.name === 'group-end'}" *ngFor="let function of menu.children"
+          <li class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
             (click)="menuAction(function.action)">
             <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
               fiber_manual_record

@@ -46,6 +46,13 @@
               margin: 5px 0;
             }
           }
+          .gz-menu-function-item.disabled {
+            color: #9d9d9d;
+            pointer-events: none;
+          }
+          .gz-menu-function-item.disabled:hover {
+              background-color: #586198;
+          }
           .gz-menu-function-item:hover {
             background-color: #e0e0e0;
           }
