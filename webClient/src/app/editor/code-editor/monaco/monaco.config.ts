@@ -93,6 +93,7 @@ const JCL_HILITE = {
   
   brackets: [ 
   ['(',')','jcl-delimiter'], ],
+  
 
 // Expand tokenizer via: https://microsoft.github.io/monaco-editor/monarch.html
   tokenizer: {
@@ -141,10 +142,7 @@ const JCL_HILITE = {
       [/[a-z]+/, { token: 'jcl-invalid', next: '@operands' }], // Checks for invalid lowercase JCL
       [/(,|&|=|\^)/, { token: 'jcl-delimiter', next: '@operands'}],
       [/'/, { token: 'jcl-string', next: '@strings' }],
-      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
-      [/\(/, { token: 'jcl-invalid' }],
-      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
-      [/\)/, { token: 'jcl-invalid' }],
+      [/[()]/, '@brackets'],
       [/(IF)/, { token: 'jcl-operator', next: '@if' }],
       [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) *$/, { token: 'jcl-operator', next: '@popall' }],
       [/(DD|CNTL|EXEC|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND) +/, { token: 'jcl-operator', next: '@operands' }],
@@ -177,10 +175,7 @@ const JCL_HILITE = {
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+ /, { token: 'jcl-variable', next: '@comments'}],
       // [/[^\s,=~!@%&_{}\]:;'<>\[\\\^\$\.\|\?\*\+\(\)]+/, { token: 'jcl-variable' }],
       [/(,|&|=|\^)/, { token: 'jcl-delimiter' }],
-      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
-      [/\(/, { token: 'jcl-invalid' }],
-      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
-      [/\)/, { token: 'jcl-invalid' }],
+      [/[()]/, '@brackets'],
       [/ /, { token: 'jcl-variable', next: '@comments' }],//Space leads to comments
       [/./, { token: 'jcl-variable' }],//For everything else
       // [/'[^']+'\s*$/, { token: 'string', next: '@popall' }],
@@ -201,10 +196,7 @@ const JCL_HILITE = {
       [/(,|&|=|\^)/, { token: 'jcl-delimiter' }],
       // [/[(]/, { token: 'jcl-delimiter', bracket: '@open' }],
       // [/[)]/, { token: 'jcl-delimiter', bracket: '@close' }],
-      [/\(/,   { token: 'jcl-delimiter', bracket: '@open'  }],
-      [/\(/, { token: 'jcl-invalid' }],
-      [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
-      [/\)/, { token: 'jcl-invalid' }],
+      [/[()]/, '@brackets'],
       [/ +/, { token: 'jcl-variable', next: '@operands' }],//Space leads to next operand
       [/\//, { token: 'jcl-variable' }],
       [/^.*/, { token: 'none-slash' }], //When a token doesn't match, the line is blue
@@ -240,7 +232,7 @@ export const JCL_THEME: Theme = {
     { token: 'jcl-delimiter', foreground: 'fffd23' }, // Yellow
     { token: 'jcl-string', foreground: 'fdfdfd' }, // White
     { token: 'jcl-variable', foreground: '50eb24' }, // Green
-    { token: 'jcl-invalid', foreground: 'ffadc7', background: 'ff8173' }, // Light red, background is supposed to be "highlight" 
+    { token: 'jcl-invalid', foreground: 'ffadc7', background: 'ff8173', fontStyle: 'bold' }, // Light red, background is supposed to be "highlight" 
     //of text but it doesn't seem to work?
     { token: 'none-slash', foreground: '815aff' }, // Blue-Purple
     { token: 'default', foreground: '50eb24' }, // Green
