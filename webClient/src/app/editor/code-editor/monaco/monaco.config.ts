@@ -118,7 +118,7 @@ const JCL_HILITE = {
       [/./, { token: 'jcl-invalid', next: '@name' }], //For everything else
     ],
     name: [
-      [/[A-Z|@|#|$|0-9]{8,}/, { token: 'jcl-invalid', next: '@operator' }], //Name must be between {0, 8} characters
+      [/[A-Z|@|#|$|0-9]{0,7}/, { token: 'default', next: '@invalidName' }], //Name must be between {0, 8} characters
       [/, *$/, { token: 'jcl-delimiter', next: '@operands2' }], //Checks for end of line with a ','
       [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
       [/,( +)[0-9]+$/, { token: 'jcl-delimiter', next: '@operands2'}], //Checks for ',' + linenumber + linebreak (continuation of statement)
@@ -133,6 +133,11 @@ const JCL_HILITE = {
       // [/\)/, { token: 'jcl-delimiter', bracket: '@close' }],
       // [/\)/, { token: 'jcl-invalid' }],
       [/./, { token: 'default' }]
+    ],
+    invalidName: [
+      [/ *\n| *$/, { token: 'default', next: '@popall' }], //Checks for end of line without a ','
+      [/( +)/, { token: 'jcl-invalid', next: '@operator' }], //Name must be between {0, 8} characters
+      [/./, { token: 'jcl-invalid', }], //Name must be between {0, 8} characters
     ],
     operator: [
       //[/( +)/, { token: 'whitespace' }],
