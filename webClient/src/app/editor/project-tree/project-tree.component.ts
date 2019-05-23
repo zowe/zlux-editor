@@ -146,12 +146,13 @@ export class ProjectTreeComponent implements OnInit {
         } else { //Datasets
           //Note: This temporary hack is used to show datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
-            this.fileExplorer.hideExplorers();
-            this.showDatasets = true;
 
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
+              this.fileExplorer.showDatasets();
+              this.fileExplorer.hideExplorers();
+              this.showDatasets = true;
               this.nodes = this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               this.editorControl.initProjectContext(dirName, this.nodes);
@@ -263,6 +264,7 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
+        console.log("NODE ACTIVATE STILL USED HERE");
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
     }
