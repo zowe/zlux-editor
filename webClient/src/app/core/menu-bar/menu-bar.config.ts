@@ -8,41 +8,65 @@
   
   Copyright Contributors to the Zowe Project.
 */
+
+export const TEST_LANGUAGE_MENU = [{name:'TEST_REPLACE',
+                  action: {
+                    functionString:`
+                    console.log("My context=",context);
+                    context.editor.model.setValue("GOODBYE TEXT");`, params:[]}, keyMap: ''},
+                 {name:'Crop',
+                  action: {
+                    functionString:`
+                    const selection = context.editor.cursor.getSelection();
+                    context.log.info('selection=',selection);
+                    if (selection) {
+                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
+                    }`, params:[]}, keyMap: ''},
+                 {name:'Is Dataset?',
+                  action: {
+                    functionString:`
+                    const model = context.controller.fetchActiveFile().model;
+                    context.log.info('My model=',model);
+                    const isDataset = model.isDataset;
+                    const fullName = isDataset ? model.fileName : model.name;
+                    context.controller.snackBar.open(isDataset ? fullName+' is a dataset!'
+                                                     : fullName+' is NOT a dataset.', 'Close',
+                                                     { duration: 3000, panelClass: 'center' });
+                    `, params:[]}, keyMap: ''}
+                ]
+
+
 export const MENU = [
     {
         name: 'File',
         children: [
             {
-                name: 'New File',
-                action: {
-                    name: 'createFile',
-                    params: [],
-                },
-                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+              name: 'New File',
+              action: {
+                internalName: 'createFile'
+              },
+              keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
             },              // to be rethinked.
             {
-                name: 'group-end'
+              name: 'group-end'
             },
-            // {
-            //     name: 'Open Project',
-            //     action: {
-            //         name: 'openProject',
-            //         params: [],
-            //     },
-            // },
+          // {
+          //     name: 'Open Project',
+          //     action: {
+          //       internalName: 'openProject'
+          //     }
+          // },
             {
                 name: 'Open Directory',
                 action: {
-                    name: 'openDirectory',
-                    params: [],
-                },
+                    internalName: 'openDirectory'
+                }
             },
             {
                 name: 'Open Datasets',
                 action: {
-                    name: 'openDatasets',
-                    params: [],
-                },
+                    internalName: 'openDatasets'
+                }
             },
             {
                 name: 'group-end'
@@ -50,18 +74,16 @@ export const MENU = [
             {
                 name: 'Save',
                 action: {
-                    name: 'saveFile',
-                    params: [],
+                    internalName: 'saveFile'
                 },
-                keyMap: '', // [Ctrl+S] won't work due to browser conflicts. Keybindings will need
+                keyMap: '' // [Ctrl+S] won't work due to browser conflicts. Keybindings will need
             },              // to be rethinked.
             //{
             //    name: 'Save All',
             //    action: {
-            //        name: 'saveAll',
-            //        params: [],
+            //        internalName: 'saveAll'
             //    },
-            //    keyMap: '[Ctrl+S]',
+            //    keyMap: '[Ctrl+S]'
             //},
             {
                 name: 'group-end'
@@ -69,10 +91,9 @@ export const MENU = [
             {
                 name: 'Delete File',
                 action: {
-                    name: 'deleteFile',
-                    params: [],
+                    internalName: 'deleteFile'
                 },
-                keyMap: '', // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+                keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
             },              // to be rethinked.
         ],
     },
@@ -82,8 +103,7 @@ export const MENU = [
             {
                 name: 'URL',
                 action: {
-                    name: 'languageServerSetting',
-                    params: [],
+                    internalName: 'languageServerSetting'
                 }
             }
         ],

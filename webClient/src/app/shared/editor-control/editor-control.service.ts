@@ -43,9 +43,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openDataset: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
+  public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
   //public saveAllFile: EventEmitter<any> = new EventEmitter();
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
@@ -59,6 +61,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
 
   private _projectName = '';
+  public _isTestLangMode = false;
 
 
   /**
@@ -158,6 +161,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this._context.next(childrenContext);
     this._rootContext.next(root);
     return root;
+  }
+
+  public registerLanguage(languageDefinition, highlighter?:any) {
+    monaco.languages.register(languageDefinition);
+    if (highlighter) {
+      monaco.languages.setMonarchTokensProvider(languageDefinition.id, highlighter);
+    }
+    this.languageRegistered.next(languageDefinition);
   }
 
   public get openFileList(): BehaviorSubject<ProjectContext[]> {
@@ -743,6 +754,31 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
    */
   setHighlightingModeForBuffer(buffer: ZLUX.EditorBufferHandle, language: string): void {
     this.changeLanguage.next({ context: buffer, language: language });
+  }
+
+  /**
+   * Sets the theme for a unique language, if necessary.
+   *
+   * @param language The desired language
+   */
+  setThemeForLanguage(language: string): void {
+    // This is a pleasant option to preserve the classic ISPF aesthetic but we can
+    // change the structure depending on what we do with themes (create modified versions
+    // of the regular/dark/black themes and add our language specific tokens?)
+    switch(language) {
+      // TODO: Once we expand editor themes, we can think about how we handle languages like JCL
+      // for ex. maybe have ispf, ispf-dark, and ispf-black that groups multiple commonly used languages
+      // in ISPF that we decide to create syntax highlighting for,
+      case 'jcl': { 
+        monaco.editor.setTheme('jcl-dark');
+        break; 
+      }
+      default: { 
+        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
+        monaco.editor.setTheme('vs-dark');
+        break; 
+      } 
+    } 
   }
 
   /**
