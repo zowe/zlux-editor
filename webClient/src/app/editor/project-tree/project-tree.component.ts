@@ -264,7 +264,6 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
-        console.log("NODE ACTIVATE STILL USED HERE");
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
     }

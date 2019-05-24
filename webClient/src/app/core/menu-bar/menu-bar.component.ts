@@ -341,6 +341,7 @@ export class MenuBarComponent implements OnInit {
   setEditorLanguage(language: string) {
     let fileContext = this.editorControl.fetchActiveFile();
     this.editorControl.setHighlightingModeForBuffer(fileContext, language);
+    this.editorControl.setThemeForLanguage(language);
   }
 
   languageActiveCheck(language: string): boolean {
