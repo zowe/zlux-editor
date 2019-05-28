@@ -130,9 +130,8 @@ export class ProjectTreeComponent implements OnInit {
     this.editorControl.openDirectory.subscribe(dirName => {
       //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
       // Will be removed when Dataset functionality for Explorer gets better.
-        this.fileExplorer.showUss();
+        this.onUssSelect();
         this.fileExplorer.updateDirectory(dirName);
-        this.showDatasets = false;
     });
 
     this.editorControl.openDataset.subscribe(dirName => {
@@ -140,9 +139,8 @@ export class ProjectTreeComponent implements OnInit {
         if (dirName[0] == '/') {
           //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
-            this.fileExplorer.showUss();
+            this.onUssSelect();
             this.fileExplorer.updateDirectory(dirName);
-            this.showDatasets = false;
         } else { //Datasets
           //Note: This temporary hack is used to show datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
@@ -151,8 +149,7 @@ export class ProjectTreeComponent implements OnInit {
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
               this.fileExplorer.showDatasets();
-              this.fileExplorer.hideExplorers();
-              this.showDatasets = true;
+              this.onDatasetSelect();
               this.nodes = this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               this.editorControl.initProjectContext(dirName, this.nodes);
