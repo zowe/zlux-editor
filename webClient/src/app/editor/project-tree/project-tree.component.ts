@@ -178,6 +178,10 @@ export class ProjectTreeComponent implements OnInit {
   onDatasetSelect() {
     this.fileExplorer.hideExplorers();
     this.showDatasets = true;
+    // This is a pseudo-hacky way of styling the explorer that hides the unfinished dataset
+    // browser to use the original Editor one. This can be removed once Explorer datasets are used.
+    let myElement = document.getElementsByClassName("file-explorer-container")[0];
+    myElement.setAttribute("style", "height: 75px;");
   }
 
   onDeleteClick($event: any){
@@ -228,6 +232,9 @@ export class ProjectTreeComponent implements OnInit {
   onUssSelect() {
     this.fileExplorer.showUss();
     this.showDatasets = false;
+    // This is a pseudo-hacky way of styling that pops back the Explorer.
+    let myElement = document.getElementsByClassName("file-explorer-container")[0];
+    myElement.setAttribute("style", "height: 100%;");
   }
 
   openProject() {
