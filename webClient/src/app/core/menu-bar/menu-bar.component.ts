@@ -281,7 +281,13 @@ export class MenuBarComponent implements OnInit {
 
   saveFile() {
     let fileContext = this.editorControl.fetchActiveFile();
-    let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
+    if (!fileContext) {
+      this.snackBar.open('Warning: Cannot save, no file found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+    } else if (fileContext.model.isDataset) {
+      this.snackBar.open('Dataset saving not yet supported', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
+    } else {
+      let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
+    }   
   }
 
   //saveAll() {
@@ -341,6 +347,7 @@ export class MenuBarComponent implements OnInit {
   setEditorLanguage(language: string) {
     let fileContext = this.editorControl.fetchActiveFile();
     this.editorControl.setHighlightingModeForBuffer(fileContext, language);
+    this.editorControl.setThemeForLanguage(language);
   }
 
   languageActiveCheck(language: string): boolean {

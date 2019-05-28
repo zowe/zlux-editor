@@ -159,9 +159,10 @@ export class MonacoService {
               fileNode.model.language = fileLang;
               const model = {
                 value: file['contents'],
-                language: fileLang,
+                language: fileLang, // Replace fileLang here to test other languages
                 uri: this.generateUri(fileNode.model),
               };
+              this.editorControl.setThemeForLanguage(fileLang);
               const duplicate: boolean = this.fileDuplicateChecker(model.uri);
               let newModel;
               if (!duplicate) {
