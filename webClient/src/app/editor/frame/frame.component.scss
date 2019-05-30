@@ -64,8 +64,8 @@
       flex: 0 0 230px;
       .section-container {
         min-width: 315px;
-        padding-top: 36px;
-        overflow-y: auto;
+        padding-top: 0px;
+        overflow-y: hidden;
         overflow-x: hidden;
         display: none;
         &.active {

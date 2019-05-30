@@ -756,6 +756,31 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   /**
+   * Sets the theme for a unique language, if necessary.
+   *
+   * @param language The desired language
+   */
+  setThemeForLanguage(language: string): void {
+    // This is a pleasant option to preserve the classic ISPF aesthetic but we can
+    // change the structure depending on what we do with themes (create modified versions
+    // of the regular/dark/black themes and add our language specific tokens?)
+    switch(language) {
+      // TODO: Once we expand editor themes, we can think about how we handle languages like JCL
+      // for ex. maybe have ispf, ispf-dark, and ispf-black that groups multiple commonly used languages
+      // in ISPF that we decide to create syntax highlighting for,
+      case 'jcl': { 
+        monaco.editor.setTheme('jcl-dark');
+        break; 
+      }
+      default: { 
+        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
+        monaco.editor.setTheme('vs-dark');
+        break; 
+      } 
+    } 
+  }
+
+  /**
    * Gets the highlighting mode for a given buffer.
    *
    * @param   buffer The buffer for which the highlighting mode should be checked
