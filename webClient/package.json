@@ -1,6 +1,6 @@
 {
   "name": "org.zowe.editor.webclient",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "license": "EPL-2.0",
   "scripts": {
     "start": "webpack --config ./webpack.build.config.js --watch --progress",

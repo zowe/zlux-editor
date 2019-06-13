@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
 import { ProjectContext } from '../../../shared/model/project-context';
@@ -21,19 +22,24 @@ import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
+import { SnackBarService } from '../../../shared/snack-bar.service';
+import { MessageDuration } from '../../../shared/message-duration';
+
 
 @Injectable()
 export class MonacoService {
 
   private decorations: string[] = [];
-
+  
   constructor(
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private httpService: HttpService,
     private http: Http,
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
-    private utils: UtilsService
+    private utils: UtilsService,
+    private snackBar: SnackBarService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -57,6 +63,11 @@ export class MonacoService {
     //});
   }
 
+  /*
+     Tab selection tells monaco to switch its buffer, this is interpreted as an open file operation
+     But, the file may already be open, so within this we have to determine whether to fire an event
+     From the controller to say whether this is new, or just a selection change
+   */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (fileNode.temp) {
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
@@ -88,29 +99,51 @@ export class MonacoService {
       } else {
         _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
       }
-      _observable.subscribe((response: any) => {
-        const resJson = response;
-        this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe(() => {
-          this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
-          if (line) {
-            this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
-            this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
-              { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
-            ])[0]);
-            // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+      _observable.subscribe({
+        next: (response: any) => {
+          const resJson = response;
+          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
+            next: () => {
+              this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
+              if (line) {
+                this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
+                this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
+                  { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
+                ])[0]);
+                // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+              }
+              if (reload) {
+                this.editorControl.initializedFile.next(fileNode);
+              }
+            },
+            error: (err) => {
+              this.log.warn(err);
+            }
+          });
+        },
+        error: (err) => {
+          this.log.warn(`${fileNode.name} could not be opened`);
+          if (err.status === 403) {
+            this.snackBar.open(`${fileNode.name} could not be opened due to permissions`,
+              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+          } else if (err.status === 404) {
+            this.snackBar.open(`${fileNode.name} could not be found`,
+              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+          } else {
+            this.snackBar.open(`${fileNode.name} could not be opened`,
+              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
           }
-        });
+        }
       });
     }
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
     return new Observable((obs) => {
-      let coreSubscription = this.editorControl.editorCore
-        .subscribe((value)=> {
+      const coreSubscriber = this.editorControl.editorCore
+        .subscribe((value) => {
           if (value && value.editor) {
             const editorCore = value.editor;
-            //getValue().editor;
 
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
@@ -126,10 +159,10 @@ export class MonacoService {
               fileNode.model.language = fileLang;
               const model = {
                 value: file['contents'],
-                language: fileLang,
-                // language: 'json',
+                language: fileLang, // Replace fileLang here to test other languages
                 uri: this.generateUri(fileNode.model),
               };
+              this.editorControl.setThemeForLanguage(fileLang);
               const duplicate: boolean = this.fileDuplicateChecker(model.uri);
               let newModel;
               if (!duplicate) {
@@ -140,22 +173,27 @@ export class MonacoService {
               newModel.onDidChangeContent((e: any) => {
                 this.fileContentChangeHandler(e, fileNode, newModel);
               });
-              let editorSubscription = this.editorControl.editor.subscribe((value)=> {
+              const subscriber = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
                   value.setModel(newModel);
-                  editorSubscription.unsubscribe();
+                  if (subscriber){subscriber.unsubscribe();}
                   obs.next();
                 }
               });
             });
-            coreSubscription.unsubscribe();
+            if (coreSubscriber) {coreSubscriber.unsubscribe();}
           }
         });
     });
   }
 
   closeFile(fileNode: ProjectContext) {
-    const _editor = this.editorControl.editorCore.getValue().editor;
+    const editorCore = this.editorControl.editorCore.getValue();
+    if (!editorCore) {
+      console.warn(`Editor core null on closeFile()`);
+      return;
+    }
+    const _editor = editorCore.editor;
     const models = _editor.getModels();
     const fileUri = this.generateUri(fileNode.model);
     for (const model of models) {
