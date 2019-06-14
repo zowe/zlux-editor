@@ -179,6 +179,11 @@ export class ProjectTreeComponent implements OnInit {
     // browser to use the original Editor one. This can be removed once Explorer datasets are used.
     let myElement = document.getElementsByClassName("file-explorer-container")[0];
     myElement.setAttribute("style", "height: 75px;");
+    // this.fileExplorer.showDatasets();
+    // this.showDatasets = false;
+    // // This is a pseudo-hacky way of styling that pops back the Explorer.
+    // let myElement = document.getElementsByClassName("file-explorer-container")[0];
+    // myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
@@ -263,6 +268,7 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   nodeActivate($event: any) {
+    console.log("NODE ACTIVATE!!!!!");
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openFile('', nodeData).subscribe(x => {
@@ -274,6 +280,7 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   nodeClickHandler(node: TreeNode, $event: any) {
+    console.log("NODE CLICKED!!!!!!!");
     node.mouseAction('click', $event);
     if (node.hasChildren) {
       TREE_ACTIONS.TOGGLE_EXPANDED(node.treeModel, node, $event);
@@ -284,6 +291,7 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   treeUpdate($event: any) {
+    console.log("UPDATING TREE!!!!!!!!!!!!!!!!!");
     this.editorControl.setProjectNode($event.treeModel.nodes);
     this.editorControl.initProjectContext('', $event.treeModel.nodes);
   }
