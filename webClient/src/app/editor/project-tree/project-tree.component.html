@@ -14,7 +14,7 @@
   <button mat-raised-button class="button-open" color="primary" (click)="openDirectory()">Open Directory</button>
 </div>
 -->
-<div class="explorer-container">
+<div class="file-explorer-container">
   <zlux-file-explorer #fileExplorer
   (nodeClick)="onNodeClick($event)"
   (newFileClick)="onNewFileClick($event)"
@@ -24,13 +24,14 @@
   (datasetSelect)="onDatasetSelect()"
   (ussSelect)="onUssSelect()"
   (pathChanged)="onPathChanged($event)"
+  [style]="{'height': '100%', 'padding-bottom': '100px'}"
   >
   </zlux-file-explorer>
 </div>
 <!-- The below "dataset-container" will eventually be truncated as Dataset viewing capability 
 improves in the File Explorer. Keeping this structure here in the mean time for datasets. -->
 <div class="dataset-container" *ngIf="showDatasets">
-  <perfect-scrollbar [config]="scrollConfig" [disabled]="false">
+  <perfect-scrollbar [config]="scrollConfig" [disabled]="false" style="height: calc(100% - 45px);">
     <tree-root #tree [nodes]="nodes" [options]="options" (activate)="nodeActivate($event)" (loadNodeChildren)="treeUpdate($event)">
       <ng-template #treeNodeWrapperTemplate let-node let-index="index">
         <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">

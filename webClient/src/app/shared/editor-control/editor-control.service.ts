@@ -88,7 +88,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     private utils: UtilsService,
     private http: HttpService,
     private ngHttp: Http,
-    private snackBar: SnackBarService,
+    public snackBar: SnackBarService,
     private dialog: MatDialog,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
@@ -193,12 +193,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
-    this._openFileList.next(this._openFileList.getValue().filter((file) => file.model.id !== fileContext.model.id));
+    this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
     for (const file of this._openFileList.getValue()) {
-      if (file.id === fileContext.id) {
+      if (file.model.fileName === fileContext.model.fileName && file.model.path === fileContext.model.path) {
         file.opened = true;
         file.active = true;
       } else {
@@ -215,8 +215,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     if (context != null) {
       for (const node of context) {
-        // const match = fileNode.id === node.id && fileNode.name === node.name;
-        const match = fileNode.id === node.id;
+        const match = fileNode.name === node.name && fileNode.path === node.model.path;
         if (match) {
           fileContext = node;
           break;
@@ -757,6 +756,31 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   /**
+   * Sets the theme for a unique language, if necessary.
+   *
+   * @param language The desired language
+   */
+  setThemeForLanguage(language: string): void {
+    // This is a pleasant option to preserve the classic ISPF aesthetic but we can
+    // change the structure depending on what we do with themes (create modified versions
+    // of the regular/dark/black themes and add our language specific tokens?)
+    switch(language) {
+      // TODO: Once we expand editor themes, we can think about how we handle languages like JCL
+      // for ex. maybe have ispf, ispf-dark, and ispf-black that groups multiple commonly used languages
+      // in ISPF that we decide to create syntax highlighting for,
+      case 'jcl': { 
+        monaco.editor.setTheme('jcl-dark');
+        break; 
+      }
+      default: { 
+        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
+        monaco.editor.setTheme('vs-dark');
+        break; 
+      } 
+    } 
+  }
+
+  /**
    * Gets the highlighting mode for a given buffer.
    *
    * @param   buffer The buffer for which the highlighting mode should be checked
@@ -787,13 +811,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         if (monaco != null) {
           let languages = monaco.languages.getLanguages();
           if (buffer.model.isDataset) {
-            for (let i = 0; i < languages.length; i++) {
-              let lang = languages[i];
-              for (let extension of lang.extensions) {
-                if (name.indexOf(extension)!=-1 || name.indexOf(`${extension}.`) != -1) {
-                  results.push(lang.id);
-                  i = languages.length;
-                  break;
+            //to solve asm.jcllib, search back-to-front, all langs before moving to next portion of name
+            const portions = name.split('.');
+            for (let portion of portions) {
+              for (let i = 0; i < languages.length; i++) {
+                let lang = languages[i];
+                for (let extension of lang.extensions) {
+                  if (portion === extension
+                      || portion === extension+'lib') {
+                    results.push(lang.id);
+                    i = languages.length;
+                    break;
+                  }
                 }
               }
             }
