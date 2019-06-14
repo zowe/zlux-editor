@@ -29,6 +29,7 @@ export class FileTabsComponent implements OnInit {
 
   private scrollConfig = {
     wheelPropagation: true,
+    suppressScrollY: true,
   };
 
   constructor(@Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
