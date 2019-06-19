@@ -12,7 +12,7 @@
   <div class="tabs-container">
     <ul class="tabs-file-list">
       <li mClick class="tabs-file" [fileContext]="item" [ngClass]="{'active':item.active}" *ngFor="let item of data" (click)="clickHandler($event, item)">
-        {{item.name}}
+        <span class="filename">{{item.name}}</span>
         <mat-icon class="close-file" (click)="remove.next(item)">clear</mat-icon>
         <mat-icon *ngIf="item.changed" class="changed-file">fiber_manual_record</mat-icon>
       </li>
