@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<perfect-scrollbar [config]="scrollConfig" [disabled]="false">
+<perfect-scrollbar [config]="fileTabsScrollConfig" [disabled]="false">
   <div class="tabs-container">
     <ul class="tabs-file-list">
       <li mClick class="tabs-file" [fileContext]="item" [ngClass]="{'active':item.active}" *ngFor="let item of data" (click)="clickHandler($event, item)">
