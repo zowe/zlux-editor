@@ -179,6 +179,11 @@ export class ProjectTreeComponent implements OnInit {
     // browser to use the original Editor one. This can be removed once Explorer datasets are used.
     let myElement = document.getElementsByClassName("file-explorer-container")[0];
     myElement.setAttribute("style", "height: 75px;");
+    // Uncomment the following code to test Dataset viewer of FE (Disables default Dataset viewer of Editor)
+    // this.fileExplorer.showDatasets();
+    // this.showDatasets = false;
+    // let myElement = document.getElementsByClassName("file-explorer-container")[0];
+    // myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
