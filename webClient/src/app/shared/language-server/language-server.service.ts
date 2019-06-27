@@ -16,6 +16,7 @@ export class LanguageServerService {
 
   config = { domain: 'ws://localhost:3000', endpoint: { hlasm: 'asmServer', json: 'jsonServer' } };
   connections: { name: string, connection: MessageConnection }[] = [];
+  enabled: boolean = true;
 
   constructor() { }
 
@@ -23,8 +24,13 @@ export class LanguageServerService {
     return this.config;
   }
 
-  updateSettings(config: any) {
-    this.config = config;
+  getEnabled(): boolean {
+    return this.enabled;
+  }
+
+  updateSettings(result: any) {
+    this.config = JSON.parse(result.config);
+    this.enabled = result.enable;
   }
 
   getLanguageUrl(lang: string): string {
