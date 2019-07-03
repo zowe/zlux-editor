@@ -8,8 +8,9 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { MessageConnection } from 'vscode-jsonrpc';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 
 @Injectable()
 export class LanguageServerService {
@@ -18,7 +19,7 @@ export class LanguageServerService {
   connections: { name: string, connection: MessageConnection }[] = [];
   enabled: boolean = true;
 
-  constructor() { }
+  constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }
 
   getSettings(): any {
     return this.config;
@@ -28,9 +29,19 @@ export class LanguageServerService {
     return this.enabled;
   }
 
-  updateSettings(result: any) {
-    this.config = JSON.parse(result.config);
-    this.enabled = result.enable;
+  updateSettings(langSettings: any) {
+    if(langSettings === undefined){
+      this.log.debug("Settings are invalid (undefined)");
+    } else {
+      try{
+        var serverConfig = JSON.parse(langSettings.config);
+        this.config = serverConfig;
+        this.enabled = langSettings.enable;
+      }catch(e){
+        this.log.debug(e);
+        console.log(e);
+      }
+    }
   }
 
   getLanguageUrl(lang: string): string {
