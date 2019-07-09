@@ -608,7 +608,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
-  createFile(name: string): ProjectContext {
+  createFile(name?: string): ProjectContext {
+
+    if(name===undefined) {
+      name = this.getNewFileName();
+    }
+
     let rootContext = this.rootContext.getValue();
     let fileStructure: ProjectStructure = {
       id: _.uniqueId(),
@@ -637,7 +642,20 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     //   observer.next(<ProjectContext>fileContext);
     // });
   }
-  
+
+  getNewFileName() {
+    let name:string='new';
+    let num:number= 1;
+    let fileName = `${name}${num}`;
+    let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
+    
+    while(openFiles.indexOf(fileName)>=0) {
+      fileName = `${name}${++num}`;
+    }
+
+    return fileName;
+  }
+   
   /* ============= ZLUX code editor implement ============= */
   /* ============= Class IEditor ============= */
   /**
