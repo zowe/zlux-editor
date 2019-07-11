@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild } from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, DoCheck, IterableDiffers, AfterViewChecked } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
@@ -20,7 +20,7 @@ import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
   templateUrl: './file-tabs.component.html',
   styleUrls: ['./file-tabs.component.scss',  '../../../../styles.scss']
 })
-export class FileTabsComponent implements OnInit {
+export class FileTabsComponent implements OnInit, AfterViewChecked {
 
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
@@ -38,17 +38,37 @@ export class FileTabsComponent implements OnInit {
     useBothWheelAxes: true
   };
 
-  constructor(@Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
+  private iterableDiffer;
+
+  constructor(
+    private editorControl: EditorControlService,
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
+    private _iterableDiffers: IterableDiffers) { 
+    this.iterableDiffer = this._iterableDiffers.find([]).create(null);
+  }
 
   ngOnInit() {
     this.viewportEvents.resized.subscribe(()=> {
       this.componentRef.directiveRef.update();
     });
+    this.editorControl.initializedFile.subscribe(() => {
+      this.componentRef.directiveRef.scrollToRight();
+    });
+
+  }
+
+  ngAfterViewChecked() {
+    const changes = this.iterableDiffer.diff(this.data);
+    if (changes) {
+      this.componentRef.directiveRef.scrollToRight();
+    }
   }
 
   clickHandler(e: Event, item: ProjectContext) {
     this.select.next(item);
   }
+
+  
 }
 
 @Directive({
