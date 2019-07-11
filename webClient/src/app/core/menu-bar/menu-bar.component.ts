@@ -442,7 +442,7 @@ export class MenuBarComponent implements OnInit {
 
     newFileRef.afterClosed().subscribe(result => {
       if (result) {
-        this.languageServer.updateSettings(JSON.parse(result.config));
+        this.languageServer.updateSettings(result);
         if (result.enable) {
           this.editorControl.connToLS.next();
         } else {
