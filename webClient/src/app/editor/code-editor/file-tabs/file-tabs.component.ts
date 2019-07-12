@@ -52,17 +52,18 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
       this.componentRef.directiveRef.scrollToRight();
     });
 
+    console.log(this.componentRef.directiveRef.scrollToElement);
     this.prevLength = 0;
   }
 
   ngAfterViewChecked() {
-    if (this.prevLength > this.data.length) {
-      this.componentRef.directiveRef.scrollToLeft();
-    } else if (this.data.length > this.prevLength){
-    
-      this.componentRef.directiveRef.scrollToRight();
-    }
-    this.prevLength = this.data.length;
+    this.data.forEach((tab, i) => {
+      if (!tab.active) {
+        return;
+      }
+
+      this.componentRef.directiveRef.scrollToElement(`.tabs-file-list > li:nth-child(${i + 1})`);
+    });
 
   }
 
