@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild, DoCheck, IterableDiffers, AfterViewChecked } from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, AfterViewChecked } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
@@ -38,14 +38,11 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     useBothWheelAxes: true
   };
 
-  private iterableDiffer;
+  private prevLength:number;
 
   constructor(
     private editorControl: EditorControlService,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
-    private _iterableDiffers: IterableDiffers) { 
-    this.iterableDiffer = this._iterableDiffers.find([]).create(null);
-  }
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {}
 
   ngOnInit() {
     this.viewportEvents.resized.subscribe(()=> {
@@ -55,13 +52,18 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
       this.componentRef.directiveRef.scrollToRight();
     });
 
+    this.prevLength = 0;
   }
 
   ngAfterViewChecked() {
-    const changes = this.iterableDiffer.diff(this.data);
-    if (changes) {
+    if (this.prevLength > this.data.length) {
+      this.componentRef.directiveRef.scrollToLeft();
+    } else if (this.data.length > this.prevLength){
+    
       this.componentRef.directiveRef.scrollToRight();
     }
+    this.prevLength = this.data.length;
+
   }
 
   clickHandler(e: Event, item: ProjectContext) {
