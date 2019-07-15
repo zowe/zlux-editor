@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild, AfterViewChecked } from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, AfterViewChecked} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
@@ -57,6 +57,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   }
 
   ngAfterViewChecked() {
+   if (this.prevLength !== this.data.length) {
     this.data.forEach((tab, i) => {
       if (!tab.active) {
         return;
@@ -64,7 +65,8 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 
       this.componentRef.directiveRef.scrollToElement(`.tabs-file-list > li:nth-child(${i + 1})`);
     });
-
+   }
+   this.prevLength = this.data.length; 
   }
 
   clickHandler(e: Event, item: ProjectContext) {
