@@ -25,7 +25,6 @@ import { CodeEditorService } from './code-editor.service';
   styleUrls: ['./code-editor.component.scss']
 })
 export class CodeEditorComponent implements OnInit {
-
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
 
@@ -52,6 +51,7 @@ export class CodeEditorComponent implements OnInit {
     private monacoService: MonacoService,
     private editorService: EditorService,
     private codeEditorService: CodeEditorService) {
+    //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
     });
@@ -106,9 +106,14 @@ export class CodeEditorComponent implements OnInit {
     this.codeEditorService.closeFile(fileContext);
   }
 
+  /* 
+     this.editorFile instructs monaco to change, 
+     which in turn invokes monacoservice.openfile, 
+     which kicks off discovery involving the editor controller   
+  */
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
-    this.editorFile = { context: fileContext, reload: false, line: line };
     this.codeEditorService.selectFile(fileContext, broadcast);
+    this.editorFile = { context: fileContext, reload: false, line: line };
   }
 }
 

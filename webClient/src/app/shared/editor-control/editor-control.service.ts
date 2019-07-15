@@ -26,6 +26,9 @@ import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 
+let stateCache = {};
+let lastFile;
+
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
  * Editor control service will communicate between tree list, editor and toolbar.
@@ -93,6 +96,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
   ) {
     EditorServiceInstance.next(this);
+  }
+
+  public saveCursorState() {
+    let editor = this.editor.getValue();
+    //when quickly switching, cursor or viewmodel may not exist
+    if (editor && editor.cursor && editor.viewModel && lastFile) {
+      let lastCursor = editor.cursor.saveState();
+      let lastView = editor.viewModel.saveState();
+      this.log.debug(`saved cursor`,lastCursor,`file`,lastFile);
+      stateCache[lastFile] = {cursor:lastCursor, view: lastView};
+    }
   }
 
   public get rootContext(): BehaviorSubject<ProjectContext> {
@@ -175,6 +189,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return this._openFileList;
   }
 
+  //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
@@ -190,6 +205,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
+    let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
+    if (cacheFileName) {
+      this.log.debug(`Clearing cache for`,cacheFileName);
+      delete stateCache[cacheFileName];
+    }
     !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
@@ -197,6 +217,22 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
+    this.saveCursorState();
+    //fileopen to be called soon after
+    let fileOpenSub: Subscription = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
+      let model = e.buffer.model;
+      lastFile = `${model.fileName}:${model.path}`;
+      let cache = stateCache[lastFile];
+      this.log.debug(`restoring cache`,cache,`file`,lastFile);
+      if (cache){
+        let editor = this.editor.getValue();
+        editor.cursor.restoreState(cache.cursor);
+        const smallView = editor.viewModel.reduceRestoreState(cache.view);
+			  editor._view.restoreState(smallView);
+      }
+      fileOpenSub.unsubscribe();
+    });
+    
     for (const file of this._openFileList.getValue()) {
       if (file.model.fileName === fileContext.model.fileName && file.model.path === fileContext.model.path) {
         file.opened = true;
@@ -631,7 +667,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return targetFile.name;
   }
   /**
-     * Open a file into a buffer.
+     * Open a file into a buffer - this prepares to alert others when that is done, 
+     * but actually emits a request for help to do so, and awaits fullfilment
      *
      * @param   file         The path of the file that should be opened
      * @param   targetBuffer The buffer into which the file should be opened, or null to open a new buffer
@@ -642,12 +679,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;
     let resultObserver: Observer<ZLUX.EditorBufferHandle>;
-
+    this.saveCursorState();
+    
     resultOpenObs = new Observable((observer) => {
       resultObserver = observer;
     });
 
     fileOpenSub = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
+      let model = e.buffer.model;
+      lastFile = `${model.fileName}:${model.path}`;
+
       // if have subscriber
       if (resultObserver) {
         if (e.buffer != null && e.buffer.id === targetBuffer.id) {
@@ -659,6 +700,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileOpenSub.unsubscribe();
     });
 
+    //tell someone else to open it!
     this.openFileEmitter.emit(targetBuffer);
     return resultOpenObs;
   }
