@@ -98,6 +98,7 @@ export class CodeEditorComponent implements OnInit {
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
       this.editorControl.openFileHandler(fileContext);
     }
+    
   }
 
   //TODO this is causing the error of nothing showing up when a tab is closed
