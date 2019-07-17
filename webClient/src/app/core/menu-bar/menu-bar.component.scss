@@ -11,6 +11,7 @@
 :host {
   .gz-menu-bar {
     background-color: #303030;
+    height: 100%;
     .gz-menu-list {
       font-family: Arial, sans-serif;
       list-style-type: none;
@@ -18,7 +19,7 @@
       display: flex;
       flex-direction: row;
       padding: 0px;
-      height: 32px;
+      height: 100%;
       margin-bottom: 0;
       .gz-menu-section {
         position: relative;
@@ -46,6 +47,13 @@
               margin: 5px 0;
             }
           }
+          .gz-menu-function-item.disabled {
+            color: #9d9d9d;
+            pointer-events: none;
+          }
+          .gz-menu-function-item.disabled:hover {
+              background-color: #586198;
+          }
           .gz-menu-function-item:hover {
             background-color: #e0e0e0;
           }
@@ -57,7 +65,7 @@
           display: initial;
           position: absolute;
           left: 0;
-          max-height: 588px;
+          max-height: calc(90% - 45px);
           overflow-y: auto;
         }
       }

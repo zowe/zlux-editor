@@ -145,7 +145,7 @@ export class ProjectTreeComponent implements OnInit {
           //Note: This temporary hack is used to show datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
 
-          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName, 'true');
+          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName.toUpperCase(), 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
               this.fileExplorer.showDatasets();
@@ -179,6 +179,11 @@ export class ProjectTreeComponent implements OnInit {
     // browser to use the original Editor one. This can be removed once Explorer datasets are used.
     let myElement = document.getElementsByClassName("file-explorer-container")[0];
     myElement.setAttribute("style", "height: 75px;");
+    // Uncomment the following code to test Dataset viewer of FE (Disables default Dataset viewer of Editor)
+    // this.fileExplorer.showDatasets();
+    // this.showDatasets = false;
+    // let myElement = document.getElementsByClassName("file-explorer-container")[0];
+    // myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
