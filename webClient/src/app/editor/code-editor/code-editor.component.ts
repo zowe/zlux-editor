@@ -85,7 +85,7 @@ export class CodeEditorComponent implements OnInit {
     let exist = false;
 
     for (const file of this.editorControl.openFileList.getValue()) {
-      if (file.id === fileContext.id) {
+      if (file.name === fileContext.name && file.model.path === fileContext.model.path) {
         exist = true;
       }
     }
