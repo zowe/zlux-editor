@@ -18,7 +18,8 @@ import { MonacoService } from './monaco.service';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
-const ReconnectingWebSocket = require('reconnecting-websocket');
+import ReconnectingWebSocket from 'reconnecting-websocket';
+import * as merge from 'deepmerge';
 
 @Component({
   selector: 'app-monaco',
@@ -29,6 +30,8 @@ export class MonacoComponent implements OnInit, OnChanges {
   @Input() options;
   @Input() editorFile;
 
+  private currentLanguage = '';
+
   constructor(
     private monacoService: MonacoService,
     private editorControl: EditorControlService,
@@ -37,10 +40,10 @@ export class MonacoComponent implements OnInit, OnChanges {
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
   }
 
-  ngOnChanges(changes: SimpleChanges) {
+  ngOnChanges(changes: SimpleChanges): void {
     for (const input in changes) {
       if (input === 'editorFile' && changes[input].currentValue != null) {
         this.monacoService.openFile(
@@ -51,26 +54,50 @@ export class MonacoComponent implements OnInit, OnChanges {
     }
   }
 
-  onMonacoInit(editor) {
+  onMonacoInit(editor): void {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
-    this.viewportEvents.resized.subscribe(()=> {
+    this.viewportEvents.resized.subscribe(() => {
       editor.layout()
     });
-      /* disable for now...
-    this.editorControl.connToLS.subscribe((lang) => {
-      this.connectToLanguageServer(lang);
-    });
-    this.editorControl.disFromLS.subscribe((lang) => {
-      this.closeLanguageServer(lang);
-    });
 
-    this.connectToLanguageServer();
-    */
+    this.editorControl.updateLS.subscribe(() => {
+      const lang = this.currentLanguage;
+      this.onLanguageChange(undefined);
+      this.onLanguageChange(lang);
+    });
+    this.editorControl.fileOpened.subscribe(f => {
+      this.onLanguageChange(f.buffer.model.language);
+    });
+    this.editorControl.changeLanguage.subscribe(f => {
+      this.onLanguageChange(f.language);
+    });
+    this.editorControl.closeFile.subscribe(f => {
+      // fileOpened handles file closes as well, as long as there is another
+      // open file for the editor to switch to. This listener handles when files
+      // are closed without another open file
+
+      if (this.editorControl.fetchActiveFile() === undefined) {
+        this.onLanguageChange(undefined);
+      }
+    });
   }
 
-  keyBinds(editor: any) {
-    let self = this;
+  onLanguageChange(lang: string): void {
+    if (this.currentLanguage === lang) {
+      return;
+    }
+
+    if (this.currentLanguage) {
+      this.closeLanguageServer(this.currentLanguage);
+    }
+
+    this.connectToLanguageServer(lang);
+    this.currentLanguage = lang;
+  }
+
+  keyBinds(editor: any): void {
+    const self = this;
     //editor.addAction({
       // An unique identifier of the contributed action.
       //id: 'save-all',
@@ -140,28 +167,17 @@ export class MonacoComponent implements OnInit, OnChanges {
     });
   }
 
-  connectToLanguageServer(lang?: string) {
-    let languages = this.languageService.getSettings().endpoint;
-    let connExist = this.languageService.connections.map(x => x.name);
+  connectToLanguageServer(lang: string): void {
+    const connExist = this.languageService.connections.map(x => x.name);
 
-    for (let language in languages) {
-      if (lang) {
-        if (lang === language && connExist.indexOf(language) < 0) {
-          this.listenTo(language);
-        } else {
-          this.log.warn(`${language} server already started!`);
-        }
-      } else {
-        if (connExist.indexOf(language) < 0) {
-          this.listenTo(language);
-        } else {
-          this.log.warn(`${language} server already started!`);
-        }
-      }
+    if (connExist.indexOf(lang) < 0) {
+      this.listenTo(lang);
+    } else {
+      this.log.warn(`${lang} server already started!`);
     }
   }
 
-  closeLanguageServer(lang?: string) {
+  closeLanguageServer(lang: string): void {
     this.languageService.connections
       .filter(c => {
         if (lang) {
@@ -171,27 +187,38 @@ export class MonacoComponent implements OnInit, OnChanges {
         }
       })
       .forEach(c => {
-        let conn = this.languageService.connections;
+        const conn = this.languageService.connections;
         c.connection.dispose();
         conn.splice(conn.indexOf(c), 1);
       });
   }
 
-  listenTo(lang: string) {
+  listenTo(lang: string): void {
     const langUrl = this.createUrl(lang);
+
+    if (!langUrl) {
+      return;
+    }
+
     const langWebSocket = this.createWebSocket(langUrl);
     const langService = createMonacoServices(this.editorControl.editor.getValue());
 
     this.log.info(`Connecting to ${lang} server`);
 
     listen({
-      webSocket: langWebSocket,
+      // langWebSocket should be casted to WebSocket but it doesn't work
+      webSocket: langWebSocket as any,
       onConnection: connection => {
         // create and start the language client
         const languageClient = this.createLanguageClient(lang, connection, langService);
         const disposable = languageClient.start();
-        connection.onClose(() => disposable.dispose());
-        connection.onDispose(() => disposable.dispose());
+        connection.onClose(() => {
+          connection.dispose()
+        });
+        connection.onDispose(() => {
+          disposable.dispose();
+          langWebSocket.close();
+        });
         this.languageService.addConnection(lang, connection);
       }
     });
@@ -202,7 +229,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   createLanguageClient(language: string, connection: MessageConnection, services: BaseLanguageClient.IServices): BaseLanguageClient {
-    return new BaseLanguageClient({
+    let options = {
       name: `${language} language client`,
       clientOptions: {
         // use a language id as a document selector
@@ -212,18 +239,27 @@ export class MonacoComponent implements OnInit, OnChanges {
           error: () => ErrorAction.Continue,
           closed: () => CloseAction.DoNotRestart
         }
-      },
-      services,
+      } as any,
       // create a language client connection from the JSON RPC connection on demand
       connectionProvider: {
         get: (errorHandler, closeHandler) => {
           return Promise.resolve(createConnection(connection, errorHandler, closeHandler));
         }
       }
-    });
+    } as any;
+
+    options = merge(
+      options,
+      this.languageService.getLanguageOptions(language),
+    );
+
+    // services breaks merge with "too many recursions" so it is added after
+    options.services = services;
+
+    return new BaseLanguageClient(options);
   }
 
-  createWebSocket(wsUrl: string): WebSocket {
+  createWebSocket(wsUrl: string): ReconnectingWebSocket {
     const socketOptions = {
       maxReconnectionDelay: 10000,
       minReconnectionDelay: 1000,

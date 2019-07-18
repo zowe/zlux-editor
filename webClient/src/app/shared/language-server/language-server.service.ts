@@ -11,42 +11,132 @@
 import { Injectable, Inject } from '@angular/core';
 import { MessageConnection } from 'vscode-jsonrpc';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { EditorControlService } from '../editor-control/editor-control.service';
+
+interface ILanguageServerList {
+  [language: string]: {[plugin: string]: ILanguageServer};
+}
+
+interface ILanguageServer {
+  name: string;
+  options: any;
+}
+
+interface ILanguageServerSettings {
+  [language: string]: string;
+}
 
 @Injectable()
 export class LanguageServerService {
 
-  config = { domain: 'ws://localhost:3000', endpoint: { hlasm: 'asmServer', json: 'jsonServer' } };
+  langservers: ILanguageServerList = {};
+
+  settings: ILanguageServerSettings = {};
+
   connections: { name: string, connection: MessageConnection }[] = [];
   enabled: boolean = true;
 
-  constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }
+  constructor(
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    private editorControl: EditorControlService,
+  ) {
+    const plugIterator = ZoweZLUX.pluginManager.pluginsById.keys();
+    let currentPlugin;
 
-  getSettings(): any {
-    return this.config;
-  }
+    const langserverOptionPromises = [];
 
-  getEnabled(): boolean {
-    return this.enabled;
-  }
+    while (!(currentPlugin = plugIterator.next()).done) {
+      const pluginId = currentPlugin.value;
+      if (pluginId.split('.').includes('languageserver')) {
+        langserverOptionPromises.push(new Promise((resolve, reject) => {
+          fetch(`${window.location.protocol}//${this.getPluginUrl(pluginId)}`)
+            .then((res) => {
+              if (!res.ok) {
+                return resolve({});
+              }
 
-  updateSettings(langSettings: any) {
-    if(langSettings === undefined){
-      this.log.debug("Settings are invalid (undefined)");
-    } else {
-      try{
-        var serverConfig = JSON.parse(langSettings.config);
-        this.config = serverConfig;
-        this.enabled = langSettings.enable;
-      }catch(e){
-        this.log.debug(e);
-        console.log(e);
+              res.json()
+                .then((data) => {
+                  if (data.languages) {
+                    data.plugin = pluginId;
+                    return resolve(data);
+                  }
+
+                  return resolve({});
+                }).catch(() => {
+                  resolve({});
+                });
+            })
+            .catch((err) => resolve({}));
+        }));
       }
     }
+
+    Promise.all(langserverOptionPromises)
+      .then((langserverInfos) => {
+        for (const langserverInfo of langserverInfos) {
+          if (!langserverInfo.plugin) {
+            continue;
+          }
+
+          const { plugin, name, languages, options } = langserverInfo;
+          for (const language of languages) {
+            if (!this.langservers[language]) {
+              this.langservers[language] = {};
+            }
+
+            this.langservers[language][plugin] = {
+              name,
+              options,
+            };
+          }
+        }
+      });
+  }
+
+  getLanguageServers(): ILanguageServerList {
+    return this.langservers;
+  }
+
+  getSettings(): ILanguageServerSettings {
+    return this.settings;
+  }
+
+  updateSettings(settings: any): void {
+    this.settings = settings;
+    this.editorControl.updateLS.next();
   }
 
   getLanguageUrl(lang: string): string {
-    let endpoint = this.config.endpoint[lang];
-    return endpoint ? `${this.config.domain}/${endpoint}` : '';
+    const pluginId = this.settings[lang];
+
+    if (!pluginId) {
+      return '';
+    }
+
+    // window.location.protocol will be either http: or https:
+    const prot = window.location.protocol.replace('http', 'ws');
+
+    return `${prot}//${this.getPluginUrl(pluginId)}`;
+  }
+
+  getPluginUrl(pluginId: string): string {
+    if (!pluginId) {
+      return '';
+    }
+
+    const plugin = ZoweZLUX.pluginManager.pluginsById.get(pluginId);
+    const path = ZoweZLUX.uriBroker.pluginRESTUri(plugin, 'ls', '');
+    const host = window.location.host;
+
+    // loc.host includes hostname and port
+    return `${host}${path}`;
+  }
+
+  getLanguageOptions(lang: string): ILanguageServer {
+    const pluginId = this.settings[lang];
+
+    return this.langservers[lang][pluginId].options;
   }
 
   addConnection(lang: string, connection: MessageConnection) {
