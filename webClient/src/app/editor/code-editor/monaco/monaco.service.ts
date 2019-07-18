@@ -69,7 +69,9 @@ export class MonacoService {
      From the controller to say whether this is new, or just a selection change
    */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
+    this.editorControl.saveCursorState();
     if (fileNode.temp) {
+      //blank new file
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
@@ -101,6 +103,7 @@ export class MonacoService {
       }
       _observable.subscribe({
         next: (response: any) => {
+          //network load or switched to currently open file
           const resJson = response;
           this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
             next: () => {

@@ -174,15 +174,16 @@
     }
   }
   
-  .explorer-container {
+  .file-explorer-container {
     margin-left: -5px;
     margin-top: 5px;
-    //padding-bottom: 100px;
+    height: 100%;
   }
 
   .dataset-container { //Note: This is temporary and will be removed when Dataset functionality for Explorer gets better.
     padding-left: 10px;
     padding-top: 10px;
+    height: 100%;
   }
 }
 

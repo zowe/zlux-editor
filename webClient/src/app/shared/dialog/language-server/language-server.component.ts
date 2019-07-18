@@ -24,7 +24,7 @@ export class LanguageServerComponent implements OnInit {
 
   constructor(private languageServer: LanguageServerService) {
     this.settings.config = JSON.stringify(this.languageServer.getSettings());
-    this.settings.enable = true;
+    this.settings.enable = this.languageServer.getEnabled();
   }
 
   ngOnInit() {
