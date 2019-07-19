@@ -30,13 +30,13 @@
 </div>
 <!-- The below "dataset-container" will eventually be truncated as Dataset viewing capability 
 improves in the File Explorer. Keeping this structure here in the mean time for datasets. -->
-<div class="dataset-container" *ngIf="showDatasets">
+<!-- <div class="dataset-container" *ngIf="showDatasets">
   <perfect-scrollbar [config]="scrollConfig" [disabled]="false" style="height: calc(100% - 45px);">
     <tree-root #tree [nodes]="nodes" [options]="options" (activate)="nodeActivate($event)" (loadNodeChildren)="treeUpdate($event)">
       <ng-template #treeNodeWrapperTemplate let-node let-index="index">
-        <div class="node-wrapper" [style.padding-left]="node.getNodePadding()">
+        <div class="node-wrapper" [style.padding-left]="node.getNodePadding()"> -->
           <!-- <tree-node-expander [node]="node"></tree-node-expander> -->
-          <mat-icon class="tree-icon" (click)="nodeClickHandler(node, $event)">{{nodeIcon(node)}}</mat-icon>
+          <!-- <mat-icon class="tree-icon" (click)="nodeClickHandler(node, $event)">{{nodeIcon(node)}}</mat-icon>
           <div class="node-content-wrapper" [class.node-content-wrapper-active]="node.isActive" [class.node-content-wrapper-focused]="node.isFocused"
             (click)="nodeClickHandler(node, $event)" (dblclick)="node.mouseAction('dblClick', $event)" (contextmenu)="node.mouseAction('contextMenu', $event)"
             (treeDrop)="node.onDrop($event)" [treeAllowDrop]="node.allowDrop" [treeDrag]="node" [treeDragEnabled]="node.allowDrag()">
@@ -46,7 +46,7 @@ improves in the File Explorer. Keeping this structure here in the mean time for 
       </ng-template>
     </tree-root>
   </perfect-scrollbar>
-</div>
+</div> -->
 
 
 
