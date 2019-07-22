@@ -10,12 +10,13 @@
   "dependencies": {
     "@angular/cdk": "~6.3.3",
     "angular-tree-component": "~7.2.0",
+    "deepmerge": "^3.3.0",
     "lodash": "~4.17.10",
     "monaco-languageclient": "0.6.3",
     "ngx-bootstrap": "^2.0.4",
     "ngx-monaco-editor": "~6.0.0",
     "ngx-perfect-scrollbar": "~5.3.5",
-    "reconnecting-websocket": "3.2.2",
+    "reconnecting-websocket": "^4.1.10",
     "vscode-json-languageservice": "3.0.12",
     "vscode-ws-jsonrpc": "0.0.2-2"
   },

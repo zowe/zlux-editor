@@ -8,14 +8,25 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<h2 mat-dialog-title>Language Server Setting</h2>
+<h2 mat-dialog-title>Language Server Settings</h2>
 <mat-dialog-content>
-  <mat-form-field>
-    <textarea matInput type="text" placeholder="Put Your Config Here" [matTextareaAutosize]="true" [(ngModel)]="settings.config"></textarea>
-  </mat-form-field>
-  <section>
-    <label>Enable Language Server:</label>
-    <mat-checkbox color="primary" [(ngModel)]="settings.enable">Enable</mat-checkbox>
+  <section *ngFor="let language of languages">
+    {{language.name}}
+
+    <mat-form-field *ngIf="language.serverIds.length > 0; else elseBlock">
+      <mat-select placeholder="Select a plugin" [(ngModel)]="settings[language.id]">
+        <mat-option *ngFor="let langserver of language.serverIds" [value]="langserver">
+        {{language.langservers[langserver].name}}</mat-option>
+
+        <mat-option value="disable">Disable</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <ng-template #elseBlock>
+      <mat-form-field>
+        <mat-select placeholder="No language server plugins installed" [disabled]="true"></mat-select>
+      </mat-form-field>
+    </ng-template>
   </section>
 </mat-dialog-content>
 <mat-dialog-actions>

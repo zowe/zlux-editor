@@ -442,12 +442,15 @@ export class MenuBarComponent implements OnInit {
 
     newFileRef.afterClosed().subscribe(result => {
       if (result) {
-        this.languageServer.updateSettings(result);
-        if (result.enable) {
-          this.editorControl.connToLS.next();
-        } else {
-          this.editorControl.disFromLS.next();
+        for (const language in result) {
+          if (!result.hasOwnProperty(language)
+            || result[language] !== 'disable') {
+            continue;
+          }
+
+          delete result[language];
         }
+        this.languageServer.updateSettings(result);
       }
     });
   }
