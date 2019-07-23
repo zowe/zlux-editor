@@ -16,7 +16,7 @@ import { OpenProjectComponent } from '../../shared/dialog/open-project/open-proj
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { ProjectStructure } from '../../shared/model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../../shared/model/editor-project';
 import { ProjectContext } from '../../shared/model/project-context';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { EditorService } from '../editor.service';
@@ -214,9 +214,9 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
       });
-    } else if($event.type && $event.type == 'nonPDS'){
+    } else if(!$event.data.hasChildren){
       this.editorControl.openFile('', ($event.data as ProjectStructure)).subscribe(x => {
-        this.log.debug(`File loaded through File Explorer.`);
+          this.log.debug(`File loaded through File Explorer.`);
       });
     }
   }
