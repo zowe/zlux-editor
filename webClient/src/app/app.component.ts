@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { EditorControlService } from './shared/editor-control/editor-control.service';
 import { HttpService } from './shared/http/http.service';
@@ -29,6 +29,9 @@ import { KeyCode } from './shared/keycode-enum';
 export class AppComponent implements OnDestroy{
   title = 'app';
   private subscription:Subscription = new Subscription();
+
+  @ViewChild('editorheader')
+  editorheaderElementRef: ElementRef<any>;
   
   constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
               @Inject(Angular2InjectionTokens.LAUNCH_METADATA) private launchMetadata: any,
@@ -45,7 +48,8 @@ export class AppComponent implements OnDestroy{
       this.handleLaunchOrMessageObject(this.launchMetadata.data);
     }
 
-    this.appKeyboard.registerKeyUpEvent();
+    const editorheaderElement = this.editorheaderElementRef.nativeElement;
+    this.appKeyboard.registerKeyUpEvent(editorheaderElement);
     this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
       if (event.altKey && event.which === KeyCode.KEY_N) {
         this.editorControl.createFile();

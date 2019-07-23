@@ -22,8 +22,8 @@ export class EditorKeybindingService {
     this.keyupEvent = new Subject();
   }
 
-  registerKeyUpEvent() {
-    let elm = document.querySelectorAll('.org-zowe-editor');
+  registerKeyUpEvent(appChild:Element) {
+    let elm = appChild.closest('app-root');
     const observable = Observable.fromEvent(elm, 'keyup' ) as Observable<KeyboardEvent>;
     observable
       .filter(value => value.altKey)

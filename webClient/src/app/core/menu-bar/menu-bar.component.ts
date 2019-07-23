@@ -406,9 +406,12 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
-    this.editorControl.createFile();
+    
+    setTimeout(()=> {
+      this.editorControl.createFile();
     let fileContext = this.editorControl.fetchActiveFile();
     this.editorControl.initializedFile.next(fileContext);
+    },0);
   }
 
   deleteFile() {
