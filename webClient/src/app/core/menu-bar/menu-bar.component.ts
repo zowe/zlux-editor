@@ -58,7 +58,7 @@ function initMenus(menus) {
 export class MenuBarComponent implements OnInit {
   private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
-  private fileCount: number = 0;
+  private bufferCount: number = 0;
   private monaco: any;
   private languageSelectionMenu: any = {
     name: 'Language',
@@ -80,7 +80,7 @@ export class MenuBarComponent implements OnInit {
   ) {
 
     /*
-    //Ideas: load languages at this time, if response occurs after file open, append results to monaco and try to reset it to the language
+    //Ideas: load languages at this time, if response occurs after buffer open, append results to monaco and try to reset it to the language
     this.httpClient.get(ZoweZLUX.uriBroker.pluginConfigUri(this.pluginDefinition, 'languages/definitions')).subscribe(data=> {
       monaco.languages.register(language);
       if (language) {
@@ -98,22 +98,22 @@ export class MenuBarComponent implements OnInit {
       this.resetLanguageSelectionMenu();
     });
     
-    this.editorControl.selectFile.subscribe((fileContext)=> {
-      if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+    this.editorControl.selectFile.subscribe((bufferContext)=> {
+      if (this.bufferCount != 0){this.showLanguageMenu(bufferContext.model.language);}
     });
 
-    this.editorControl.initializedFile.subscribe((fileContext)=> {
-      this.showLanguageMenu(fileContext.model.language);
-      this.fileCount++;
-      this.log.debug(`fileCount now=`,this.fileCount);
+    this.editorControl.initializedFile.subscribe((bufferContext)=> {
+      this.showLanguageMenu(bufferContext.model.language);
+      this.bufferCount++;
+      this.log.debug(`bufferCount now=`,this.bufferCount);
     });
 
     this.editorControl.closeFile.subscribe(()=> {
-      if (this.fileCount != 0) {
-        this.fileCount--;
-        this.log.debug(`fileCount now=`,this.fileCount);
+      if (this.bufferCount != 0) {
+        this.bufferCount--;
+        this.log.debug(`bufferCount now=`,this.bufferCount);
       } else {
-        this.log.warn(`Open file count cannot be made negative`);
+        this.log.warn(`Open buffer count cannot be made negative`);
       }
       this.removeLanguageMenu();
     });
@@ -193,7 +193,7 @@ export class MenuBarComponent implements OnInit {
   }
 
   removeLanguageMenu() {
-    const removeSelectionMenu = this.fileCount===0;
+    const removeSelectionMenu = this.bufferCount===0;
     for (let i = 0; i < this.menuList.length; i++) {
       if (this.currentLang && this.menuList[i].name === this.currentLang) {
         this.menuList.splice(i,1);
@@ -210,7 +210,7 @@ export class MenuBarComponent implements OnInit {
 
   showLanguageMenu(language) {
     let menus = [];
-    if (this.fileCount===0) {//will become 1 after
+    if (this.bufferCount===0) {//will become 1 after
       //add language selection menu, too
       menus.push(this.languageSelectionMenu);
     }
@@ -228,7 +228,7 @@ export class MenuBarComponent implements OnInit {
       }
     }
     if (menus.length>0) {
-      this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+      this.menuList.splice(this.bufferCount===0 ? 1 : 2 ,0,...menus);
     }
   }
   
@@ -300,23 +300,23 @@ export class MenuBarComponent implements OnInit {
   }
 
   // saveAll() {
-  //   const _openFile = this.editorControl.openFileList.getValue();
+  //   const _openBuffer = this.editorControl.openFileList.getValue();
   //   let promiseList = [];
   //   let requestUrl = ENDPOINTS.saveFile;
 
-  //   for (let file of _openFile) {
-  //     let saveUrl = this.utils.formatUrl(requestUrl, { dataset: file.parent.name, member: file.name });
-  //     let savePromise = this.http.put(saveUrl, { contents: file.model.contents }).toPromise();
+  //   for (let buffer of _openBuffer) {
+  //     let saveUrl = this.utils.formatUrl(requestUrl, { dataset: buffer.parent.name, member: buffer.name });
+  //     let savePromise = this.http.put(saveUrl, { contents: buffer.model.contents }).toPromise();
   //     promiseList.push(savePromise);
   //   }
 
   //   Promise.all(promiseList).then(r => {
   //     this.snackBar.open(`All Saved!`, 'Close', { duration: 1000, panelClass: 'center' });
-  //     let fileList = this.editorControl.openFileList.getValue().map(file => {
-  //       file.changed = false;
-  //       return file;
+  //     let bufferList = this.editorControl.openFileList.getValue().map(buffer => {
+  //       buffer.changed = false;
+  //       return buffer;
   //     });
-  //     this.editorControl.openFileList.next(fileList);
+  //     this.editorControl.openFileList.next(bufferList);
   //     console.log(this.editorControl.openFileList.getValue());
   //     r.forEach(x => {
   //       console.log(x.message);
@@ -324,14 +324,14 @@ export class MenuBarComponent implements OnInit {
   //   });
   // }
 
-  saveFile() {
-    let fileContext = this.editorControl.fetchActiveFile();
-    if (!fileContext) {
-      this.snackBar.open('Warning: Cannot save, no file found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
-    } else if (fileContext.model.isDataset) {
+  saveBuffer() {
+    let bufferContext = this.editorControl.fetchActiveFile();
+    if (!bufferContext) {
+      this.snackBar.open('Warning: Cannot save, no buffer found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+    } else if (bufferContext.model.isDataset) {
       this.snackBar.open('Dataset saving not yet supported', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
     } else {
-      let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
+      let sub = this.monacoService.saveBuffer(bufferContext).subscribe(() => { sub.unsubscribe(); });
     }   
   }
 
@@ -344,21 +344,21 @@ export class MenuBarComponent implements OnInit {
   }
 
   graphicDiagram() {
-    let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
-    if (!file) {
+    let buffer = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
+    if (!buffer) {
       this.snackBar.open(`Please open a file before you generate a diagram.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
     }
-    this.http.post(ENDPOINTS.diagram, { member: file.name, content: file.model.contents }).subscribe(r => {
+    this.http.post(ENDPOINTS.diagram, { member: buffer.name, content: buffer.model.contents }).subscribe(r => {
       window.open(r.url, '_blank');
     });
     this.snackBar.open(`A new window will open after the diagram generated`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
   }
 
   submitJob() {
-    let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
-    if (!file || (file.model.language !== 'jcl')) {
+    let buffer = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
+    if (!buffer || (buffer.model.language !== 'jcl')) {
       this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-    } this.http.post(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {
+    } this.http.post(ENDPOINTS.jobs, { contents: buffer.model.contents }).subscribe(r => {
       let jobId = r.jobid;
       const input = document.createElement('input');
       input.type = 'text';
@@ -390,31 +390,31 @@ export class MenuBarComponent implements OnInit {
   }
 
   setEditorLanguage(language: string) {
-    let fileContext = this.editorControl.fetchActiveFile();
-    this.editorControl.setHighlightingModeForBuffer(fileContext, language);
+    let bufferContext = this.editorControl.fetchActiveFile();
+    this.editorControl.setHighlightingModeForBuffer(bufferContext, language);
     this.editorControl.setThemeForLanguage(language);
   }
 
   languageActiveCheck(language: string): boolean {
-    let fileContext = this.editorControl.fetchActiveFile();
-    // check if there is a file opened in editor
-    if (fileContext) {
-      return fileContext.model.language && fileContext.model.language.toLowerCase() === language.toLowerCase();
+    let bufferContext = this.editorControl.fetchActiveFile();
+    // check if there is a buffer opened in editor
+    if (bufferContext) {
+      return bufferContext.model.language && bufferContext.model.language.toLowerCase() === language.toLowerCase();
     } else {
       return false;
     }
   }
 
-  createFile() {
+  createBuffer() {
     this.editorControl.createFile("(new)");
-    let fileContext = this.editorControl.fetchActiveFile();
-    this.editorControl.initializedFile.next(fileContext);
+    let bufferContext = this.editorControl.fetchActiveFile();
+    this.editorControl.initializedFile.next(bufferContext);
     /*
-    let newFileRef = this.dialog.open(NewFileComponent, {
+    let newBufferRef = this.dialog.open(NewFileComponent, {
       width: '500px'
     });
 
-    newFileRef.afterClosed().subscribe(result => {
+    newBufferRef.afterClosed().subscribe(result => {
       if (result) {
         this.editorControl.createFile(result);
       }
@@ -436,11 +436,11 @@ export class MenuBarComponent implements OnInit {
   }
 
   languageServerSetting() {
-    let newFileRef = this.dialog.open(LanguageServerComponent, {
+    let newBufferRef = this.dialog.open(LanguageServerComponent, {
       width: '500px'
     });
 
-    newFileRef.afterClosed().subscribe(result => {
+    newBufferRef.afterClosed().subscribe(result => {
       if (result) {
         this.languageServer.updateSettings(result);
         if (result.enable) {

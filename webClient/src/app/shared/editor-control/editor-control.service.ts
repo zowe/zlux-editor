@@ -11,7 +11,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
-import { ProjectStructure } from '../model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -27,7 +27,33 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 
 let stateCache = {};
+const WHITESPACE_256 = String.fromCharCode.apply(null, new Array(256).fill(0x20));
 let lastFile;
+
+function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes) {
+  //TODO: validation of record length that is aware of how DBCS will effect actual length
+  //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
+  if (!content) {
+    return 'No Content';
+  }
+  let isFixedRecordLength = datasetAttrs.recfm.recordLength === 'F';
+  let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
+  for (let i = 0; i < content.length; i++) {
+    let record = content[i];
+    if (record.length > maxRecordLen) {
+      return `Line ${i} exceeds record length limit of ${maxRecordLen}`;
+    } else if (isFixedRecordLength && record.length < maxRecordLen) {
+      let whitespace = WHITESPACE_256;
+      while (whitespace.length < maxRecordLen) {
+        whitespace += WHITESPACE_256;
+      }
+      console.log(`Whitespace len=${whitespace.length}`);
+      content[i] = record+whitespace.substring(record.length,maxRecordLen);
+      console.log(`Padded to '${content[i]}'`);
+    }
+  }
+  return true;
+}
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -137,6 +163,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public setProjectNode(value: ProjectStructure[]) {
+    //used to set the list of available files, folders, and datasets
     this._projectNode.next(value);
   }
 
@@ -224,8 +251,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       lastFile = `${model.fileName}:${model.path}`;
       let cache = stateCache[lastFile];
       this.log.debug(`restoring cache`,cache,`file`,lastFile);
+      let editor = this.editor.getValue();
       if (cache){
-        let editor = this.editor.getValue();
         editor.cursor.restoreState(cache.cursor);
         const smallView = editor.viewModel.reduceRestoreState(cache.view);
 			  editor._view.restoreState(smallView);
@@ -378,7 +405,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return x;    
   }
   
-  doSaving(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
+  _saveFileInner(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
           _observer: Observer<void>, _observable: Observable<void>) {
     /* We must BASE64 encode the contents
      * of the file before it is sent
@@ -426,8 +453,57 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.openDirectory.next(results.directory);
     });
   }
+
+  saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
+    const _openDataset = this.openFileList.getValue();
+    const editor = this._editor.getValue();
+    let contents;
+    if (editor) {
+      contents = editor.getValue();
+    }
+    let _activeDataset: ProjectContext;
+    if (context != null) {
+      _activeDataset = context;
+    } else {
+      _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
+    }
+    const model = _activeDataset.model;
+    const isDataset = model.isDataset;
+    const fullName = isDataset ? model.fileName : model.name;
+    if (!isDataset) {
+      this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
+      return;
+    }
+    if (!editor || !contents) {
+      //TODO check if it is OK to write an empty record to clear out
+      this.snackBar.open(`Cannot get editor or no contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+      return;
+    }
+
+    if (!destinationOverride && fullName) {
+
+      const contents = editor.getValue().split('\n');
+      const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+      this.log.info(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}, contents=${contents}`);
+      let result = isContentValidForDataset(contents, model.datasetAttrs);
+      if (result === true) {
+        this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
+          this.snackBar.open(`Save complete!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+        }, e => {
+          this.snackBar.open(`${_activeDataset.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        });  
+      } else {
+        this.snackBar.open(`Cannot save dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+      }
+    } else {
+      //dataset is new or needs some alteration we can't do yet
+      this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
+                         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
+    }
+  }
   
-  saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
+  saveFileHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
     let _activeFile: ProjectContext;
     let _observer: Observer<void>;
@@ -463,8 +539,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * we use it.
      */
     let targetEncoding: string;
-    if (results || isUntagged) {
-      targetEncoding = results.encoding;
+    if (destinationOverride || isUntagged) {
+      targetEncoding = destinationOverride.encoding;
     }
     /* Use the encoding of the file (tag) */
     else {
@@ -481,7 +557,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * untagged, then we can use it's current
      * file properties.
      */
-    if (!results || isUntagged) {
+    if (!destinationOverride || isUntagged) {
       fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
@@ -502,7 +578,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     { sessionID,
                                                       forceOverwrite,
                                                       lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        this._saveFileInner(context, requestUrl, _activeFile, destinationOverride, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -519,13 +595,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
        * This should be validated in the dialog
        * in future enhancements.
        */
-      if (results.directory.charAt(0) === '/') {
-        results.directory.substr(1);
+      if (destinationOverride.directory.charAt(0) === '/') {
+        destinationOverride.directory.substr(1);
       }
       
       /* Request to get sessionID */
       requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                  results.directory+'/'+results.fileName,
+                                                  destinationOverride.directory+'/'+destinationOverride.fileName,
                                                   { sourceEncoding,
                                                     targetEncoding,
                                                     forceOverwrite: true });
@@ -534,11 +610,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                    results.directory+'/'+results.fileName,
+                                                    destinationOverride.directory+'/'+destinationOverride.fileName,
                                                     { forceOverwrite: true,
                                                       sessionID,
                                                       lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        this._saveFileInner(context, requestUrl, _activeFile, destinationOverride, isUntagged, _observer, _observable);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -718,7 +794,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      */
   saveBuffer(buffer: ZLUX.EditorBufferHandle, path: string | null): Observable<void> {
     this.saveFile.emit(<ProjectContext>buffer);
-    return this.saveFileHandler(buffer, path);
+    if (buffer.model.isDataset) {
+      return this.saveDatasetHandler(buffer, path);
+    } else {
+      return this.saveFileHandler(buffer, path);
+    }
   }
   /**
     * Get the contents of a buffer.

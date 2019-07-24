@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<div class="editor-instruction" *ngIf="noOpenFile">
+<div class="editor-instruction" *ngIf="noOpenBuffer">
   <div class="instruction">
     <!-- <img src="./assets/logo.svg" alt="logo"> -->
     <p class="welcome">Welcome to the <span class="welcome" style="color: #4286f4">Zowe</span> Editor.</p>
@@ -17,8 +17,8 @@
   </div>
 </div>
 <div class="code-editor-container">
-  <app-file-tabs [data]="openFileList" (select)="selectFile($event, true)" (remove)="closeFile($event)"></app-file-tabs>
-  <app-monaco [editorFile]="editorFile" [options]="options"></app-monaco>
+  <app-file-tabs [data]="openBufferList" (select)="selectBuffer($event, true)" (remove)="closeBuffer($event)"></app-file-tabs>
+  <app-monaco [editorBuffer]="editorBuffer" [options]="options"></app-monaco>
 </div>
 
 <!-- 

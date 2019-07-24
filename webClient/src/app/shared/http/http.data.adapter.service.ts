@@ -10,7 +10,7 @@
 */
 import { Injectable, Inject } from '@angular/core';
 import { ProjectDef } from '../model/project';
-import { ProjectStructure } from '../model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import * as _ from 'lodash';
 import { B64Decoder } from '../b64-decoder';
@@ -58,12 +58,17 @@ export class DataAdapterService {
         hasChildren: pds,
         path: entry.name.trim(),
         fileName: entry.name.trim(),
-        isDataset: true
+        isDataset: true,
+        datasetAttrs: {
+          dsorg: entry.dsorg,
+          recfm: entry.recfm,
+          volser: entry.volser
+        }
       };
     });
   }
 
-  convertDatasetMemberList(responseData: any): ProjectStructure[] {
+  convertDatasetMemberList(responseData: any, parentDatasetAttrs: DatasetAttributes): ProjectStructure[] {
     let entries = responseData.datasets;
     let path = entries[0].name;
     return entries[0].members.map((entry: any) => {
@@ -73,7 +78,8 @@ export class DataAdapterService {
         hasChildren: false,
         path: path.trim() + "(" + entry.name.trim() + ")",
         fileName: path.trim() + "(" + entry.name.trim() + ")",
-        isDataset: true
+        isDataset: true,
+        datasetAttrs: parentDatasetAttrs
       };
     });
   }
@@ -85,8 +91,9 @@ export class DataAdapterService {
   }
 
   convertDatasetContent(responseData: any): { contents: string } {
+    
     return {
-      contents: JSON.parse(responseData).records.join("\n")
+      contents: JSON.parse(responseData).records.filter(function(record){return record.length > 0}).map(function(record){return record.trim()}).join("\n")
     };
   }
 }

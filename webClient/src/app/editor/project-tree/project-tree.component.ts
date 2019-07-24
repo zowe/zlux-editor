@@ -61,8 +61,8 @@ export class ProjectTreeComponent implements OnInit {
     getChildren: (node: TreeNode) => {
       if (node.data.isDataset) {
         let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(node.data.path.trim(), undefined, undefined, true);
-        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
-          let struct = this.dataAdapter.convertDatasetMemberList(file);
+        return this.httpService.get(requestUrl).toPromise().then((res: any) => {
+          let struct = this.dataAdapter.convertDatasetMemberList(res, node.data.datasetAttrs);
           return struct.map(f => {
             f.parent = node.data;
             return f;
@@ -145,6 +145,7 @@ export class ProjectTreeComponent implements OnInit {
           //Note: This temporary hack is used to show datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
 
+          //run dataset search query and get returned properties
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName.toUpperCase(), 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
@@ -279,6 +280,7 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   treeUpdate($event: any) {
+    //this is where file properties are populated initially.
     this.editorControl.setProjectNode($event.treeModel.nodes);
     this.editorControl.initProjectContext('', $event.treeModel.nodes);
   }
