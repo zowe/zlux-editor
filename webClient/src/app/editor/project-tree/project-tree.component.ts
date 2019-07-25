@@ -207,7 +207,7 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
       });
-    } else if(!$event.data.hasChildren){
+    } else if(!$event.data.hasChildren && $event.data.isDataset){
       this.editorControl.openFile('', ($event.data as ProjectStructure)).subscribe(x => {
           this.log.debug(`File loaded through File Explorer.`);
       });
