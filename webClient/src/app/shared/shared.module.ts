@@ -15,7 +15,6 @@ import { DialogModule } from './dialog/dialog.module';
 import { HttpService } from './http/http.service';
 import { DataAdapterService } from './http/http.data.adapter.service';
 import { UtilsService } from './utils.service';
-import { ConfigService } from './config.service';
 import { EditorControlService } from './editor-control/editor-control.service';
 import { SnackBarService } from './snack-bar.service';
 import { LanguageServerService } from './language-server/language-server.service';
@@ -27,7 +26,7 @@ import { LanguageServerService } from './language-server/language-server.service
     MatSnackBarModule,
   ],
   declarations: [],
-  providers: [HttpService, DataAdapterService, UtilsService, ConfigService, EditorControlService, SnackBarService, LanguageServerService],
+  providers: [HttpService, DataAdapterService, UtilsService, EditorControlService, SnackBarService, LanguageServerService],
 })
 export class SharedModule { }
 
