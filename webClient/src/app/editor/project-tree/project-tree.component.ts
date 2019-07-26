@@ -16,7 +16,7 @@ import { OpenProjectComponent } from '../../shared/dialog/open-project/open-proj
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { ProjectStructure } from '../../shared/model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../../shared/model/editor-project';
 import { ProjectContext } from '../../shared/model/project-context';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { EditorService } from '../editor.service';
@@ -173,17 +173,10 @@ export class ProjectTreeComponent implements OnInit {
   }
 
   onDatasetSelect() {
-    this.fileExplorer.hideExplorers();
-    this.showDatasets = true;
-    // This is a pseudo-hacky way of styling the explorer that hides the unfinished dataset
-    // browser to use the original Editor one. This can be removed once Explorer datasets are used.
+    this.fileExplorer.showDatasets();
+    this.showDatasets = false;
     let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    myElement.setAttribute("style", "height: 75px;");
-    // Uncomment the following code to test Dataset viewer of FE (Disables default Dataset viewer of Editor)
-    // this.fileExplorer.showDatasets();
-    // this.showDatasets = false;
-    // let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    // myElement.setAttribute("style", "height: 100%;");
+    myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
@@ -214,7 +207,14 @@ export class ProjectTreeComponent implements OnInit {
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
       });
-    } else { }
+    } else if($event.data.isDataset){
+      let data: ProjectStructure = ($event.data as ProjectStructure);
+      if($event.type == 'file'){
+        this.editorControl.openFile('', (data)).subscribe(x => {
+          this.log.debug(`Dataset loaded through File Explorer.`);
+        });
+      }
+    }
   }
 
   onPathChanged($event: any) {
@@ -275,16 +275,6 @@ export class ProjectTreeComponent implements OnInit {
         this.log.debug(`file loaded through project explorer.`);
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
-    }
-  }
-
-  nodeClickHandler(node: TreeNode, $event: any) {
-    node.mouseAction('click', $event);
-    if (node.hasChildren) {
-      TREE_ACTIONS.TOGGLE_EXPANDED(node.treeModel, node, $event);
-      // TREE_ACTIONS.TOGGLE_ACTIVE(tree, node, $event);
-      // TREE_ACTIONS.TOGGLE_SELECTED(tree, node, $event);
-      // TREE_ACTIONS.FOCUS(tree, node, $event);
     }
   }
 
