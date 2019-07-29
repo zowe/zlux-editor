@@ -328,9 +328,7 @@ export class MenuBarComponent implements OnInit {
     let bufferContext = this.editorControl.fetchActiveFile();
     if (!bufferContext) {
       this.snackBar.open('Warning: Cannot save, no buffer found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
-    } else if (bufferContext.model.isDataset) {
-      this.snackBar.open('Dataset saving not yet supported', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
-    } else {
+    } else { 
       let sub = this.monacoService.saveBuffer(bufferContext).subscribe(() => { sub.unsubscribe(); });
     }   
   }

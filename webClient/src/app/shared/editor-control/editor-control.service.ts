@@ -490,7 +490,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       let result = isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
         this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
-          this.snackBar.open(`Save complete!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+          this.snackBar.open(`Saving complete`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
         }, e => {
           this.snackBar.open(`${_activeDataset.name} could not be saved! Error code=${e.status}`, 
                              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
