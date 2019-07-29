@@ -41,8 +41,8 @@ export class MonacoService {
     private utils: UtilsService,
     private snackBar: SnackBarService
   ) {
-    this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
-      this.closeFile(fileContext);
+    this.editorControl.closeFile.subscribe((bufferContext: ProjectContext) => {
+      this.closeBuffer(bufferContext);
     });
 
     this.editorControl.changeLanguage.subscribe(e => {
@@ -68,55 +68,55 @@ export class MonacoService {
      But, the file may already be open, so within this we have to determine whether to fire an event
      From the controller to say whether this is new, or just a selection change
    */
-  openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
+  openBuffer(bufferNode: ProjectContext, reload: boolean, line?: number) {
     this.editorControl.saveCursorState();
-    if (fileNode.temp) {
-      //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
-        this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
+    if (bufferNode.temp) {
+      //blank new buffer
+      this.setMonacoModel(bufferNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
+        this.editorControl.fileOpened.next({ buffer: bufferNode, file: bufferNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
           this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
             { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
           ])[0]);
-          // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+          // this.editor.getValue().colorizeModelLine(newModel, bufferNode.model.line);
         }
       });
     } else {
       let requestUrl: string;
-      let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
+      let bufferPath = ['/', '\\'].indexOf(bufferNode.model.path.substring(0, 1)) > -1 ? bufferNode.model.path.substring(1) : bufferNode.model.path;
       let _observable;
 
       if (reload) {
-        if (fileNode.model.isDataset) {
-          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
+        if (bufferNode.model.isDataset) {
+          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(bufferPath);
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
         } else {
           requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                      filePath+'/'+fileNode.model.fileName,
+                                                      bufferPath+'/'+bufferNode.model.fileName,
                                                       { responseType: 'b64' });
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
         }
 
       } else {
-        _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
+        _observable = new Observable((obs) => obs.next({ contents: bufferNode.model.contents }));
       }
       _observable.subscribe({
         next: (response: any) => {
-          //network load or switched to currently open file
+          //network load or switched to currently open buffer
           const resJson = response;
-          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
+          this.setMonacoModel(bufferNode, <{ contents: string, language: string }>resJson).subscribe({
             next: () => {
-              this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
+              this.editorControl.fileOpened.next({ buffer: bufferNode, file: bufferNode.name });
               if (line) {
                 this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
                 this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
                   { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
                 ])[0]);
-                // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+                // this.editor.getValue().colorizeModelLine(newModel, bufferNode.model.line);
               }
               if (reload) {
-                this.editorControl.initializedFile.next(fileNode);
+                this.editorControl.initializedFile.next(bufferNode);
               }
             },
             error: (err) => {
@@ -125,15 +125,15 @@ export class MonacoService {
           });
         },
         error: (err) => {
-          this.log.warn(`${fileNode.name} could not be opened`);
+          this.log.warn(`${bufferNode.name} could not be opened`);
           if (err.status === 403) {
-            this.snackBar.open(`${fileNode.name} could not be opened due to permissions`,
+            this.snackBar.open(`${bufferNode.name} could not be opened due to permissions`,
               'Close', { duration: MessageDuration.Short, panelClass: 'center' });
           } else if (err.status === 404) {
-            this.snackBar.open(`${fileNode.name} could not be found`,
+            this.snackBar.open(`${bufferNode.name} could not be found`,
               'Close', { duration: MessageDuration.Short, panelClass: 'center' });
           } else {
-            this.snackBar.open(`${fileNode.name} could not be opened`,
+            this.snackBar.open(`${bufferNode.name} could not be opened`,
               'Close', { duration: MessageDuration.Short, panelClass: 'center' });
           }
         }
@@ -141,32 +141,32 @@ export class MonacoService {
     }
   }
 
-  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
+  setMonacoModel(bufferNode: ProjectContext, buffer: { contents: string, language: string }): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
         .subscribe((value) => {
           if (value && value.editor) {
             const editorCore = value.editor;
 
-            fileNode.model.contents = file['contents'];
-            this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
-              let fileLang = 'plaintext';
-              if (file['language']) {
-                fileLang = file['language'];
-              } else if (fileNode.model.language) {
-                fileLang = fileNode.model.language;
+            bufferNode.model.contents = buffer['contents'];
+            this.editorControl.getRecommendedHighlightingModesForBuffer(bufferNode).subscribe((supportLanguages: string[]) => {
+              let bufferLang = 'plaintext';
+              if (buffer['language']) {
+                bufferLang = buffer['language'];
+              } else if (bufferNode.model.language) {
+                bufferLang = bufferNode.model.language;
               } else if (supportLanguages[0]) {
-                fileLang = supportLanguages[0];
+                bufferLang = supportLanguages[0];
               }
               // sync language to context
-              fileNode.model.language = fileLang;
+              bufferNode.model.language = bufferLang;
               const model = {
-                value: file['contents'],
-                language: fileLang, // Replace fileLang here to test other languages
-                uri: this.generateUri(fileNode.model),
+                value: buffer['contents'],
+                language: bufferLang, // Replace bufferLang here to test other languages
+                uri: this.generateUri(bufferNode.model),
               };
-              this.editorControl.setThemeForLanguage(fileLang);
-              const duplicate: boolean = this.fileDuplicateChecker(model.uri);
+              this.editorControl.setThemeForLanguage(bufferLang);
+              const duplicate: boolean = this.bufferDuplicateChecker(model.uri);
               let newModel;
               if (!duplicate) {
                 newModel = editorCore.createModel(model.value, model.language, model.uri);
@@ -174,7 +174,7 @@ export class MonacoService {
                 newModel = editorCore.getModel(model.uri);
               }
               newModel.onDidChangeContent((e: any) => {
-                this.fileContentChangeHandler(e, fileNode, newModel);
+                this.bufferContentChangeHandler(e, bufferNode, newModel);
               });
               const subscriber = this.editorControl.editor.subscribe((value)=> {
                 if (value) {
@@ -190,29 +190,29 @@ export class MonacoService {
     });
   }
 
-  closeFile(fileNode: ProjectContext) {
+  closeBuffer(bufferNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      console.warn(`Editor core null on closeBuffer()`);
       return;
     }
     const _editor = editorCore.editor;
     const models = _editor.getModels();
-    const fileUri = this.generateUri(fileNode.model);
+    const bufferUri = this.generateUri(bufferNode.model);
     for (const model of models) {
-      if (model.uri === fileUri) {
+      if (model.uri === bufferUri) {
         model.dispose();
       }
     }
   }
 
-  preSaveCheck(fileContext?: ProjectContext): boolean {
-    let _activeFile: ProjectContext = fileContext;
+  preSaveCheck(bufferContext?: ProjectContext): boolean {
+    let _activeBuffer: ProjectContext = bufferContext;
     let canBeISO = true;
     let i = 0;
-    let fileContents = _activeFile.model.contents;
-    for (i; i < fileContents.length; i++) {
-      if (fileContents[i].charCodeAt(0) > 127) {
+    let bufferContents = _activeBuffer.model.contents;
+    for (i; i < bufferContents.length; i++) {
+      if (bufferContents[i].charCodeAt(0) > 127) {
         canBeISO = false;
         break;
       }
@@ -220,35 +220,38 @@ export class MonacoService {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext): Observable<void> {
+  saveBuffer(bufferContext: ProjectContext): Observable<void> {
     return new Observable((obs) => {
-      
-      /* If the file is not new, and the encoding 
+      if (bufferContext.model.isDataset) {
+        //TODO validation
+        this.editorControl.saveBuffer(bufferContext, null).subscribe(() => obs.next());
+      }
+      /* If the buffer is not new, and the encoding 
        * has already been set inside of USS via
        * chtag.
        */
-      if (!fileContext.temp && 
-          fileContext.model.encoding != undefined &&
-          fileContext.model.encoding != null && 
-          fileContext.model.encoding != 0
+      if (!bufferContext.temp && 
+          bufferContext.model.encoding != undefined &&
+          bufferContext.model.encoding != null && 
+          bufferContext.model.encoding != 0
           ){
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+        this.editorControl.saveBuffer(bufferContext, null).subscribe(() => obs.next());
       }
-      /* The file is new or is untagged,
+      /* The buffer is new or is untagged,
        * so we must prompt a dialog.
        */
       else {
         /* Issue a presave check to see if the
-         * file can be saved as ISO-8859-1,
+         * buffer can be saved as ISO-8859-1,
          * perhaps this should be done in real
          * time as an enhancement.
          */
-        let x = this.preSaveCheck(fileContext);
+        let x = this.preSaveCheck(bufferContext);
         
-        /* The file is temporary, which means that
+        /* The buffer is temporary, which means that
          * it was never tagged.
          */
-        if (fileContext.temp) {
+        if (bufferContext.temp) {
           /* Open up a dialog with the standard,
            * "save as" format.
            */
@@ -258,28 +261,28 @@ export class MonacoService {
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+            this.editorControl.saveBuffer(bufferContext, result).subscribe(() => obs.next());
           }
           });
         }
-        /* The file was never tagged, so we should
+        /* The buffer was never tagged, so we should
          * ask the user if they would like to tag
          * it.
          */
         else {
           /* Open up a dialog asking if the user
-           * wants to tag their file. Again,
+           * wants to tag their buffer. Again,
            * we are checking if ISO-8859-1 is
            * an option.
            */
           let saveRef = this.dialog.open(TagComponent, {
             width: '500px',
             data: { canBeISO: x,
-                    fileName: fileContext.model.fileName }
+                    fileName: bufferContext.model.fileName }
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+            this.editorControl.saveBuffer(bufferContext, result).subscribe(() => obs.next());
           }
           });
         }
@@ -290,24 +293,24 @@ export class MonacoService {
   //saveAllFile() {
     //let unsavedFile = this.editorControl.openFileList.getValue().filter((file: ProjectContext) => file.changed);
     // if (unsavedFile[0]) {
-    //   let sub = this.saveFile(unsavedFile[0]).subscribe(() => {
+    //   let sub = this.saveBuffer(unsavedFile[0]).subscribe(() => {
     //     sub.unsubscribe();
     //     this.saveAllFile();
     //   });
     // }
-    //for (let file of unsavedFile) {
-      //let sub = this.saveFile(file).subscribe(() => {
+    //for (let buffer of unsavedBuffer) {
+      //let sub = this.saveBuffer(buffer).subscribe(() => {
         //sub.unsubscribe();
       //});
     //}
   //}
 
-  generateUri(editorFile: ProjectStructure): string {
+  generateUri(editorBuffer: ProjectStructure): string {
     // have to use lowercase here!
-    return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
+    return `inmemory://${editorBuffer.name.toLowerCase()}/${editorBuffer.id}`;
   }
 
-  fileDuplicateChecker(uri: string): boolean {
+  bufferDuplicateChecker(uri: string): boolean {
     const models = this.editorControl.editorCore.getValue().editor.getModels();
     for (const model of models) {
       if (model.uri === uri) {
@@ -317,10 +320,10 @@ export class MonacoService {
     return false;
   }
 
-  fileContentChangeHandler(e: any, fileNode: ProjectContext, model: any) {
-    // update file context
-    fileNode.model.contents = model.getValue();
-    fileNode.changed = true;
+  bufferContentChangeHandler(e: any, bufferNode: ProjectContext, model: any) {
+    // update buffer context
+    bufferNode.model.contents = model.getValue();
+    bufferNode.changed = true;
   }
 
   cleanDecoration() {

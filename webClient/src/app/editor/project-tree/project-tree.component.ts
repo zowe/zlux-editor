@@ -130,7 +130,6 @@ export class ProjectTreeComponent implements OnInit {
     this.editorControl.openDirectory.subscribe(dirName => {
       //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
       // Will be removed when Dataset functionality for Explorer gets better.
-        this.onUssSelect();
         this.fileExplorer.updateDirectory(dirName);
     });
 
@@ -139,8 +138,7 @@ export class ProjectTreeComponent implements OnInit {
         if (dirName[0] == '/') {
           //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
-            this.onUssSelect();
-            this.fileExplorer.updateDirectory(dirName);
+             this.fileExplorer.updateDirectory(dirName);
         } else { //Datasets
           //Note: This temporary hack is used to show datasets using the original slower Editor structure.
           // Will be removed when Dataset functionality for Explorer gets better.
@@ -150,7 +148,6 @@ export class ProjectTreeComponent implements OnInit {
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
               this.fileExplorer.showDatasets();
-              this.onDatasetSelect();
               this.nodes = this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               this.editorControl.initProjectContext(dirName, this.nodes);
@@ -171,13 +168,6 @@ export class ProjectTreeComponent implements OnInit {
 
   onCopyClick($event: any){
     // Todo: Create right click menu functionality.
-  }
-
-  onDatasetSelect() {
-    this.fileExplorer.showDatasets();
-    this.showDatasets = false;
-    let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
@@ -203,7 +193,7 @@ export class ProjectTreeComponent implements OnInit {
         isDataset: false,
         name: $event.name,
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
-    };
+      };
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
@@ -218,101 +208,8 @@ export class ProjectTreeComponent implements OnInit {
     }
   }
 
-  onPathChanged($event: any) {
-    // Currently, we check for when the path's changed for Dataset viewing, so we only need to treat
-    // it within a dataset context. This will probably be removed along with other hacks for temporarily
-    // keeping the original dataset viewer.
-    this.fileExplorer.hideExplorers();
-    this.showDatasets = true;
-    this.editorControl.projectName = $event;
-    this.editorControl.openDataset.next($event);
-  }
-
   onRenameClick($event: any) {
     // Todo: Create right click menu functionality.
-  }
-
-  onUssSelect() {
-    this.fileExplorer.showUss();
-    this.showDatasets = false;
-    // This is a pseudo-hacky way of styling that pops back the Explorer.
-    let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    myElement.setAttribute("style", "height: 100%;");
-  }
-
-  openProject() {
-    let openProjectRef = this.dialog.open(OpenProjectComponent, {
-      width: '500px'
-    });
-
-    openProjectRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.editorControl.projectName = result.name;
-        this.editorControl.openProject.next(result.name);
-      }
-    });
-  }
-
-  openDirectory() {
-    let openDirectoryRef = this.dialog.open(OpenFolderComponent, {
-      width: '500px'
-    });
-
-    openDirectoryRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.showDatasets = false;
-        this.fileExplorer.showUss();
-        this.editorControl.projectName = result;
-        this.editorControl.openDirectory.next(result);
-      }
-    });
-  }
-
-  nodeActivate($event: any) {
-    if (!$event.node.data.children && !$event.node.data.hasChildren) {
-      const nodeData: ProjectStructure = $event.node.data;
-      this.editorControl.openFile('', nodeData).subscribe(x => {
-        this.log.debug(`NodeData=`,nodeData);
-        this.log.debug(`file loaded through project explorer.`);
-      });
-      // this.editorControl.openFileEmitter.emit(nodeData);
-    }
-  }
-
-  treeUpdate($event: any) {
-    //this is where file properties are populated initially.
-    this.editorControl.setProjectNode($event.treeModel.nodes);
-    this.editorControl.initProjectContext('', $event.treeModel.nodes);
-  }
-
-  fetchNode(nodeName: string, nodes?: ProjectStructure[]): ProjectStructure {
-    let result: ProjectStructure;
-    if (nodes == null) { nodes = this.tree.treeModel.nodes; }
-    for (let node of nodes) {
-      if (node.name === nodeName) {
-        result = node;
-        break;
-      }
-      if (node.children) {
-        result = this.fetchNode(nodeName, node.children);
-      }
-    }
-    return result;
-  }
-
-  nodeIcon(node: TreeNode) {
-    let iconName = '';
-    if (node.hasChildren) {
-      return 'folder';
-    } else {
-      let openFile = this.editorControl.openFileList.getValue();
-      for (let file of openFile) {
-        if (file.id === node.data.id) {
-          return 'edit';
-        }
-      }
-      return 'assignment';
-    }
   }
 }
 

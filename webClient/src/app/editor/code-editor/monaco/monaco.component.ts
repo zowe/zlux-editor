@@ -8,8 +8,9 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
+import { Subscription } from 'rxjs/Subscription';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
   createMonacoServices, createConnection,
@@ -27,7 +28,9 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 })
 export class MonacoComponent implements OnInit, OnChanges {
   @Input() options;
-  @Input() editorFile;
+  @Input() editorBuffer;
+
+  private bufferListener:Subscription;
 
   constructor(
     private monacoService: MonacoService,
@@ -38,12 +41,30 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    //TODO frustratingly appears to do nothing at all.
+    if (!this.bufferListener) {
+      this.bufferListener = this.editorControl.fileOpened.subscribe(e=> {
+        let model = e.buffer.model;
+        if (model.isDataset && this.options.rulers[0] != model.datasetAttrs.dsorg.maxRecordLen) {
+          //apply record length limiter
+          this.options = Object.assign({},this.options,{rulers:[model.datasetAttrs.dsorg.maxRecordLen]});
+        } else if (!model.isDataset && this.options.rulers.length > 0) {
+          this.options = Object.assign({},this.options,{rulers:[]});
+        }
+      });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.bufferListener) {
+      this.bufferListener.unsubscribe();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
-      if (input === 'editorFile' && changes[input].currentValue != null) {
-        this.monacoService.openFile(
+      if (input === 'editorBuffer' && changes[input].currentValue != null) {
+        this.monacoService.openBuffer(
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
@@ -133,8 +154,8 @@ export class MonacoComponent implements OnInit, OnChanges {
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convenience
       run: function (ed) {
-        let fileContext = self.editorControl.fetchActiveFile();
-        let sub = self.monacoService.saveFile(fileContext).subscribe(() => sub.unsubscribe());
+        let bufferContext = self.editorControl.fetchActiveFile();
+        let sub = self.monacoService.saveBuffer(bufferContext).subscribe(() => sub.unsubscribe());
         return null;
       }
     });

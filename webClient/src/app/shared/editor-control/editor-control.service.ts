@@ -52,6 +52,9 @@ function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttrib
       console.log(`Padded to '${content[i]}'`);
     }
   }
+  if (JSON.stringify({records:content}).length > 5242880) {
+    return 'Content over max size currently supported (5MB)';
+  }
   return true;
 }
 
@@ -474,8 +477,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
       return;
     }
-    if (!editor || !contents) {
-      //TODO check if it is OK to write an empty record to clear out
+    if (!editor || contents === undefined) {
       this.snackBar.open(`Cannot get editor or no contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
       return;
     }
@@ -484,17 +486,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
       const contents = editor.getValue().split('\n');
       const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-      this.log.info(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}, contents=${contents}`);
+      this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
         this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
           this.snackBar.open(`Save complete!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
         }, e => {
-          this.snackBar.open(`${_activeDataset.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+          this.snackBar.open(`${_activeDataset.name} could not be saved! Error code=${e.status}`, 
                              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         });  
       } else {
-        this.snackBar.open(`Cannot save dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+        this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
       }
     } else {
       //dataset is new or needs some alteration we can't do yet
