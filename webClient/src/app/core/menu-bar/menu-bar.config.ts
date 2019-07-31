@@ -140,7 +140,7 @@ export const MENU = [
             {
               name: 'New File',
               action: {
-                internalName: 'createFile'
+                internalName: 'createBuffer'
               },
               keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
             },              // to be rethinked.
