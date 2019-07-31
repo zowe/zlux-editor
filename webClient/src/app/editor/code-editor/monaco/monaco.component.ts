@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnDestroy, OnInit, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
+import { Component, OnDestroy, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import { Subscription } from 'rxjs/Subscription';
 import {
@@ -26,11 +26,9 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
   templateUrl: './monaco.component.html',
   styleUrls: ['./monaco.component.scss']
 })
-export class MonacoComponent implements OnInit, OnChanges {
+export class MonacoComponent implements OnChanges {
   @Input() options;
   @Input() editorBuffer;
-
-  private bufferListener:Subscription;
 
   constructor(
     private monacoService: MonacoService,
@@ -38,27 +36,6 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
-  }
-
-  ngOnInit() {
-    //TODO frustratingly appears to do nothing at all.
-    if (!this.bufferListener) {
-      this.bufferListener = this.editorControl.fileOpened.subscribe(e=> {
-        let model = e.buffer.model;
-        if (model.isDataset && this.options.rulers[0] != model.datasetAttrs.dsorg.maxRecordLen) {
-          //apply record length limiter
-          this.options = Object.assign({},this.options,{rulers:[model.datasetAttrs.dsorg.maxRecordLen]});
-        } else if (!model.isDataset && this.options.rulers.length > 0) {
-          this.options = Object.assign({},this.options,{rulers:[]});
-        }
-      });
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.bufferListener) {
-      this.bufferListener.unsubscribe();
-    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
