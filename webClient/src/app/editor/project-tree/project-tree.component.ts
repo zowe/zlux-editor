@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
+import { Component, ViewChild, Inject } from '@angular/core';
 import { Response } from '@angular/http';
 import { MatDialog } from '@angular/material';
 import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
@@ -34,7 +34,7 @@ import { B64Decoder } from '../../shared/b64-decoder';
   templateUrl: './project-tree.component.html',
   styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
-export class ProjectTreeComponent implements OnInit {
+export class ProjectTreeComponent {
 
   @ViewChild(TreeComponent)
   private tree: TreeComponent;
@@ -165,8 +165,6 @@ export class ProjectTreeComponent implements OnInit {
     });
   }
   
-  ngOnInit() {
-  }
 
   onCopyClick($event: any){
     // Todo: Create right click menu functionality.
