@@ -636,6 +636,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.createFileEmitter.next(name);
     // let new file open in editor
     this.openFile(null, fileStructure);
+    // get focus of editor
+    setTimeout(()=> {
+      this.editor.getValue().focus();
+    });
+    //trigger initializedFile
+    this.initializedFile.next(fileContext);
     // return file context
     return fileContext;
     // return new Observable<ProjectContext>((observer) => {

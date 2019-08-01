@@ -53,8 +53,6 @@ export class AppComponent implements OnDestroy{
     this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
       if (event.altKey && event.which === KeyCode.KEY_N) {
         this.editorControl.createFile();
-        let fileContext = this.editorControl.fetchActiveFile();
-        this.editorControl.initializedFile.next(fileContext);
       }
     }));
   }
