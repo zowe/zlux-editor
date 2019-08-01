@@ -31,6 +31,13 @@ export class FileTabsComponent implements OnInit {
     wheelPropagation: true,
   };
 
+  private fileTabsScrollConfig = {
+    wheelPropagation: true,
+    suppressScrollY: true,
+    suppressScrollX: false,
+    useBothWheelAxes: true
+  };
+
   constructor(@Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
 
   ngOnInit() {
@@ -55,6 +62,7 @@ export class MouseMiddleClickDirective {
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);
+    this.editorControl.closeFile.next(this.fileContext);
   }
   constructor(private editorControl: EditorControlService,
               @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }

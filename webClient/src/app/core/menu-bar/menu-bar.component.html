@@ -12,11 +12,11 @@
   <ul class="gz-menu-list">
     <li class="gz-menu-section" [ngClass]="{'active': menuActive}" *ngFor="let menu of menuList" (click)="menuActive = !menuActive">
       {{menu.name}}
-      <div class="gz-menu-function">
+      <div class="gz-menu-function" *ngIf="menuActive">
         <ul>
-          <li class="gz-menu-function-item" [ngClass]="{'group-line': function.name === 'group-end'}" *ngFor="let function of menu.children"
-            (click)="menuAction(function.action.name, function.action.params)">
-            <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active.name, function.active.params)" class="gz-menu-function-check">
+          <li class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
+            (click)="menuAction(function.action)">
+            <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
               fiber_manual_record
             </mat-icon>
             <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>

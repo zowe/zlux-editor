@@ -62,10 +62,11 @@
       background-color: #303030; // float: left;
       // margin-left: -300px;
       flex: 0 0 230px;
+      z-index: 0;
       .section-container {
         min-width: 315px;
-        padding-top: 36px;
-        overflow-y: auto;
+        padding-top: 0px;
+        overflow-y: hidden;
         overflow-x: hidden;
         display: none;
         &.active {
@@ -161,10 +162,10 @@
       }
     }
     .gz-editor {
-      // width: 100%;
       height: 100%;
       position: relative;
-      flex: 1 0 auto;
+      flex: 1 1 auto;
+      overflow: hidden;
     }
   }
 }

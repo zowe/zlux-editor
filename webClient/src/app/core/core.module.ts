@@ -18,7 +18,7 @@ import { MenuBarComponent } from './menu-bar/menu-bar.component';
   imports: [
     CommonModule,
     MatIconModule,
-    MatDialogModule,
+    MatDialogModule
   ],
   exports: [
     NavComponent,

@@ -25,7 +25,6 @@ import { CodeEditorService } from './code-editor.service';
   styleUrls: ['./code-editor.component.scss']
 })
 export class CodeEditorComponent implements OnInit {
-
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
 
@@ -52,6 +51,7 @@ export class CodeEditorComponent implements OnInit {
     private monacoService: MonacoService,
     private editorService: EditorService,
     private codeEditorService: CodeEditorService) {
+    //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
     });
@@ -61,6 +61,16 @@ export class CodeEditorComponent implements OnInit {
       list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
     });
 
+    this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
+      if (!this.noOpenFile && !this.isAnySelected()) {
+        this.selectFile(this.openFileList[0], true);
+      }
+    });
+
+  }
+
+  isAnySelected () {
+    return this.openFileList.some(f=>f.active)
   }
 
   ngOnInit() { }
@@ -75,7 +85,7 @@ export class CodeEditorComponent implements OnInit {
     let exist = false;
 
     for (const file of this.editorControl.openFileList.getValue()) {
-      if (file.id === fileContext.id) {
+      if (file.name === fileContext.name && file.model.path === fileContext.model.path) {
         exist = true;
       }
     }
@@ -96,9 +106,14 @@ export class CodeEditorComponent implements OnInit {
     this.codeEditorService.closeFile(fileContext);
   }
 
+  /* 
+     this.editorFile instructs monaco to change, 
+     which in turn invokes monacoservice.openfile, 
+     which kicks off discovery involving the editor controller   
+  */
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
-    this.editorFile = { context: fileContext, reload: false, line: line };
     this.codeEditorService.selectFile(fileContext, broadcast);
+    this.editorFile = { context: fileContext, reload: false, line: line };
   }
 }
 
@@ -106,8 +121,8 @@ export class CodeEditorComponent implements OnInit {
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
