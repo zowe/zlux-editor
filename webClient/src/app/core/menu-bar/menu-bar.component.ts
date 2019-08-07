@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU, TEST_LANGUAGE_MENU, LANGUAGE_MENUS } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -26,6 +26,9 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -55,7 +58,7 @@ function initMenus(menus) {
   templateUrl: './menu-bar.component.html',
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
-export class MenuBarComponent implements OnInit {
+export class MenuBarComponent implements OnInit, OnDestroy {
   private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
@@ -65,6 +68,7 @@ export class MenuBarComponent implements OnInit {
     children: []
   };
 
+  private subscription:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
   
   constructor(
@@ -75,6 +79,7 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
   ) {
@@ -100,6 +105,10 @@ export class MenuBarComponent implements OnInit {
     
     this.editorControl.selectFile.subscribe((fileContext)=> {
       if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+         // get focus of editor
+      setTimeout(()=> {
+        this.editorControl.getFocus();
+      });
     });
 
     this.editorControl.initializedFile.subscribe((fileContext)=> {
@@ -129,6 +138,8 @@ export class MenuBarComponent implements OnInit {
         this.resetLanguageSelectionMenu();
       }
     });
+
+    
 
     // this.editorControl.saveAllFile.subscribe(x => {
     //   this.saveAll();
@@ -237,6 +248,13 @@ export class MenuBarComponent implements OnInit {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
     }
+
+    this.subscription.add(this.appKeyboard.keyupEvent
+      .filter(value => value.which===KeyCode.KEY_N).subscribe((event) => {
+      if (event.altKey && event.which === KeyCode.KEY_N) {
+        this.createFile();
+      }
+    }));
   }
 
   menuAction(menuItem: any): any {
@@ -439,6 +457,10 @@ export class MenuBarComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy():void {
+    this.subscription.unsubscribe();
   }
 }
 

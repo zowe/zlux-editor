@@ -14,9 +14,7 @@ import { EditorControlService } from './shared/editor-control/editor-control.ser
 import { HttpService } from './shared/http/http.service';
 import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
-import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
-import { KeyCode } from './shared/keycode-enum';
 
 @Component({
   selector: 'app-root',
@@ -26,9 +24,8 @@ import { KeyCode } from './shared/keycode-enum';
               './app.component.scss'
               ]
 })
-export class AppComponent implements OnDestroy{
+export class AppComponent {
   title = 'app';
-  private subscription:Subscription = new Subscription();
 
   @ViewChild('editorheader')
   editorheaderElementRef: ElementRef<any>;
@@ -50,11 +47,6 @@ export class AppComponent implements OnDestroy{
 
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
-    this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
-      if (event.altKey && event.which === KeyCode.KEY_N) {
-        this.editorControl.createFile();
-      }
-    }));
   }
 
   handleLaunchOrMessageObject(data: any) {
@@ -132,10 +124,6 @@ export class AppComponent implements OnDestroy{
         return this.zluxOnMessage(eventContext);
       }      
     }
-  }
-
-  ngOnDestroy():void {
-    this.subscription.unsubscribe();
   }
 
 }

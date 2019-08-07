@@ -269,6 +269,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return activeFile;
   }
 
+  public fetchAdjToActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
+  }
+
   public generateProjectContext(
     project: ProjectStructure | ProjectStructure[],
     parent?: ProjectContext
@@ -606,6 +612,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     } else {
       throw new Error('File parent does not exist! This may have been caused by you wanting to a delete a root context.');
     }
+  }
+
+  getFocus(): void {
+    // get focus of editor
+    this.editor.getValue().focus();
   }
 
   createFile(name?: string): ProjectContext {
