@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -27,6 +27,9 @@ import { CodeEditorService } from './code-editor.service';
 export class CodeEditorComponent implements OnInit {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
+  @ViewChild('monaco')
+  monacoRef: ElementRef;
+  
 
   //TODO load from configservice
   public options = {
@@ -71,6 +74,10 @@ export class CodeEditorComponent implements OnInit {
 
   isAnySelected () {
     return this.openFileList.some(f=>f.active)
+  }
+
+  focusMonaco() {
+    (this.monacoRef as any).focus();
   }
 
   ngOnInit() { }
