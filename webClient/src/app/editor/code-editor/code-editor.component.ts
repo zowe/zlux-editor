@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -33,7 +34,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
   private subscription:Subscription = new Subscription();
-
+  @ViewChild('monaco')
+  monacoRef: ElementRef;
 
   //TODO load from configservice
   public options = {
@@ -58,7 +60,13 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private monacoService: MonacoService,
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     private codeEditorService: CodeEditorService) {
+    if (this.windowEvents) {
+      this.windowEvents.restored.subscribe(()=> {
+        this.focusMonaco();
+      });
+    }
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
@@ -89,6 +97,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   isAnySelected () {
     return this.openFileList.some(f=>f.active)
+  }
+
+  focusMonaco() {
+    (this.monacoRef as any).focus();
   }
 
   ngOnInit() { }
