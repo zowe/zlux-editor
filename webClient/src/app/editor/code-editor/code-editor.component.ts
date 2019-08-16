@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional } from '@angular/core';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -53,7 +54,13 @@ export class CodeEditorComponent implements OnInit {
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private editorService: EditorService,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     private codeEditorService: CodeEditorService) {
+    if (this.windowEvents) {
+      this.windowEvents.restored.subscribe(()=> {
+        this.focusMonaco();
+      });
+    }
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
