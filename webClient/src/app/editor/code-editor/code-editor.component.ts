@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
@@ -20,17 +20,22 @@ import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorService } from '../editor.service';
 import { ProjectContext } from '../../shared/model/project-context';
 import { CodeEditorService } from './code-editor.service';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
+import { Subscription } from 'rxjs/Rx';
+
+
 @Component({
   selector: 'app-code-editor',
   templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.scss']
 })
-export class CodeEditorComponent implements OnInit {
+export class CodeEditorComponent implements OnInit, OnDestroy {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
+  private subscription:Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
-  
 
   //TODO load from configservice
   public options = {
@@ -54,6 +59,7 @@ export class CodeEditorComponent implements OnInit {
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private editorService: EditorService,
+    private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     private codeEditorService: CodeEditorService) {
     if (this.windowEvents) {
@@ -76,6 +82,16 @@ export class CodeEditorComponent implements OnInit {
         this.selectFile(this.openFileList[0], true);
       }
     });
+
+    this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
+      if (event.altKey && event.which === KeyCode.KEY_T) {
+        let fileContext = this.editorControl.fetchAdjToActiveFile();
+        this.selectFile(fileContext, true);      
+      } else if (event.altKey && event.which === KeyCode.KEY_W) {
+        let fileContext = this.editorControl.fetchActiveFile();
+        this.closeFile(fileContext);
+      }
+    }));
 
   }
 
@@ -128,6 +144,10 @@ export class CodeEditorComponent implements OnInit {
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
     this.codeEditorService.selectFile(fileContext, broadcast);
     this.editorFile = { context: fileContext, reload: false, line: line };
+  }
+
+  ngOnDestroy():void {
+    this.subscription.unsubscribe();
   }
 }
 
