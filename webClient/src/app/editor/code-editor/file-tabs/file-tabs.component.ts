@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild } from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, AfterViewChecked} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
@@ -20,7 +20,7 @@ import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
   templateUrl: './file-tabs.component.html',
   styleUrls: ['./file-tabs.component.scss',  '../../../../styles.scss']
 })
-export class FileTabsComponent implements OnInit {
+export class FileTabsComponent implements OnInit, AfterViewChecked {
 
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
@@ -38,17 +38,42 @@ export class FileTabsComponent implements OnInit {
     useBothWheelAxes: true
   };
 
-  constructor(@Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
+  private prevLength:number;
+
+  constructor(
+    private editorControl: EditorControlService,
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {}
 
   ngOnInit() {
     this.viewportEvents.resized.subscribe(()=> {
       this.componentRef.directiveRef.update();
     });
+    this.editorControl.initializedFile.subscribe(() => {
+      this.componentRef.directiveRef.scrollToRight();
+    });
+
+    console.log(this.componentRef.directiveRef.scrollToElement);
+    this.prevLength = 0;
+  }
+
+  ngAfterViewChecked() {
+   if (this.prevLength !== this.data.length) {
+    this.data.forEach((tab, i) => {
+      if (!tab.active) {
+        return;
+      }
+
+      this.componentRef.directiveRef.scrollToElement(`.tabs-file-list > li:nth-child(${i + 1})`);
+    });
+   }
+   this.prevLength = this.data.length; 
   }
 
   clickHandler(e: Event, item: ProjectContext) {
     this.select.next(item);
   }
+
+  
 }
 
 @Directive({

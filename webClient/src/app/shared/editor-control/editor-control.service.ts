@@ -732,6 +732,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           resultObserver.next(null);
         }
       }
+
       fileOpenSub.unsubscribe();
     });
 
