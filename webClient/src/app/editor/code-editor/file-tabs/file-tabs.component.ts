@@ -52,7 +52,6 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
       this.componentRef.directiveRef.scrollToRight();
     });
 
-    console.log(this.componentRef.directiveRef.scrollToElement);
     this.prevLength = 0;
   }
 
