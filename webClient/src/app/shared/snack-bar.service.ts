@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
-import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef, SimpleSnackBar } from '@angular/material';
+import { MatSnackBar, MatSnackBarConfig, MatSnackBarRef, SimpleSnackBar, MatSnackBarHorizontalPosition, MatSnackBarVerticalPosition } from '@angular/material';
 
 @Injectable()
 export class SnackBarService {
@@ -21,7 +21,9 @@ export class SnackBarService {
   }
 
   open(message: string, action?: string, config?: MatSnackBarConfig): MatSnackBarRef<SimpleSnackBar> {
-    return this.snackBar.open(message, action, config);
+    console.log(config)
+    let config2 = {duration: config.duration, panelClass: ['center', 'testtest2', "testtest3"], horizontalPosition: ('center' as MatSnackBarHorizontalPosition), verticalPosition: ('bottom' as MatSnackBarVerticalPosition)}
+    return this.snackBar.open(message, action, config2);
   }
 }
 

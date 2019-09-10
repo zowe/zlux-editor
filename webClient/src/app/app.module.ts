@@ -24,10 +24,14 @@ import { CoreModule } from './core/core.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EditorModule } from './editor/editor.module';
 import { SharedModule } from './shared/shared.module';
+import { MatSnackBarModule } from '@angular/material';
+import { SnackbarComponent } from './shared/snackbar/snackbar.component'
+import {MAT_SNACK_BAR_DATA} from '@angular/material';
 
 @NgModule({
   declarations: [
     AppComponent,
+    SnackbarComponent
   ],
   imports: [
     CommonModule,
@@ -40,8 +44,10 @@ import { SharedModule } from './shared/shared.module';
     EditorModule,
     MonacoEditorModule.forRoot(new MonacoConfig().config),
     SharedModule,
+    MatSnackBarModule,
   ],
-  providers: [],
+  entryComponents: [SnackbarComponent],
+  providers: [{ provide: MAT_SNACK_BAR_DATA, useValue: {} }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
