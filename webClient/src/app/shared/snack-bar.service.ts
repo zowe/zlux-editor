@@ -22,7 +22,7 @@ export class SnackBarService {
 
   open(message: string, action?: string, config?: MatSnackBarConfig): MatSnackBarRef<SimpleSnackBar> {
     console.log(config)
-    let config2 = {duration: config.duration, panelClass: ['center', 'testtest2', "testtest3"], horizontalPosition: ('center' as MatSnackBarHorizontalPosition), verticalPosition: ('bottom' as MatSnackBarVerticalPosition)}
+    let config2 = {duration: 593274798, panelClass: ['center', 'testtest2', "testtest3"], horizontalPosition: ('center' as MatSnackBarHorizontalPosition), verticalPosition: ('bottom' as MatSnackBarVerticalPosition)}
     return this.snackBar.open(message, action, config2);
   }
 }
