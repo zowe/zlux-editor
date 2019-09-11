@@ -687,7 +687,7 @@ input.mat-input-element {
 }
 
 .cdk-global-overlay-wrapper {
-  /* display: flex; */
+  /* display: flex; removed since this was messing up the snackbar from the notification manager */
   position: absolute;
   z-index: 1000
 }
