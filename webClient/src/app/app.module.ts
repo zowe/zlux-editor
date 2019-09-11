@@ -25,13 +25,10 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { EditorModule } from './editor/editor.module';
 import { SharedModule } from './shared/shared.module';
 import { MatSnackBarModule } from '@angular/material';
-import { SnackbarComponent } from './shared/snackbar/snackbar.component'
-import {MAT_SNACK_BAR_DATA} from '@angular/material';
 
 @NgModule({
   declarations: [
     AppComponent,
-    SnackbarComponent
   ],
   imports: [
     CommonModule,
@@ -46,8 +43,7 @@ import {MAT_SNACK_BAR_DATA} from '@angular/material';
     SharedModule,
     MatSnackBarModule,
   ],
-  entryComponents: [SnackbarComponent],
-  providers: [{ provide: MAT_SNACK_BAR_DATA, useValue: {} }],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
