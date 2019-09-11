@@ -35,7 +35,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* <link rel="stylesheet" href="node_modules/@angular/material/prebuilt-themes/indigo-pink.css"> */
+/* <link rel="stylesheet" href="node_modules/@angular/material/prebuilt-themes/indigo-pink.css">*/
 
 .mat-elevation-z0 {
   box-shadow: 0 0 0 0 rgba(0, 0, 0, .2), 0 0 0 0 rgba(0, 0, 0, .14), 0 0 0 0 rgba(0, 0, 0, .12)
