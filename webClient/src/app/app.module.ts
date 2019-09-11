@@ -24,7 +24,6 @@ import { CoreModule } from './core/core.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EditorModule } from './editor/editor.module';
 import { SharedModule } from './shared/shared.module';
-import { MatSnackBarModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -41,7 +40,6 @@ import { MatSnackBarModule } from '@angular/material';
     EditorModule,
     MonacoEditorModule.forRoot(new MonacoConfig().config),
     SharedModule,
-    MatSnackBarModule,
   ],
   providers: [],
   bootstrap: [AppComponent]
