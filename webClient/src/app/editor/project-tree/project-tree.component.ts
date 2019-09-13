@@ -29,6 +29,16 @@ import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/component
 import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { B64Decoder } from '../../shared/b64-decoder';
 
+function getDatasetName(dirName) {
+  let lParenIndex = dirName.indexOf('(');
+  let rParenIndex = dirName.lastIndexOf(')');
+  if (lParenIndex > 0 && lParenIndex < 46 && rParenIndex == dirName.length-1) {
+    return dirName.substring(0,lParenIndex);
+  } else {
+    return dirName;
+  }
+}
+
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
@@ -41,8 +51,6 @@ export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileExplorerComponent)
   private fileExplorer: ZluxFileExplorerComponent;
-
-  private showDatasets: Boolean;
 
   nodes: ProjectStructure[];
   options = {
@@ -104,7 +112,6 @@ export class ProjectTreeComponent {
       this.nodes = nodes;
     });
 
-    this.showDatasets = false;
 
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {
@@ -128,34 +135,43 @@ export class ProjectTreeComponent {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
-      // Will be removed when Dataset functionality for Explorer gets better.
-        this.onUssSelect();
+      if (dirName.startsWith('/')) {
         this.fileExplorer.updateDirectory(dirName);
+      } else {
+        let dsName = getDatasetName(dirName);
+        this.fileExplorer.updateDSList(dsName);
+      }
     });
 
     this.editorControl.openDataset.subscribe(dirName => {
       if (dirName != null && dirName !== '') {
-        if (dirName[0] == '/') {
-          //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
-          // Will be removed when Dataset functionality for Explorer gets better.
-            this.onUssSelect();
-            this.fileExplorer.updateDirectory(dirName);
-        } else { //Datasets
-          //Note: This temporary hack is used to show datasets using the original slower Editor structure.
-          // Will be removed when Dataset functionality for Explorer gets better.
-
+        if (dirName[0] != '/') {
+          dirName = dirName.toUpperCase();
+          let isMember = false;
+          let dsName = getDatasetName(dirName);
+          if (dirName == dsName) {
+            let periodPos = dirName.lastIndexOf('.');
+            if (periodPos) {
+              this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
+            } else {
+              this.fileExplorer.updateDSList(dirName);
+            }
+          } else {
+            isMember = true;
+            this.fileExplorer.updateDSList(dsName);
+          }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName.toUpperCase(), 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
-              this.fileExplorer.showDatasets();
-              this.onDatasetSelect();
-              this.nodes = this.dataAdapter.convertDatasetList(response);
+              this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
-              this.editorControl.initProjectContext(dirName, this.nodes);
+              this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
             }, e => {
               // TODO
             });
+          
+        } else {
+          this.fileExplorer.updateDirectory(dirName);
         }
       }
     });
@@ -168,13 +184,6 @@ export class ProjectTreeComponent {
 
   onCopyClick($event: any){
     // Todo: Create right click menu functionality.
-  }
-
-  onDatasetSelect() {
-    this.fileExplorer.showDatasets();
-    this.showDatasets = false;
-    let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    myElement.setAttribute("style", "height: 100%;");
   }
 
   onDeleteClick($event: any){
@@ -220,21 +229,12 @@ export class ProjectTreeComponent {
     // it within a dataset context. This will probably be removed along with other hacks for temporarily
     // keeping the original dataset viewer.
     this.fileExplorer.hideExplorers();
-    this.showDatasets = true;
     this.editorControl.projectName = $event;
     this.editorControl.openDataset.next($event);
   }
 
   onRenameClick($event: any) {
     // Todo: Create right click menu functionality.
-  }
-
-  onUssSelect() {
-    this.fileExplorer.showUss();
-    this.showDatasets = false;
-    // This is a pseudo-hacky way of styling that pops back the Explorer.
-    let myElement = document.getElementsByClassName("file-explorer-container")[0];
-    myElement.setAttribute("style", "height: 100%;");
   }
 
   openProject() {
@@ -257,7 +257,6 @@ export class ProjectTreeComponent {
 
     openDirectoryRef.afterClosed().subscribe(result => {
       if (result) {
-        this.showDatasets = false;
         this.fileExplorer.showUss();
         this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);

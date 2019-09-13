@@ -143,9 +143,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public initProjectContext(name: string, project: ProjectStructure[]): ProjectContext {
     // const mockProject = JSON.parse(JSON.stringify(project));
     const mockProject = project;
-    let projectName = name ?
-      name :
-      (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    let projectName;
+    let isDataset = !name.startsWith('/');
+    let lParen = name.indexOf('(');
+    
+    if (isDataset) {
+      projectName = lParen ? name.substring(lParen+1, name.length-1) : name;
+    } else {
+      projectName = name ?
+        name :
+        (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    }
     let root: ProjectContext = {
       id: '-1',
       name: projectName,
@@ -153,7 +161,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         id: '-1',
         name: projectName,
         hasChildren: true,
-        isDataset: false
+        isDataset: isDataset,
+        path: name
       },
       opened: false,
       active: false,

@@ -63,13 +63,15 @@ export class AppComponent {
         this.log.warn(`Ignoring opening invalid file or dataset name=${data.name}`);
         return;
       }
-      let parenIsLast = data.name.lastIndexOf(")") == data.name.length-1;
-      let openParen = data.name.indexOf("(");
-      let hasSlash = lastSlash != -1;
       let isDataset = false;
-      if (hasSlash && parenIsLast && openParen != -1 && firstSlash > openParen) {
+      if (data.name.startsWith("//'") && data.name.charAt(data.name.length-1) == "'") {
         isDataset = true;
-      }
+        data.name = data.name.substring(3,data.name.length-1);
+      }      
+//      let parenIsLast = data.name.lastIndexOf(")") == data.name.length-1;
+//      let openParen = data.name.indexOf("(");
+//      let hasSlash = lastSlash != -1;
+//      if (hasSlash && parenIsLast && openParen != -1 && firstSlash > openParen) {
       let nodeData;
       if (!isDataset) {
         let uri = ZoweZLUX.uriBroker.unixFileUri('contents', data.name.substring(0,lastSlash));
@@ -90,6 +92,17 @@ export class AppComponent {
             let error = e.json().error;
 //            this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
           });
+      } else {
+        this.log.info(`Opening dataset=${data.name}`);
+        this.editorControl.openDataset.next(data.name);
+      }
+      break;
+    case 'openDataset':
+      if (data.name) {
+        this.log.info(`Opening dataset=${data.name}`);
+        this.editorControl.openDataset.next(data.name);
+      } else {
+        this.log.warn(`Dataset name missing. Skipping operation`);
       }
       break;
     case 'openDir':
