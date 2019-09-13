@@ -687,7 +687,7 @@ input.mat-input-element {
 }
 
 .cdk-global-overlay-wrapper {
-  display: flex;
+  /* display: flex; removed since this was messing up the snackbar from the notification manager */
   position: absolute;
   z-index: 1000
 }
@@ -2126,20 +2126,9 @@ input.mat-input-element {
   background: rgba(97, 97, 97, .9)
 }
 
-.mat-snack-bar-container {
-  background: #323232;
-  color: #fff
-}
-
-.mat-simple-snackbar-action {
-  color: #ff4081
-}
 
 /* over write mat style */
 
-.mat-simple-snackbar-action button {
-  color: #3f51b5;
-}
 
 /*
   This program and the accompanying materials are
