@@ -21,7 +21,7 @@ export class SnackBarService {
   }
 
   open(message: string, action?: string, config?: MatSnackBarConfig): MatSnackBarRef<SimpleSnackBar> {
-    let config2 = {duration: config.duration, panelClass: ["editor-snackbar"]}
+    let config2 = {duration: config.duration, panelClass: ["org_zowe_editor-snackbar"]}
     return this.snackBar.open(message, action, config2);
   }
 }
