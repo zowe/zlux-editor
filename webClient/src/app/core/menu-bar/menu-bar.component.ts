@@ -53,6 +53,11 @@ function initMenus(menus) {
   }
 }
 
+// Where el is the DOM element you'd like to test for visibility
+function isHidden(el) {
+  return (el.offsetParent === null)
+}
+
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
@@ -263,6 +268,12 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.createFile();
         } else if (event.altKey && event.which === KeyCode.KEY_M) {
           this.getMenuSectionElements()[0].focus();
+        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+          this.openDirectory();
+        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+          this.openDatasets();
+        } else if (event.altKey && event.which === KeyCode.KEY_S) {
+          this.getSearchFocus();
         }
     }));
   }
@@ -276,6 +287,15 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     setTimeout(()=> {
       this.editorControl.getFocus();
     });
+  }
+
+  getSearchFocus() {
+    let elm = null;
+    elm = document.querySelector('.filebrowseruss-search-input');
+    if(isHidden(elm)) {
+      elm = document.querySelector('.filebrowsermvs-search-input');
+    }
+    elm.focus();
   }
 
   moveSelection(event) {
@@ -293,7 +313,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       case KeyCode.DOWN_ARROW:
           if(document.activeElement !== currentTarget) {
             nextFocusElement = document.activeElement.nextElementSibling;
-            if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+            if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
               nextFocusElement = nextFocusElement.nextElementSibling;
             }
           } 
@@ -305,7 +325,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       case KeyCode.UP_ARROW:
         if(document.activeElement != currentTarget) {
           nextFocusElement = document.activeElement.previousElementSibling;
-          if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+          if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
             nextFocusElement = nextFocusElement.previousElementSibling;
           }  
         } 
