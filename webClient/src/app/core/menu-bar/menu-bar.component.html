@@ -9,13 +9,16 @@
   Copyright Contributors to the Zowe Project.
 -->
 <div class="gz-menu-bar">
-  <ul class="gz-menu-list">
-    <li class="gz-menu-section" [ngClass]="{'active': menuActive}" *ngFor="let menu of menuList" (click)="menuActive = !menuActive">
+  <ul class="gz-menu-list" #menubar (mouseover)="onMouseOver($event)">
+    <li role="menubar" tabindex="0" class="gz-menu-section" [ngClass]="{'active': menuActive}" 
+      *ngFor="let menu of menuList" (click)="menuActive = !menuActive" (keyup.enter)="menuActive = !menuActive"
+      (keyup.escape)="menuActive=menuActive?!menuActive:menuActive;getEditorFocus();"
+      (keyup)="moveSelection($event)">
       {{menu.name}}
       <div class="gz-menu-function" *ngIf="menuActive">
         <ul>
-          <li class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
-            (click)="menuAction(function.action)">
+          <li role="menuitem" tabindex="{{function.name === 'group-end'?-1:0}}"  class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
+            (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action)">
             <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
               fiber_manual_record
             </mat-icon>

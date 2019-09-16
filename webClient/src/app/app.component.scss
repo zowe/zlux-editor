@@ -1960,15 +1960,26 @@ input.mat-input-element {
   background: rgba(97, 97, 97, 0.9);
 }
 
-.mat-snack-bar-container {
+::ng-deep .org_zowe_editor-snackbar{
   background: #323232;
   color: #fff;
-}
-
-.mat-simple-snackbar-action {
-  color: #ff4081;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  margin: auto !important; 
+  position: absolute;
+  bottom: 0px;
+  left: 45%;
+  // Don't know which is better temp fix setting left to 45% for semi centered?
+  // or center with weird animation
+  // left: 50%;
+  // transform: translateX(-50%) !important;
   button {
+    background-color:transparent;
     color: #3f51b5;
+    background-repeat:no-repeat;
+    overflow: hidden;
+    outline:none;
+    border: none;
   }
 }
 

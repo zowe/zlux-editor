@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU, TEST_LANGUAGE_MENU, LANGUAGE_MENUS } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -59,6 +59,9 @@ function initMenus(menus) {
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
 export class MenuBarComponent implements OnInit, OnDestroy {
+
+  @ViewChild('menubar') menuBarRef: ElementRef<any>;
+
   private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
@@ -146,6 +149,11 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     // });
 
   }
+
+  getMenuSectionElements() {
+    return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
+  }
+
 
   public getMenuItemStyle(menuItem) {
     let style = [];
@@ -250,11 +258,71 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     }
 
     this.subscription.add(this.appKeyboard.keyupEvent
-      .filter(value => value.which===KeyCode.KEY_N).subscribe((event) => {
-      if (event.altKey && event.which === KeyCode.KEY_N) {
-        this.createFile();
-      }
+      .filter(value => value.altKey).subscribe((event) => {
+        if (event.altKey && event.which === KeyCode.KEY_N) {
+          this.createFile();
+        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+          this.getMenuSectionElements()[0].focus();
+        }
     }));
+  }
+
+  onMouseOver(event) {
+    event.stopImmediatePropagation();
+    const elm = event.target.focus();
+  }
+
+  getEditorFocus() {
+    setTimeout(()=> {
+      this.editorControl.getFocus();
+    });
+  }
+
+  moveSelection(event) {
+    event.stopImmediatePropagation();
+    const currentEventTarget = event.target;
+    const currentTarget = event.currentTarget || document.activeElement;
+    let nextFocusElement = null;
+    switch(event.which) {
+      case KeyCode.RIGHT_ARROW:
+          nextFocusElement = currentTarget.nextElementSibling || currentTarget.parentNode.firstElementChild;
+          break;
+      case KeyCode.LEFT_ARROW:
+          nextFocusElement = currentTarget.previousElementSibling || currentTarget.parentNode.lastElementChild;
+          break;
+      case KeyCode.DOWN_ARROW:
+          if(document.activeElement !== currentTarget) {
+            nextFocusElement = document.activeElement.nextElementSibling;
+            if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+              nextFocusElement = nextFocusElement.nextElementSibling;
+            }
+          } 
+
+          if(!nextFocusElement) {
+            nextFocusElement = currentTarget.querySelector('li');
+          }
+          break;
+      case KeyCode.UP_ARROW:
+        if(document.activeElement != currentTarget) {
+          nextFocusElement = document.activeElement.previousElementSibling;
+          if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+            nextFocusElement = nextFocusElement.previousElementSibling;
+          }  
+        } 
+        
+        if(!nextFocusElement) {
+          const nodes = currentTarget.querySelectorAll('li');
+          nextFocusElement = nodes[nodes.length- 1];
+        }
+        break;  
+
+        default:
+          break;
+    }
+
+    if(nextFocusElement) {
+      nextFocusElement.focus();
+    }
   }
 
   menuAction(menuItem: any): any {
