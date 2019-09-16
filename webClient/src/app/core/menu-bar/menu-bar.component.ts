@@ -274,6 +274,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.openDatasets();
         } else if (event.altKey && event.which === KeyCode.KEY_S) {
           this.getSearchFocus();
+        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+          this.getEditorFocus();
         }
     }));
   }
