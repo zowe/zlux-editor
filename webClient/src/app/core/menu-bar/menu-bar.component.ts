@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU, TEST_LANGUAGE_MENU, LANGUAGE_MENUS } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -26,6 +26,9 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -55,7 +58,10 @@ function initMenus(menus) {
   templateUrl: './menu-bar.component.html',
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
-export class MenuBarComponent implements OnInit {
+export class MenuBarComponent implements OnInit, OnDestroy {
+
+  @ViewChild('menubar') menuBarRef: ElementRef<any>;
+
   private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
@@ -65,6 +71,7 @@ export class MenuBarComponent implements OnInit {
     children: []
   };
 
+  private subscription:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
   
   constructor(
@@ -75,6 +82,7 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
   ) {
@@ -100,6 +108,10 @@ export class MenuBarComponent implements OnInit {
     
     this.editorControl.selectFile.subscribe((fileContext)=> {
       if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+         // get focus of editor
+      setTimeout(()=> {
+        this.editorControl.getFocus();
+      });
     });
 
     this.editorControl.initializedFile.subscribe((fileContext)=> {
@@ -130,11 +142,18 @@ export class MenuBarComponent implements OnInit {
       }
     });
 
+    
+
     // this.editorControl.saveAllFile.subscribe(x => {
     //   this.saveAll();
     // });
 
   }
+
+  getMenuSectionElements() {
+    return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
+  }
+
 
   public getMenuItemStyle(menuItem) {
     let style = [];
@@ -236,6 +255,73 @@ export class MenuBarComponent implements OnInit {
     if (this.editorControl._isTestLangMode) {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
+    }
+
+    this.subscription.add(this.appKeyboard.keyupEvent
+      .filter(value => value.altKey).subscribe((event) => {
+        if (event.altKey && event.which === KeyCode.KEY_N) {
+          this.createFile();
+        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+          this.getMenuSectionElements()[0].focus();
+        }
+    }));
+  }
+
+  onMouseOver(event) {
+    event.stopImmediatePropagation();
+    const elm = event.target.focus();
+  }
+
+  getEditorFocus() {
+    setTimeout(()=> {
+      this.editorControl.getFocus();
+    });
+  }
+
+  moveSelection(event) {
+    event.stopImmediatePropagation();
+    const currentEventTarget = event.target;
+    const currentTarget = event.currentTarget || document.activeElement;
+    let nextFocusElement = null;
+    switch(event.which) {
+      case KeyCode.RIGHT_ARROW:
+          nextFocusElement = currentTarget.nextElementSibling || currentTarget.parentNode.firstElementChild;
+          break;
+      case KeyCode.LEFT_ARROW:
+          nextFocusElement = currentTarget.previousElementSibling || currentTarget.parentNode.lastElementChild;
+          break;
+      case KeyCode.DOWN_ARROW:
+          if(document.activeElement !== currentTarget) {
+            nextFocusElement = document.activeElement.nextElementSibling;
+            if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+              nextFocusElement = nextFocusElement.nextElementSibling;
+            }
+          } 
+
+          if(!nextFocusElement) {
+            nextFocusElement = currentTarget.querySelector('li');
+          }
+          break;
+      case KeyCode.UP_ARROW:
+        if(document.activeElement != currentTarget) {
+          nextFocusElement = document.activeElement.previousElementSibling;
+          if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+            nextFocusElement = nextFocusElement.previousElementSibling;
+          }  
+        } 
+        
+        if(!nextFocusElement) {
+          const nodes = currentTarget.querySelectorAll('li');
+          nextFocusElement = nodes[nodes.length- 1];
+        }
+        break;  
+
+        default:
+          break;
+    }
+
+    if(nextFocusElement) {
+      nextFocusElement.focus();
     }
   }
 
@@ -406,20 +492,9 @@ export class MenuBarComponent implements OnInit {
   }
 
   createFile() {
-    this.editorControl.createFile("(new)");
-    let fileContext = this.editorControl.fetchActiveFile();
-    this.editorControl.initializedFile.next(fileContext);
-    /*
-    let newFileRef = this.dialog.open(NewFileComponent, {
-      width: '500px'
+    setTimeout(()=> {
+      this.editorControl.createFile();
     });
-
-    newFileRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.editorControl.createFile(result);
-      }
-    });
-    */
   }
 
   deleteFile() {
@@ -450,6 +525,10 @@ export class MenuBarComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy():void {
+    this.subscription.unsubscribe();
   }
 }
 
