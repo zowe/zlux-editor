@@ -411,9 +411,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (results && !isUntagged) {
         _activeFile.name = results.fileName;
         _activeFile.model.name = results.fileName;
+        _activeFile.model.fileName = results.fileName;
         _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        _activeFile.model.path = results.directory;
+        _activeFile.temp = false;
       }
-      
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
