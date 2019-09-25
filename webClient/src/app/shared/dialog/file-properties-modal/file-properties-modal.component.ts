@@ -18,8 +18,6 @@ import { MAT_DIALOG_DATA, MatTableDataSource } from '@angular/material';
 })
 export class FilePropertiesModal implements OnInit {
 
-  private value = '';
-  private FileName_Pattern = /^([^\x00-\x1F!"$'\(\)*,\/:;<>\?\[\\\]\{\|\}\x7F\s]+)\.([a-zA-Z0-9]*)$/;
   private fileName = '';
   private fileCreatedAt = '';
   private fileType = '';
