@@ -10,7 +10,7 @@
 */
 import { Component, ViewChild, Inject } from '@angular/core';
 import { Response } from '@angular/http';
-import { MatDialog } from '@angular/material';
+import { MatDialog, MatDialogConfig } from '@angular/material';
 import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
@@ -28,6 +28,8 @@ import { FileBrowserUSSComponent } from '@zlux/file-explorer/src/app/components/
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
 import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
 import { B64Decoder } from '../../shared/b64-decoder';
+import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
+import { FilePropertiesModal } from '../../shared/dialog/file-properties-modal/file-properties-modal.component';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -231,6 +233,24 @@ export class ProjectTreeComponent {
     this.fileExplorer.hideExplorers();
     this.editorControl.projectName = $event;
     this.editorControl.openDataset.next($event);
+  }
+
+  onPropertiesClick($event: any) {
+    const filePropConfig = new MatDialogConfig();
+    filePropConfig.data = {
+      event: $event,
+      width: '600px'
+    }
+
+    let filePropRef = this.dialog.open(FilePropertiesModal, filePropConfig);
+
+    filePropRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.log.debug("Deleting: " + result);
+        this.editorControl.deleteFile.next(result);
+      }
+    });
+    
   }
 
   onRenameClick($event: any) {

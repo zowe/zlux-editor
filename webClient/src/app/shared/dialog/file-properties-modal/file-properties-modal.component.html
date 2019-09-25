@@ -1,0 +1,68 @@
+
+<!-- 
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+-->
+<i class="{{fileIcon}}" style="font-size:24px; position: absolute; margin-top: 4px; margin-left: 3px;"></i>
+<h2 mat-dialog-title style="margin-left: 33px; margin-bottom: 15px;">{{fileName}} - Properties</h2>
+
+
+<!-- Possible future filter code -->
+<!-- <mat-form-field>
+  <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+</mat-form-field> -->
+
+<table mat-table [dataSource]="dataSource" class="mat-properties-table">
+
+  <!-- Date/Time created Column -->
+  <ng-container matColumnDef="fileCreatedAt">
+    <th mat-header-cell *matHeaderCellDef>Created: </th>
+    <td mat-cell *matCellDef="let element" class="mat-properties-cell"> {{element.fileCreatedAt}} </td>
+  </ng-container>
+
+  <!-- Type Column -->
+  <ng-container matColumnDef="fileType">
+    <th mat-header-cell *matHeaderCellDef>Type: </th>
+    <td mat-cell *matCellDef="let element" class="mat-properties-cell"> {{element.fileType}} </td>
+  </ng-container>
+
+  <!-- Path Column -->
+  <ng-container matColumnDef="filePath">
+    <th mat-header-cell *matHeaderCellDef>Path: </th>
+    <td mat-cell *matCellDef="let element" class="mat-properties-cell"> {{element.filePath}} </td>
+  </ng-container>
+
+  <!-- Mode (permissions) Column -->
+  <ng-container matColumnDef="fileMode">
+    <th mat-header-cell *matHeaderCellDef>Mode: </th>
+    <td mat-cell *matCellDef="let element" class="mat-properties-cell"> {{element.fileMode}} </td>
+  </ng-container>
+
+  <!-- Size Column -->
+  <ng-container matColumnDef="fileSize">
+    <th mat-header-cell *matHeaderCellDef>Size: </th>
+    <td mat-cell *matCellDef="let element" class="mat-properties-cell"> {{element.fileSize}} </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close class="right">Cancel</button>
+  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+</mat-dialog-actions>
+
+<!-- 
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+-->
