@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, ViewChild, Inject } from '@angular/core';
-import { MatDialog, MatDialogConfig } from '@angular/material';
+import { MatDialog } from '@angular/material';
 import { TreeNode, TreeComponent } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
@@ -23,7 +23,6 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
-import { FilePropertiesModal } from '../../shared/dialog/file-properties-modal/file-properties-modal.component';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -227,16 +226,6 @@ export class ProjectTreeComponent {
     this.fileExplorer.hideExplorers();
     this.editorControl.projectName = $event;
     this.editorControl.openDataset.next($event);
-  }
-
-  onPropertiesClick($event: any) {
-    const filePropConfig = new MatDialogConfig();
-    filePropConfig.data = {
-      event: $event,
-      width: '600px'
-    }
-
-    this.dialog.open(FilePropertiesModal, filePropConfig);
   }
 
   onRenameClick($event: any) {

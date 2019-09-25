@@ -17,7 +17,6 @@ import { OpenDatasetComponent } from './open-dataset/open-dataset.component';
 import { HttpService } from '../http/http.service';
 import { OpenFolderComponent } from './open-folder/open-folder.component';
 import { DeleteFileComponent } from './delete-file/delete-file.component';
-import { FilePropertiesModal } from './file-properties-modal/file-properties-modal.component';
 import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
@@ -39,7 +38,6 @@ import { TagComponent } from './tag/tag.component';
         OpenDatasetComponent,
         OpenFolderComponent,
         DeleteFileComponent,
-        FilePropertiesModal,
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,
@@ -51,7 +49,6 @@ import { TagComponent } from './tag/tag.component';
         OpenDatasetComponent,
         OpenFolderComponent,
         DeleteFileComponent,
-        FilePropertiesModal,
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,
