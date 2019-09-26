@@ -11,7 +11,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule, MatTableModule } from '@angular/material';
+import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 import { OpenProjectComponent } from './open-project/open-project.component';
 import { OpenDatasetComponent } from './open-dataset/open-dataset.component';
 import { HttpService } from '../http/http.service';
@@ -26,7 +26,6 @@ import { TagComponent } from './tag/tag.component';
         CommonModule,
         FormsModule,
         MatInputModule,
-        MatTableModule,
         MatIconModule,
         MatCheckboxModule,
         MatDialogModule,
