@@ -7,6 +7,10 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 # ZLUX Editor
 
+This is a Monaco-powered editor of remote files and datasets that are accessible on a system with a Zowe instance, and this program is an App which lives within that Zowe instance.
+
+**To request features or report bugs, please use the issues page at the [zlux repo](https://github.com/zowe/zlux/issues) with the editor or app tags**
+
 ## Install
 
 There is an Angular module in "webClient" folder. Go to this folder and run ```npm install```.

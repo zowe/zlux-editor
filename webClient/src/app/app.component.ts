@@ -8,12 +8,13 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { EditorControlService } from './shared/editor-control/editor-control.service';
 import { HttpService } from './shared/http/http.service';
 import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
+import { EditorKeybindingService } from './shared/editor-keybinding.service';
 
 @Component({
   selector: 'app-root',
@@ -25,13 +26,17 @@ import { UtilsService } from './shared/utils.service';
 })
 export class AppComponent {
   title = 'app';
+
+  @ViewChild('editorheader')
+  editorheaderElementRef: ElementRef<any>;
   
   constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
               @Inject(Angular2InjectionTokens.LAUNCH_METADATA) private launchMetadata: any,
               private dataAdapter: DataAdapterService,
               private httpService: HttpService,
               private utils: UtilsService,
-              private editorControl: EditorControlService) {
+              private editorControl: EditorControlService,
+              private appKeyboard: EditorKeybindingService) {
     this.log.debug(`Monaco object=`,(<any>window).monaco);
   }
 
@@ -39,6 +44,9 @@ export class AppComponent {
     if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
       this.handleLaunchOrMessageObject(this.launchMetadata.data);
     }
+
+    const editorheaderElement = this.editorheaderElementRef.nativeElement;
+    this.appKeyboard.registerKeyUpEvent(editorheaderElement);
   }
 
   handleLaunchOrMessageObject(data: any) {
@@ -55,13 +63,15 @@ export class AppComponent {
         this.log.warn(`Ignoring opening invalid file or dataset name=${data.name}`);
         return;
       }
-      let parenIsLast = data.name.lastIndexOf(")") == data.name.length-1;
-      let openParen = data.name.indexOf("(");
-      let hasSlash = lastSlash != -1;
       let isDataset = false;
-      if (hasSlash && parenIsLast && openParen != -1 && firstSlash > openParen) {
+      if (data.name.startsWith("//'") && data.name.charAt(data.name.length-1) == "'") {
         isDataset = true;
-      }
+        data.name = data.name.substring(3,data.name.length-1);
+      }      
+//      let parenIsLast = data.name.lastIndexOf(")") == data.name.length-1;
+//      let openParen = data.name.indexOf("(");
+//      let hasSlash = lastSlash != -1;
+//      if (hasSlash && parenIsLast && openParen != -1 && firstSlash > openParen) {
       let nodeData;
       if (!isDataset) {
         let uri = ZoweZLUX.uriBroker.unixFileUri('contents', data.name.substring(0,lastSlash));
@@ -82,6 +92,17 @@ export class AppComponent {
             let error = e.json().error;
 //            this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
           });
+      } else {
+        this.log.info(`Opening dataset=${data.name}`);
+        this.editorControl.openDataset.next(data.name);
+      }
+      break;
+    case 'openDataset':
+      if (data.name) {
+        this.log.info(`Opening dataset=${data.name}`);
+        this.editorControl.openDataset.next(data.name);
+      } else {
+        this.log.warn(`Dataset name missing. Skipping operation`);
       }
       break;
     case 'openDir':

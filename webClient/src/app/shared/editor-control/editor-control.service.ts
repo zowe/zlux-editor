@@ -143,9 +143,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public initProjectContext(name: string, project: ProjectStructure[]): ProjectContext {
     // const mockProject = JSON.parse(JSON.stringify(project));
     const mockProject = project;
-    let projectName = name ?
-      name :
-      (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    let projectName;
+    let isDataset = !name.startsWith('/');
+    let lParen = name.indexOf('(');
+    
+    if (isDataset) {
+      projectName = lParen ? name.substring(lParen+1, name.length-1) : name;
+    } else {
+      projectName = name ?
+        name :
+        (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    }
     let root: ProjectContext = {
       id: '-1',
       name: projectName,
@@ -153,7 +161,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         id: '-1',
         name: projectName,
         hasChildren: true,
-        isDataset: false
+        isDataset: isDataset,
+        path: name
       },
       opened: false,
       active: false,
@@ -267,6 +276,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public fetchActiveFile(): ProjectContext {
     let activeFile = this._openFileList.getValue().filter(x => x.active === true)[0];
     return activeFile;
+  }
+
+  public fetchAdjToActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
   }
 
   public generateProjectContext(
@@ -396,9 +411,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (results && !isUntagged) {
         _activeFile.name = results.fileName;
         _activeFile.model.name = results.fileName;
+        _activeFile.model.fileName = results.fileName;
         _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        _activeFile.model.path = results.directory;
+        _activeFile.temp = false;
       }
-      
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
@@ -608,7 +625,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
-  createFile(name: string): ProjectContext {
+  getFocus(): void {
+    // get focus of editor
+    this.editor.getValue().focus();
+  }
+
+  createFile(name?: string): ProjectContext {
+
+    if(name===undefined) {
+      name = this.getNewFileName();
+    }
+
     let rootContext = this.rootContext.getValue();
     let fileStructure: ProjectStructure = {
       id: _.uniqueId(),
@@ -631,13 +658,32 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.createFileEmitter.next(name);
     // let new file open in editor
     this.openFile(null, fileStructure);
+    // get focus of editor
+    setTimeout(()=> {
+      this.editor.getValue().focus();
+    });
+    //trigger initializedFile
+    this.initializedFile.next(fileContext);
     // return file context
     return fileContext;
     // return new Observable<ProjectContext>((observer) => {
     //   observer.next(<ProjectContext>fileContext);
     // });
   }
-  
+
+  getNewFileName() {
+    let name:string='new';
+    let num:number= 1;
+    let fileName = `${name}${num}`;
+    let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
+    
+    while(openFiles.indexOf(fileName)>=0) {
+      fileName = `${name}${++num}`;
+    }
+
+    return fileName;
+  }
+   
   /* ============= ZLUX code editor implement ============= */
   /* ============= Class IEditor ============= */
   /**
@@ -697,6 +743,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           resultObserver.next(null);
         }
       }
+
       fileOpenSub.unsubscribe();
     });
 

@@ -8,6 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
+$line-height: 32px;
+
 :host {
   .gz-menu-bar {
     background-color: #303030;
@@ -24,7 +26,7 @@
       .gz-menu-section {
         position: relative;
         font-size: 14px;
-        line-height: 32px;
+        line-height: $line-height;
         background-color: #303030;
         padding: 0 10px;
         list-style: none;
@@ -54,17 +56,29 @@
           .gz-menu-function-item.disabled:hover {
               background-color: #586198;
           }
-          .gz-menu-function-item:hover {
+          .gz-menu-function-item:focus {
             background-color: #e0e0e0;
           }
         }
       }
-      .gz-menu-section.active:hover {
+      .gz-menu-section.active:focus {
         background-color: #4f4f4f;
         .gz-menu-function {
           display: initial;
           position: absolute;
           left: 0;
+          top: $line-height;
+          max-height: calc(90% - 45px);
+          overflow-y: auto;
+        }
+      }
+      .gz-menu-section.active:focus-within {
+        background-color: #4f4f4f;
+        .gz-menu-function {
+          display: initial;
+          position: absolute;
+          left: 0;
+          top: $line-height;
           max-height: calc(90% - 45px);
           overflow-y: auto;
         }
