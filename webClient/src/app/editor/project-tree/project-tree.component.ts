@@ -9,25 +9,20 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, ViewChild, Inject } from '@angular/core';
-import { Response } from '@angular/http';
 import { MatDialog } from '@angular/material';
-import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
+import { TreeNode, TreeComponent } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { ProjectStructure, DatasetAttributes } from '../../shared/model/editor-project';
-import { ProjectContext } from '../../shared/model/project-context';
+import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { FileBrowserUSSComponent } from '@zlux/file-explorer/src/app/components/filebrowseruss/filebrowseruss.component';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
-import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
-import { B64Decoder } from '../../shared/b64-decoder';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
