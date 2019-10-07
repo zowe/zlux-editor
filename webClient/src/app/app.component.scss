@@ -565,87 +565,6 @@ input.mat-input-element {
   transform: scale(0);
 }
 
-.cdk-visually-hidden {
-  border: 0;
-  clip: rect(0 0 0 0);
-  height: 1px;
-  margin: -1px;
-  overflow: hidden;
-  padding: 0;
-  position: absolute;
-  width: 1px;
-  outline: 0;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.cdk-global-overlay-wrapper {
-  pointer-events: none;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-}
-
-.cdk-overlay-container {
-  pointer-events: none;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  position: fixed;
-  z-index: 1000;
-  &:empty {
-    display: none;
-  }
-}
-
-.cdk-global-overlay-wrapper {
-  display: flex;
-  position: absolute;
-  z-index: 1000;
-}
-
-.cdk-overlay-pane {
-  position: absolute;
-  pointer-events: auto;
-  box-sizing: border-box;
-  z-index: 1000;
-}
-
-.cdk-overlay-backdrop {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
-  pointer-events: auto;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  opacity: 0;
-  &.cdk-overlay-backdrop-showing {
-    opacity: 1;
-  }
-}
-
-.cdk-overlay-dark-backdrop {
-  background: rgba(0, 0, 0, 0.288);
-}
-
-.cdk-overlay-transparent-backdrop {
-  opacity: 0;
-  &.cdk-overlay-backdrop-showing {
-    opacity: 0;
-  }
-}
-
-.cdk-global-scrollblock {
-  position: fixed;
-  width: 100%;
-  overflow-y: scroll;
-}
-
 .mat-ripple-element {
   background-color: rgba(0, 0, 0, 0.1);
 }
@@ -1964,7 +1883,7 @@ input.mat-input-element {
   background: #323232;
   color: #fff;
 }
-
+ 
 .mat-simple-snackbar-action {
   color: #ff4081;
   button {
@@ -1973,7 +1892,6 @@ input.mat-input-element {
 }
 
 /* over write mat style */
-
 
 
 

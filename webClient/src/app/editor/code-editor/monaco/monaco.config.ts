@@ -213,7 +213,7 @@ export const JCL_DARK: Theme = {
     { token: 'jcl-variable', foreground: '50eb24' }, // Green
     { token: 'jcl-invalid', foreground: 'ffadc7', background: 'ff8173', fontStyle: 'bold' }, // Light red, background is supposed to be "highlight" 
     //of text but it doesn't seem to work?
-    { token: 'jcl-none', foreground: '815aff' }, // Blue-Purple
+    { token: 'jcl-none', foreground: '75abff' }, // Blue
     { token: 'jcl-default', foreground: '50eb24' }, // Green
 	]
 }
