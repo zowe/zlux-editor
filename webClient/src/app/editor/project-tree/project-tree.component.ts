@@ -172,7 +172,7 @@ export class ProjectTreeComponent {
     });
 
     this.editorControl.deleteFile.subscribe(pathAndName => {
-      this.fileExplorer.deleteFile(pathAndName);
+      this.fileExplorer.deleteFileOrFolder(pathAndName);
     });
   }
   
