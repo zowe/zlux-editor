@@ -3,6 +3,9 @@
   "apiVersion": "1.0.0",
   "pluginVersion": "2.1.0",
   "pluginType": "application",
+  "author": "Zowe",
+  "license": "EPL-2.0",
+  "homepage": "https://github.com/zowe/zlux-editor",
   "webContent": {
     "framework": "angular",
     "launchDefinition": {
