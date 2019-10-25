@@ -36,7 +36,7 @@
     "@angular/platform-browser-dynamic": "~6.0.9",
     "@angular/router": "~6.0.9",
     "@types/node": "^6.0.112",
-    "@zlux/file-explorer": "git+ssh://git@github.com:DivergentEuropeans/zlux-file-explorer.git#feature/add-create-dir-right-click",
+    "@zlux/file-explorer": "git+ssh://git@github.com:DivergentEuropeans/zlux-file-explorer.git#feature/test-deletion-slowdown",
     "angular2-template-loader": "~0.6.2",
     "codelyzer": "~4.4.2",
     "compression-webpack-plugin": "~2.0.0",
