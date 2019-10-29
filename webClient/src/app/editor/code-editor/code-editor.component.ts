@@ -82,7 +82,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       if (!this.noOpenFile && !this.isAnySelected()) {
         this.selectFile(this.openFileList[0], true);
       } else {
-        if (!this.isAnySelected() && this.windowActions) {
+        if (!this.isAnySelected()) {
           this.setTitle();
         }
       }
@@ -155,12 +155,16 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   setTitle(title?:String):void {
+    const defaultTitle = 'Editor';
+    let newTitle = defaultTitle; 
+    if(title) {
+      newTitle = title + ' - ' + newTitle;
+    }
+
     if (this.windowActions) {
-      if(!title) {
-        this.windowActions.setTitle('Editor');
-      } else {
-        this.windowActions.setTitle(title+' - '+'Editor');
-      }
+      this.windowActions.setTitle(newTitle);
+    } else {
+      document.title = newTitle;
     }
   }
 
