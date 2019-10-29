@@ -448,7 +448,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   //}
 
   menuLabel(item) {
-    return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
+    return `${item.name}`;
   }
 
   graphicDiagram() {
