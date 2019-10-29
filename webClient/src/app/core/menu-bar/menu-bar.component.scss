@@ -38,14 +38,17 @@ $line-height: 32px;
           z-index: 3;
           .gz-action {
             display: flex;
-            justify-content: space-between;
+            .gz-shortcut {
+              margin-left: auto;
+            }
+            .gz-menu-function-check {
+              font-size: 12px;
+              margin-top: auto;
+            }
           }
           .gz-menu-function-item {
             font-size: 14px;
             padding: 5px 20px;
-          }
-          .gz-menu-function-check {
-            font-size: 12px;
           }
           .gz-menu-function-item.group-line {
             padding: 0;
