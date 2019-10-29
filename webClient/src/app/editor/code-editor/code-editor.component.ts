@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
-import { Angular2InjectionTokens, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -61,6 +61,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     private codeEditorService: CodeEditorService) {
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(()=> {
@@ -80,6 +81,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       if (!this.noOpenFile && !this.isAnySelected()) {
         this.selectFile(this.openFileList[0], true);
+      } else {
+        if (!this.isAnySelected() && this.windowActions) {
+          this.setTitle();
+        }
       }
     });
 
@@ -127,6 +132,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       // trigger code-editor change, let code editor open file
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
       this.editorControl.openFileHandler(fileContext);
+      this.setTitle(fileContext.name);
     }
     
   }
@@ -145,6 +151,17 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
     this.codeEditorService.selectFile(fileContext, broadcast);
     this.editorFile = { context: fileContext, reload: false, line: line };
+    this.setTitle(fileContext.name);
+  }
+
+  setTitle(title?:String):void {
+    if (this.windowActions) {
+      if(!title) {
+        this.windowActions.setTitle('Editor');
+      } else {
+        this.windowActions.setTitle(title+' - '+'Editor');
+      }
+    }
   }
 
   ngOnDestroy():void {
