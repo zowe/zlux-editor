@@ -19,12 +19,12 @@
         <ul>
           <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
             (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action)">
-            <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
-              fiber_manual_record
-            </mat-icon>
             <div class="gz-action">
-              <span >{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
-              <span >{{ function.name !== 'group-end' ? function.shortcut : '' }}</span>
+              <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
+                  fiber_manual_record
+              </mat-icon>
+              <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
+              <span class="gz-shortcut">{{ function.name !== 'group-end' ? function.shortcut : '' }}</span>
             </div>
             <hr *ngIf="function.name === 'group-end'" />
           </li>
