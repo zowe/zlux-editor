@@ -142,8 +142,7 @@ export const MENU = [
               action: {
                 internalName: 'createFile'
               },
-              keyMap: '',
-              shortcut: 'Alt+N'
+              keyMap: 'Alt+N'
             },          
             {
               name: 'New Directory',
@@ -166,14 +165,14 @@ export const MENU = [
                 action: {
                     internalName: 'openDirectory'
                 },
-                shortcut: 'Alt+O'
+                keyMap: 'Alt+O'
             },
             {
                 name: 'Open Datasets',
                 action: {
                     internalName: 'openDatasets'
                 },
-                shortcut: 'Alt+K'
+                keyMap: 'Alt+K'
             },
             {
                 name: 'group-end'
@@ -183,15 +182,14 @@ export const MENU = [
                 action: {
                     internalName: 'saveFile'
                 },
-                keyMap: '', 
-                shortcut: 'Ctrl+S'
+                keyMap: 'Ctrl+S'
             },              
             //{
             //    name: 'Save All',
             //    action: {
             //        internalName: 'saveAll'
             //    },
-            //    keyMap: '[Ctrl+S]'
+            //    keyMap: '[Ctrl+K S]'
             //},
             {
                 name: 'group-end'
