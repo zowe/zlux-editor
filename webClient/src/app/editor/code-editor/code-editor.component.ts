@@ -161,9 +161,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       newTitle = title + ' - ' + newTitle;
     }
 
+    // for multiple app mode
     if (this.windowActions) {
       this.windowActions.setTitle(newTitle);
     } else {
+      // for single app mode
       document.title = newTitle;
     }
   }
