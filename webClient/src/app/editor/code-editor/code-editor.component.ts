@@ -76,15 +76,13 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
       this.openFileList = list;
       list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
+      // update editor title
+      this.updateEditorTitle();
     });
 
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       if (!this.noOpenFile && !this.isAnySelected()) {
         this.selectFile(this.openFileList[0], true);
-      } else {
-        if (!this.isAnySelected()) {
-          this.setTitle();
-        }
       }
     });
 
@@ -98,6 +96,28 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       }
     }));
 
+  }
+
+  updateEditorTitle():void {
+    if(this.noOpenFile) {
+      this.setTitle();
+      return;
+    } 
+
+    const fileContext = this.getActiveFile();
+    if(fileContext) {
+      this.setTitle(fileContext.name);
+    } else {
+      this.setTitle();
+    }
+  }
+
+  getActiveFile() {
+    const fileContext = this.openFileList.filter(f=>f.active);
+    if(fileContext.length>0) {
+      return fileContext[0];
+    } 
+    return;
   }
 
   isAnySelected () {
@@ -132,7 +152,6 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       // trigger code-editor change, let code editor open file
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
       this.editorControl.openFileHandler(fileContext);
-      this.setTitle(fileContext.name);
     }
     
   }
@@ -151,7 +170,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
     this.codeEditorService.selectFile(fileContext, broadcast);
     this.editorFile = { context: fileContext, reload: false, line: line };
-    this.setTitle(fileContext.name);
+    this.updateEditorTitle();
   }
 
   setTitle(title?:String):void {
