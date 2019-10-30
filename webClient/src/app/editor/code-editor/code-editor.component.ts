@@ -24,6 +24,7 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs/Rx';
 
+const DEFAULT_TITLE = 'Editor';
 
 @Component({
   selector: 'app-code-editor',
@@ -174,8 +175,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   setTitle(title?:String):void {
-    const defaultTitle = 'Editor';
-    let newTitle = defaultTitle; 
+    let newTitle = DEFAULT_TITLE; 
     if(title) {
       newTitle = title + ' - ' + newTitle;
     }
