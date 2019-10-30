@@ -114,15 +114,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   getActiveFile() {
-    const fileContext = this.openFileList.filter(f=>f.active);
-    if(fileContext.length>0) {
-      return fileContext[0];
-    } 
-    return;
+    return this.openFileList.find(f=>f.active);
   }
 
   isAnySelected () {
-    return this.openFileList.some(f=>f.active)
+    return typeof(this.getActiveFile()) != "undefined";
   }
 
   focusMonaco() {
