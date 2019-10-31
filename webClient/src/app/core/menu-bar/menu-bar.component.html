@@ -17,12 +17,15 @@
       {{menu.name}}
       <div class="gz-menu-function" *ngIf="menuActive">
         <ul>
-          <li role="menuitem" tabindex="{{function.name === 'group-end'?-1:0}}"  class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
+          <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
             (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action)">
-            <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
-              fiber_manual_record
-            </mat-icon>
-            <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
+            <div class="gz-action">
+              <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
+                  fiber_manual_record
+              </mat-icon>
+              <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
+              <span class="gz-keymap">{{ function.name !== 'group-end' ? function.keyMap : '' }}</span>
+            </div>
             <hr *ngIf="function.name === 'group-end'" />
           </li>
         </ul>
