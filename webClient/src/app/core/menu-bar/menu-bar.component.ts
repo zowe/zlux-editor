@@ -154,26 +154,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
   }
 
-
-  public getMenuItemStyle(menuItem) {
-    let style = [];
-    if (menuItem.name === 'group-end') {
-      style.push('group-line');
-    }
-    const editor = this.editorControl.editor.getValue();
-    if (editor) {
-      if (menuItem.isDisabled
-          && menuItem.isDisabled({
-            editor: editor,
-            controller: this.editorControl,
-            log: this.log
-          })) {
-        style.push('disabled');
-      }
-    }
-    return style;
-  }
-
   private resetLanguageSelectionMenu() {
     this.languageSelectionMenu.children = this.monaco.languages.getLanguages().sort(function(lang1, lang2) {
       let name1 = lang1.aliases[0].toLowerCase();
