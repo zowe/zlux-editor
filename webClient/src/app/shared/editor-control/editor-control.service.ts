@@ -41,6 +41,7 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
 })
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
+  public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
@@ -411,9 +412,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (results && !isUntagged) {
         _activeFile.name = results.fileName;
         _activeFile.model.name = results.fileName;
+        _activeFile.model.fileName = results.fileName;
         _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        _activeFile.model.path = results.directory;
+        _activeFile.temp = false;
       }
-      
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
