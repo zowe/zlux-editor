@@ -192,13 +192,6 @@ export const MENU = [
             {
                 name: 'group-end'
             },
-            {
-                name: 'Delete File',
-                action: {
-                    internalName: 'deleteFile'
-                },
-                keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
-            },              // to be rethinked.
         ],
     },
     {
