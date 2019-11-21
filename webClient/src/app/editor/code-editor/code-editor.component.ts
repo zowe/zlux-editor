@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
-import { Angular2InjectionTokens, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -24,6 +24,7 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs/Rx';
 
+const DEFAULT_TITLE = 'Editor';
 
 @Component({
   selector: 'app-code-editor',
@@ -61,6 +62,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     private codeEditorService: CodeEditorService) {
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(()=> {
@@ -75,6 +77,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
       this.openFileList = list;
       list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
+      // update editor title
+      this.updateEditorTitle();
     });
 
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
@@ -95,8 +99,26 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   }
 
+  updateEditorTitle():void {
+    if(this.noOpenFile) {
+      this.setTitle();
+      return;
+    } 
+
+    const fileContext = this.getActiveFile();
+    if(fileContext) {
+      this.setTitle(fileContext.name);
+    } else {
+      this.setTitle();
+    }
+  }
+
+  getActiveFile() {
+    return this.openFileList.find(f=>f.active);
+  }
+
   isAnySelected () {
-    return this.openFileList.some(f=>f.active)
+    return typeof(this.getActiveFile()) != "undefined";
   }
 
   focusMonaco() {
@@ -145,6 +167,22 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
     this.codeEditorService.selectFile(fileContext, broadcast);
     this.editorFile = { context: fileContext, reload: false, line: line };
+    this.updateEditorTitle();
+  }
+
+  setTitle(title?:String):void {
+    let newTitle = DEFAULT_TITLE; 
+    if(title) {
+      newTitle = title + ' - ' + newTitle;
+    }
+
+    // for multiple app mode
+    if (this.windowActions) {
+      this.windowActions.setTitle(newTitle);
+    } else {
+      // for single app mode
+      document.title = newTitle;
+    }
   }
 
   ngOnDestroy():void {

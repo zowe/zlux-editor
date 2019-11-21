@@ -145,6 +145,13 @@ export const MENU = [
               keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
             },              // to be rethinked.
             {
+              name: 'New Directory',
+              action: {
+                internalName: 'createDirectory'
+              },
+              keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+            },
+            {
               name: 'group-end'
             },
           // {
