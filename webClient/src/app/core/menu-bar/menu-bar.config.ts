@@ -143,13 +143,6 @@ export const MENU = [
                 internalName: 'createFile'
               },
               keyMap: 'Alt+N'
-            },          
-            {
-              name: 'New Directory',
-              action: {
-                internalName: 'createDirectory'
-              },
-              keyMap: '' 
             },
             {
               name: 'group-end'
@@ -199,7 +192,7 @@ export const MENU = [
                 action: {
                     internalName: 'deleteFile'
                 },
-                keyMap: '' //still need to add
+                keyMap: 'Alt+Delete' //still need to add
             },              
         ],
     },
