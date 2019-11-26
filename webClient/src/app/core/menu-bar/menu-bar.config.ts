@@ -184,16 +184,6 @@ export const MENU = [
             //    },
             //    keyMap: '[Ctrl+K S]'
             //},
-            {
-                name: 'group-end'
-            },
-            {
-                name: 'Delete File',
-                action: {
-                    internalName: 'deleteFile'
-                },
-                keyMap: 'Alt+Delete' //still need to add
-            },              
         ],
     },
     {
