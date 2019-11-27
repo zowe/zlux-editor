@@ -18,7 +18,7 @@
       <div class="gz-menu-function" *ngIf="menuActive">
         <ul>
           <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
-            (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action)">
+            (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action);getEditorFocus();">
             <div *ngIf="function.name !== 'group-end'" class="gz-action">
               <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
                   fiber_manual_record
