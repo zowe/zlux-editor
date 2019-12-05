@@ -9,10 +9,6 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit } from '@angular/core';
-import { EditorControlService } from '../shared/editor-control/editor-control.service';
-import { EditorService } from './editor.service';
-import { ProjectStructure } from '../shared/model/editor-project';
-import { CodeEditorService } from './code-editor/code-editor.service';
 
 @Component({
   selector: 'app-editor',

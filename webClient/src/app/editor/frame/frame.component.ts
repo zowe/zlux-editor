@@ -15,7 +15,6 @@ import { LineMapping } from '../../shared/model/line-mapping';
 import { UtilsService } from '../../shared/utils.service';
 import { ENDPOINTS } from '../../../environments/environment';
 import { HttpService } from '../../shared/http/http.service';
-import { ProjectStructure } from '../../shared/model/editor-project';
 import { MonacoService } from '../code-editor/monaco/monaco.service';
 import * as _ from 'lodash';
 

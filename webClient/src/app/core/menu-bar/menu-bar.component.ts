@@ -366,7 +366,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }
     });
@@ -379,7 +378,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDataset.next(result);
       }
     });
