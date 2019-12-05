@@ -341,7 +341,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         menuItem.func(context, ...menuItem.params);
         return;
       } else {
-        this.log.warn(`Cant do menu action, no function to execute.`);
+        this.log.warn(`Cannnot do menu action, no function to execute.`);
         return;
       }
     }
@@ -366,7 +366,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }
     });
@@ -379,7 +378,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDataset.next(result);
       }
     });
@@ -413,9 +411,9 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   saveFile() {
     let fileContext = this.editorControl.fetchActiveFile();
     if (!fileContext) {
-      this.snackBar.open('Warning: Cannot save, no file found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+      this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
     } else if (fileContext.model.isDataset) {
-      this.snackBar.open('Dataset saving not yet supported', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
+      this.snackBar.open('Dataset saving not yet supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
     } else {
       let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
     }   
