@@ -28,6 +28,8 @@ import { MessageDuration } from "../message-duration";
 
 let stateCache = {};
 let lastFile;
+//Unsupported DS types
+const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -267,17 +269,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     // G - Alternate index
     // I - VSAM Index
     // R - VSAM Path
-    const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
+    
     if (model) {
       if (model.datasetAttrs) {
         //VSAM & GDG are currently not supported for write mode
         if (unsupportedTypes.includes(model.datasetAttrs.csiEntryType)) {
           editor.updateOptions({ readOnly: true });
         }
+        // TODO: Uncomment this in case PDSE is not supported for Dataset writing
         //PDSE is not supported for write mode
-        if (model.datasetAttrs.dsorg.isPDSE && model.datasetAttrs.dsorg.isPDSE == true) {
-          editor.updateOptions({ readOnly: true });
-        }
+        // if (model.datasetAttrs.dsorg.isPDSE && model.datasetAttrs.dsorg.isPDSE == true) {
+        //   editor.updateOptions({ readOnly: true });
+        // }
       }
     }
   }
