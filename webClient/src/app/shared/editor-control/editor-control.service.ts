@@ -241,6 +241,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         const smallView = editor.viewModel.reduceRestoreState(cache.view);
 			  editor._view.restoreState(smallView);
       }
+      this.checkForAndSetReadOnlyMode(model);
       fileOpenSub.unsubscribe();
     });
     
@@ -251,6 +252,32 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       } else {
         file.opened = false;
         file.active = false;
+      }
+    }
+  }
+
+  public checkForAndSetReadOnlyMode(model: any): void {
+    let editor = this.editor.getValue();
+    // Set write mode to true by default
+    editor.updateOptions({ readOnly: false });
+    // Current unsupported types:
+    // B - Generation data group
+    // C - VSAM Cluster
+    // D - VSAM Data
+    // G - Alternate index
+    // I - VSAM Index
+    // R - VSAM Path
+    const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
+    if (model) {
+      if (model.datasetAttrs) {
+        //VSAM & GDG are currently not supported for write mode
+        if (unsupportedTypes.includes(model.datasetAttrs.csiEntryType)) {
+          editor.updateOptions({ readOnly: true });
+        }
+        //PDSE is not supported for write mode
+        if (model.datasetAttrs.dsorg.isPDSE && model.datasetAttrs.dsorg.isPDSE == true) {
+          editor.updateOptions({ readOnly: true });
+        }
       }
     }
   }
