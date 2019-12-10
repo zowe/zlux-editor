@@ -142,14 +142,7 @@ export const MENU = [
               action: {
                 internalName: 'createFile'
               },
-              keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
-            },              // to be rethinked.
-            {
-              name: 'New Directory',
-              action: {
-                internalName: 'createDirectory'
-              },
-              keyMap: '' // [Ctrl+N] won't work due to browser conflicts. Keybindings will need
+              keyMap: 'Alt+N'
             },
             {
               name: 'group-end'
@@ -164,13 +157,15 @@ export const MENU = [
                 name: 'Open Directory',
                 action: {
                     internalName: 'openDirectory'
-                }
+                },
+                keyMap: 'Alt+O'
             },
             {
                 name: 'Open Datasets',
                 action: {
                     internalName: 'openDatasets'
-                }
+                },
+                keyMap: 'Alt+K'
             },
             {
                 name: 'group-end'
@@ -180,18 +175,15 @@ export const MENU = [
                 action: {
                     internalName: 'saveFile'
                 },
-                keyMap: '' // [Ctrl+S] won't work due to browser conflicts. Keybindings will need
-            },              // to be rethinked.
+                keyMap: 'Ctrl+S'
+            },              
             //{
             //    name: 'Save All',
             //    action: {
             //        internalName: 'saveAll'
             //    },
-            //    keyMap: '[Ctrl+S]'
+            //    keyMap: '[Ctrl+K S]'
             //},
-            {
-                name: 'group-end'
-            },
         ],
     },
     {
