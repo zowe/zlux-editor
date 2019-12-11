@@ -62,7 +62,7 @@ export class ProjectTreeComponent {
       if (node.data.isDataset) {
         let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(node.data.path.trim(), undefined, undefined, true);
         return this.httpService.get(requestUrl).toPromise().then((res: any) => {
-          let struct = this.dataAdapter.convertDatasetMemberList(res, node.data.datasetAttrs);
+          let struct = this.dataAdapter.convertDatasetMemberList(res);
           return struct.map(f => {
             f.parent = node.data;
             return f;

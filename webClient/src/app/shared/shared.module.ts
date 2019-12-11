@@ -19,6 +19,7 @@ import { EditorControlService } from './editor-control/editor-control.service';
 import { SnackBarService } from './snack-bar.service';
 import { LanguageServerService } from './language-server/language-server.service';
 import { EditorKeybindingService } from './editor-keybinding.service';
+import { ConfigService } from './config.service';
 
 @NgModule({
   imports: [

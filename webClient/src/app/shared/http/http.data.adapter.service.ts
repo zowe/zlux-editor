@@ -69,7 +69,7 @@ export class DataAdapterService {
     });
   }
 
-  convertDatasetMemberList(responseData: any, parentDatasetAttrs: DatasetAttributes): ProjectStructure[] {
+  convertDatasetMemberList(responseData: any): ProjectStructure[] {
     let entries = responseData.datasets;
     let path = entries[0].name;
     let parent = entries[0];

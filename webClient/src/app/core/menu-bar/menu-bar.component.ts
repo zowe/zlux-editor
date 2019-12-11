@@ -526,6 +526,19 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     */
   }
 
+  createFile() {
+    setTimeout(()=> {
+      this.editorControl.createFile();
+    });
+  }
+
+  createDirectory() {
+    setTimeout(()=> {
+      this.editorControl.createDirectory.next();
+    });
+  }
+
+
   deleteFile() {
     let deleteFileRef = this.dialog.open(DeleteFileComponent, {
       width: '500px'

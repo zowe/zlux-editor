@@ -92,17 +92,17 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
       if (event.altKey && event.which === KeyCode.KEY_T) {
         let fileContext = this.editorControl.fetchAdjToActiveFile();
-        this.selectFile(fileContext, true);      
+        this.selectBuffer(fileContext, true);      
       } else if (event.altKey && event.which === KeyCode.KEY_W) {
         let fileContext = this.editorControl.fetchActiveFile();
-        this.closeFile(fileContext);
+        this.closeBuffer(fileContext);
       }
     }));
 
   }
 
   updateEditorTitle():void {
-    if(this.noOpenFile) {
+    if(this.noOpenBuffer) {
       this.setTitle();
       return;
     } 
@@ -116,7 +116,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   getActiveFile() {
-    return this.openFileList.find(f=>f.active);
+    return this.openBufferList.find(f=>f.active);
   }
 
   isAnySelected () {
@@ -171,6 +171,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.editorBuffer = { context: bufferContext, reload: false, line: line };
     this.updateEditorTitle();
   }
+  
 
   setTitle(title?:String):void {
     let newTitle = DEFAULT_TITLE; 

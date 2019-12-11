@@ -255,15 +255,9 @@ export class MonacoService {
           /* Open up a dialog with the standard,
            * "save as" format.
            */
-          let activeDirectory = '';
-          if (fileDirectory) {
-            activeDirectory = fileDirectory;
-          }
           let saveRef = this.dialog.open(SaveToComponent, {
             width: '500px',
-            data: { canBeISO: x, 
-              fileName: fileContext.model.fileName,
-              fileDirectory: activeDirectory }
+            data: { canBeISO: x }
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
