@@ -8,41 +8,41 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, ViewChild, Inject } from '@angular/core';
-import { Response } from '@angular/http';
+import { Component, ViewChild, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material';
-import { TreeNode, TREE_ACTIONS, TreeComponent } from 'angular-tree-component';
+import { TreeNode, TreeComponent } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { ProjectStructure, DatasetAttributes } from '../../shared/model/editor-project';
-import { ProjectContext } from '../../shared/model/project-context';
+import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { FileBrowserUSSComponent } from '@zlux/file-explorer/src/app/components/filebrowseruss/filebrowseruss.component';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
-import { OpenDatasetComponent } from '../../shared/dialog/open-dataset/open-dataset.component';
-import { B64Decoder } from '../../shared/b64-decoder';
+
+function getDatasetName(dirName) {
+  let lParenIndex = dirName.indexOf('(');
+  let rParenIndex = dirName.lastIndexOf(')');
+  if (lParenIndex > 0 && lParenIndex < 46 && rParenIndex == dirName.length-1) {
+    return dirName.substring(0,lParenIndex);
+  } else {
+    return dirName;
+  }
+}
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
   styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
 })
-export class ProjectTreeComponent implements OnInit {
-
-  @ViewChild(TreeComponent)
-  private tree: TreeComponent;
+export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileExplorerComponent)
   private fileExplorer: ZluxFileExplorerComponent;
-
-  private showDatasets: Boolean;
 
   nodes: ProjectStructure[];
   options = {
@@ -104,7 +104,6 @@ export class ProjectTreeComponent implements OnInit {
       this.nodes = nodes;
     });
 
-    this.showDatasets = false;
 
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {
@@ -128,32 +127,45 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
-      // Will be removed when Dataset functionality for Explorer gets better.
+      if (dirName.startsWith('/')) {
+        this.editorControl.activeDirectory = dirName;
         this.fileExplorer.updateDirectory(dirName);
+      } else {
+        let dsName = getDatasetName(dirName);
+        this.fileExplorer.updateDSList(dsName);
+      }
     });
 
     this.editorControl.openDataset.subscribe(dirName => {
       if (dirName != null && dirName !== '') {
-        if (dirName[0] == '/') {
-          //Note: This temporary hack is used to hide datasets using the original slower Editor structure.
-          // Will be removed when Dataset functionality for Explorer gets better.
-             this.fileExplorer.updateDirectory(dirName);
-        } else { //Datasets
-          //Note: This temporary hack is used to show datasets using the original slower Editor structure.
-          // Will be removed when Dataset functionality for Explorer gets better.
 
-          //run dataset search query and get returned properties
+        if (dirName[0] != '/') {
+          dirName = dirName.toUpperCase();
+          let isMember = false;
+          let dsName = getDatasetName(dirName);
+          if (dirName == dsName) {
+            let periodPos = dirName.lastIndexOf('.');
+            if (periodPos) {
+              this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
+            } else {
+              this.fileExplorer.updateDSList(dirName);
+            }
+          } else {
+            isMember = true;
+            this.fileExplorer.updateDSList(dsName);
+          }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName.toUpperCase(), 'true');
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
-              this.fileExplorer.showDatasets();
-              this.nodes = this.dataAdapter.convertDatasetList(response);
+              this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
-              this.editorControl.initProjectContext(dirName, this.nodes);
+              this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
             }, e => {
               // TODO
             });
+          
+        } else {
+          this.fileExplorer.updateDirectory(dirName);
         }
       }
     });
@@ -161,9 +173,10 @@ export class ProjectTreeComponent implements OnInit {
     this.editorControl.deleteFile.subscribe(pathAndName => {
       this.fileExplorer.deleteFileOrFolder(pathAndName);
     });
-  }
-  
-  ngOnInit() {
+
+    this.editorControl.createDirectory.subscribe(pathAndName => {
+      this.fileExplorer.createDirectory(pathAndName);
+    });
   }
 
   onCopyClick($event: any){
@@ -182,7 +195,7 @@ export class ProjectTreeComponent implements OnInit {
     // Todo: Create right click menu functionality.
   }
 
-  onNodeClick($event:any){
+  onNodeClick($event: any){
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
@@ -197,19 +210,82 @@ export class ProjectTreeComponent implements OnInit {
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
+        this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
       if($event.type == 'file'){
         this.editorControl.openFile('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
+          this.editorControl.checkForAndSetReadOnlyMode(x.model);
         });
       }
     }
   }
 
+  onPathChanged($event: any) {
+    this.editorControl.activeDirectory = $event;
+  }
+
   onRenameClick($event: any) {
     // Todo: Create right click menu functionality.
+  }
+
+  openProject() {
+    let openProjectRef = this.dialog.open(OpenProjectComponent, {
+      width: '500px'
+    });
+
+    openProjectRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.editorControl.projectName = result.name;
+        this.editorControl.openProject.next(result.name);
+      }
+    });
+  }
+
+  openDirectory() {
+    let openDirectoryRef = this.dialog.open(OpenFolderComponent, {
+      width: '500px'
+    });
+
+    openDirectoryRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.fileExplorer.showUss();
+        this.editorControl.openDirectory.next(result);
+      }
+    });
+  }
+
+  nodeActivate($event: any) {
+    if (!$event.node.data.children && !$event.node.data.hasChildren) {
+      const nodeData: ProjectStructure = $event.node.data;
+      this.editorControl.openFile('', nodeData).subscribe(x => {
+        this.log.debug(`NodeData=`,nodeData);
+        this.log.debug(`file loaded through project explorer.`);
+      });
+      // this.editorControl.openFileEmitter.emit(nodeData);
+    }
+  }
+
+  treeUpdate($event: any) {
+    this.editorControl.setProjectNode($event.treeModel.nodes);
+    this.editorControl.initProjectContext('', $event.treeModel.nodes);
+  }
+
+  nodeIcon(node: TreeNode) {
+    let iconName = '';
+    if (node.hasChildren) {
+      return 'folder';
+    } else {
+      let openFile = this.editorControl.openFileList.getValue();
+      for (let file of openFile) {
+        if (file.id === node.data.id) {
+          return 'edit';
+        }
+      }
+      return 'assignment';
+    }
   }
 }
 

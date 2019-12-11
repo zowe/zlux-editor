@@ -29,6 +29,8 @@ import { MessageDuration } from "../message-duration";
 let stateCache = {};
 const WHITESPACE_256 = String.fromCharCode.apply(null, new Array(256).fill(0x20));
 let lastFile;
+//Unsupported DS types
+const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
 
 function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes) {
   //TODO: validation of record length that is aware of how DBCS will effect actual length
@@ -70,9 +72,11 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
 })
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
+  public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
+  public activeDirectory = '';
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
@@ -173,9 +177,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public initProjectContext(name: string, project: ProjectStructure[]): ProjectContext {
     // const mockProject = JSON.parse(JSON.stringify(project));
     const mockProject = project;
-    let projectName = name ?
-      name :
-      (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    let projectName;
+    let isDataset = !name.startsWith('/');
+    let lParen = name.indexOf('(');
+    
+    if (isDataset) {
+      projectName = lParen ? name.substring(lParen+1, name.length-1) : name;
+    } else {
+      projectName = name ?
+        name :
+        (this.rootContext.getValue() && this.rootContext.getValue().name) ? this.rootContext.getValue().name : '';
+    }
     let root: ProjectContext = {
       id: '-1',
       name: projectName,
@@ -183,7 +195,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         id: '-1',
         name: projectName,
         hasChildren: true,
-        isDataset: false
+        isDataset: isDataset,
+        path: name
       },
       opened: false,
       active: false,
@@ -260,6 +273,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         const smallView = editor.viewModel.reduceRestoreState(cache.view);
 			  editor._view.restoreState(smallView);
       }
+      this.checkForAndSetReadOnlyMode(model);
       fileOpenSub.unsubscribe();
     });
     
@@ -270,6 +284,33 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       } else {
         file.opened = false;
         file.active = false;
+      }
+    }
+  }
+
+  public checkForAndSetReadOnlyMode(model: any): void {
+    let editor = this.editor.getValue();
+    // Set write mode to true by default
+    editor.updateOptions({ readOnly: false });
+    // Current unsupported types:
+    // B - Generation data group
+    // C - VSAM Cluster
+    // D - VSAM Data
+    // G - Alternate index
+    // I - VSAM Index
+    // R - VSAM Path
+    
+    if (model) {
+      if (model.datasetAttrs) {
+        //VSAM & GDG are currently not supported for write mode
+        if (unsupportedTypes.includes(model.datasetAttrs.csiEntryType)) {
+          editor.updateOptions({ readOnly: true });
+        }
+        // TODO: Uncomment this in case PDSE is not supported for Dataset writing
+        //PDSE is not supported for write mode
+        // if (model.datasetAttrs.dsorg.isPDSE && model.datasetAttrs.dsorg.isPDSE == true) {
+        //   editor.updateOptions({ readOnly: true });
+        // }
       }
     }
   }
@@ -297,6 +338,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public fetchActiveFile(): ProjectContext {
     let activeFile = this._openFileList.getValue().filter(x => x.active === true)[0];
     return activeFile;
+  }
+
+  public fetchAdjToActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
   }
 
   public generateProjectContext(
@@ -426,9 +473,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if (results && !isUntagged) {
         _activeFile.name = results.fileName;
         _activeFile.model.name = results.fileName;
+        _activeFile.model.fileName = results.fileName;
         _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        _activeFile.model.path = results.directory;
+        _activeFile.temp = false;
       }
-      
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
@@ -686,7 +735,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
-  createFile(name: string): ProjectContext {
+  getFocus(): void {
+    // get focus of editor
+    this.editor.getValue().focus();
+  }
+
+  createFile(name?: string): ProjectContext {
+
+    if(name===undefined) {
+      name = this.getNewFileName();
+    }
+
     let rootContext = this.rootContext.getValue();
     let fileStructure: ProjectStructure = {
       id: _.uniqueId(),
@@ -709,13 +768,32 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.createFileEmitter.next(name);
     // let new file open in editor
     this.openFile(null, fileStructure);
+    // get focus of editor
+    setTimeout(()=> {
+      this.editor.getValue().focus();
+    });
+    //trigger initializedFile
+    this.initializedFile.next(fileContext);
     // return file context
     return fileContext;
     // return new Observable<ProjectContext>((observer) => {
     //   observer.next(<ProjectContext>fileContext);
     // });
   }
-  
+
+  getNewFileName() {
+    let name:string='new';
+    let num:number= 1;
+    let fileName = `${name}${num}`;
+    let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
+    
+    while(openFiles.indexOf(fileName)>=0) {
+      fileName = `${name}${++num}`;
+    }
+
+    return fileName;
+  }
+   
   /* ============= ZLUX code editor implement ============= */
   /* ============= Class IEditor ============= */
   /**
@@ -775,6 +853,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           resultObserver.next(null);
         }
       }
+
       fileOpenSub.unsubscribe();
     });
 

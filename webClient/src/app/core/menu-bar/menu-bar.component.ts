@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material';
 import { MENU, TEST_LANGUAGE_MENU, LANGUAGE_MENUS } from './menu-bar.config';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -26,6 +26,9 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -50,12 +53,20 @@ function initMenus(menus) {
   }
 }
 
+// Where el is the DOM element you'd like to test for visibility
+function isHidden(el) {
+  return (el.offsetParent === null)
+}
+
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
   styleUrls: ['./menu-bar.component.scss',  '../../../styles.scss']
 })
-export class MenuBarComponent implements OnInit {
+export class MenuBarComponent implements OnInit, OnDestroy {
+
+  @ViewChild('menubar') menuBarRef: ElementRef<any>;
+
   private menuList: any = MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private bufferCount: number = 0;
@@ -65,6 +76,7 @@ export class MenuBarComponent implements OnInit {
     children: []
   };
 
+  private subscription:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
   
   constructor(
@@ -75,6 +87,7 @@ export class MenuBarComponent implements OnInit {
     private utils: UtilsService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
+    private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
   ) {
@@ -100,6 +113,10 @@ export class MenuBarComponent implements OnInit {
     
     this.editorControl.selectFile.subscribe((bufferContext)=> {
       if (this.bufferCount != 0){this.showLanguageMenu(bufferContext.model.language);}
+         // get focus of editor
+      setTimeout(()=> {
+        this.editorControl.getFocus();
+      });
     });
 
     this.editorControl.initializedFile.subscribe((bufferContext)=> {
@@ -130,11 +147,18 @@ export class MenuBarComponent implements OnInit {
       }
     });
 
+    
+
     // this.editorControl.saveAllFile.subscribe(x => {
     //   this.saveAll();
     // });
 
   }
+
+  getMenuSectionElements() {
+    return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
+  }
+
 
   public getMenuItemStyle(menuItem) {
     let style = [];
@@ -237,6 +261,90 @@ export class MenuBarComponent implements OnInit {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
     }
+
+    this.subscription.add(this.appKeyboard.keyupEvent
+      .filter(value => value.altKey).subscribe((event) => {
+        if (event.altKey && event.which === KeyCode.KEY_N) {
+          this.createFile();
+        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+          this.getMenuSectionElements()[0].focus();
+        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+          this.openDirectory();
+        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+          this.openDatasets();
+        } else if (event.altKey && event.which === KeyCode.KEY_S) {
+          this.getSearchFocus();
+        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+          this.getEditorFocus();
+        }
+    }));
+  }
+
+  onMouseOver(event) {
+    event.stopImmediatePropagation();
+    const elm = event.target.focus();
+  }
+
+  getEditorFocus() {
+    setTimeout(()=> {
+      this.editorControl.getFocus();
+    });
+  }
+
+  getSearchFocus() {
+    let elm = null;
+    elm = document.querySelector('.filebrowseruss-search-input');
+    if(isHidden(elm)) {
+      elm = document.querySelector('.filebrowsermvs-search-input');
+    }
+    elm.focus();
+  }
+
+  moveSelection(event) {
+    event.stopImmediatePropagation();
+    const currentEventTarget = event.target;
+    const currentTarget = event.currentTarget || document.activeElement;
+    let nextFocusElement = null;
+    switch(event.which) {
+      case KeyCode.RIGHT_ARROW:
+          nextFocusElement = currentTarget.nextElementSibling || currentTarget.parentNode.firstElementChild;
+          break;
+      case KeyCode.LEFT_ARROW:
+          nextFocusElement = currentTarget.previousElementSibling || currentTarget.parentNode.lastElementChild;
+          break;
+      case KeyCode.DOWN_ARROW:
+          if(document.activeElement !== currentTarget) {
+            nextFocusElement = document.activeElement.nextElementSibling;
+            if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
+              nextFocusElement = nextFocusElement.nextElementSibling;
+            }
+          } 
+
+          if(!nextFocusElement) {
+            nextFocusElement = currentTarget.querySelector('li');
+          }
+          break;
+      case KeyCode.UP_ARROW:
+        if(document.activeElement != currentTarget) {
+          nextFocusElement = document.activeElement.previousElementSibling;
+          if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
+            nextFocusElement = nextFocusElement.previousElementSibling;
+          }  
+        } 
+        
+        if(!nextFocusElement) {
+          const nodes = currentTarget.querySelectorAll('li');
+          nextFocusElement = nodes[nodes.length- 1];
+        }
+        break;  
+
+        default:
+          break;
+    }
+
+    if(nextFocusElement) {
+      nextFocusElement.focus();
+    }
   }
 
   menuAction(menuItem: any): any {
@@ -255,7 +363,7 @@ export class MenuBarComponent implements OnInit {
         menuItem.func(context, ...menuItem.params);
         return;
       } else {
-        this.log.warn(`Cant do menu action, no function to execute.`);
+        this.log.warn(`Cannnot do menu action, no function to execute.`);
         return;
       }
     }
@@ -280,7 +388,6 @@ export class MenuBarComponent implements OnInit {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }
     });
@@ -293,7 +400,6 @@ export class MenuBarComponent implements OnInit {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDataset.next(result);
       }
     });
@@ -338,7 +444,7 @@ export class MenuBarComponent implements OnInit {
   //}
 
   menuLabel(item) {
-    return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
+    return `${item.name}`;
   }
 
   graphicDiagram() {
@@ -411,8 +517,8 @@ export class MenuBarComponent implements OnInit {
     let newBufferRef = this.dialog.open(NewFileComponent, {
       width: '500px'
     });
-
-    newBufferRef.afterClosed().subscribe(result => {
+  }
+  newBufferRef.afterClosed().subscribe(result => {
       if (result) {
         this.editorControl.createFile(result);
       }
@@ -448,6 +554,10 @@ export class MenuBarComponent implements OnInit {
         }
       }
     });
+  }
+
+  ngOnDestroy():void {
+    this.subscription.unsubscribe();
   }
 }
 

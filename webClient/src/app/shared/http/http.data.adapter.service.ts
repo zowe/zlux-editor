@@ -60,6 +60,7 @@ export class DataAdapterService {
         fileName: entry.name.trim(),
         isDataset: true,
         datasetAttrs: {
+          csiEntryType: entry.csiEntryType,
           dsorg: entry.dsorg,
           recfm: entry.recfm,
           volser: entry.volser
@@ -71,6 +72,7 @@ export class DataAdapterService {
   convertDatasetMemberList(responseData: any, parentDatasetAttrs: DatasetAttributes): ProjectStructure[] {
     let entries = responseData.datasets;
     let path = entries[0].name;
+    let parent = entries[0];
     return entries[0].members.map((entry: any) => {
       return <ProjectStructure>{
         id: _.uniqueId(),
@@ -79,7 +81,12 @@ export class DataAdapterService {
         path: path.trim() + "(" + entry.name.trim() + ")",
         fileName: path.trim() + "(" + entry.name.trim() + ")",
         isDataset: true,
-        datasetAttrs: parentDatasetAttrs
+        datasetAttrs: {
+          csiEntryType: parent.csiEntryType,
+          dsorg: parent.dsorg,
+          recfm: parent.recfm,
+          volser: parent.volser
+        }
       };
     });
   }

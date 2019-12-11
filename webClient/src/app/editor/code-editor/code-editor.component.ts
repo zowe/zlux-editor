@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
@@ -19,14 +20,24 @@ import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorService } from '../editor.service';
 import { ProjectContext } from '../../shared/model/project-context';
 import { CodeEditorService } from './code-editor.service';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
+import { Subscription } from 'rxjs/Rx';
+
+const DEFAULT_TITLE = 'Editor';
+
 @Component({
   selector: 'app-code-editor',
   templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.scss']
 })
-export class CodeEditorComponent implements OnInit {
+
+export class CodeEditorComponent implements OnInit, OnDestroy {
   private openBufferList: ProjectContext[];
   private noOpenBuffer: boolean;
+  private subscription:Subscription = new Subscription();
+  @ViewChild('monaco')
+  monacoRef: ElementRef;
 
   //TODO load from configservice
   public options = {
@@ -51,7 +62,15 @@ export class CodeEditorComponent implements OnInit {
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private editorService: EditorService,
+    private appKeyboard: EditorKeybindingService,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     private codeEditorService: CodeEditorService) {
+    if (this.windowEvents) {
+      this.windowEvents.restored.subscribe(()=> {
+        this.focusMonaco();
+      });
+    }
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((bufferNode: ProjectStructure) => {
       this.openBuffer(bufferNode);
@@ -60,6 +79,8 @@ export class CodeEditorComponent implements OnInit {
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
       this.openBufferList = list;
       list.length === 0 ? this.noOpenBuffer = true : this.noOpenBuffer = false;
+      // update editor title
+      this.updateEditorTitle();
     });
 
     this.editorControl.closeFile.subscribe((bufferContext: ProjectContext) => {
@@ -68,10 +89,42 @@ export class CodeEditorComponent implements OnInit {
       }
     });
 
+    this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
+      if (event.altKey && event.which === KeyCode.KEY_T) {
+        let fileContext = this.editorControl.fetchAdjToActiveFile();
+        this.selectFile(fileContext, true);      
+      } else if (event.altKey && event.which === KeyCode.KEY_W) {
+        let fileContext = this.editorControl.fetchActiveFile();
+        this.closeFile(fileContext);
+      }
+    }));
+
+  }
+
+  updateEditorTitle():void {
+    if(this.noOpenFile) {
+      this.setTitle();
+      return;
+    } 
+
+    const fileContext = this.getActiveFile();
+    if(fileContext) {
+      this.setTitle(fileContext.name);
+    } else {
+      this.setTitle();
+    }
+  }
+
+  getActiveFile() {
+    return this.openFileList.find(f=>f.active);
   }
 
   isAnySelected () {
     return this.openBufferList.some(f=>f.active)
+  }
+
+  focusMonaco() {
+    (this.monacoRef as any).focus();
   }
 
   ngOnInit() { }
@@ -99,6 +152,7 @@ export class CodeEditorComponent implements OnInit {
       this.editorBuffer = { context: bufferContext, reload: true, line: bufferContext.model.line || bufferNode.line };
       this.editorControl.openFileHandler(bufferContext);
     }
+    
   }
 
   //TODO this is causing the error of nothing showing up when a tab is closed
@@ -115,6 +169,26 @@ export class CodeEditorComponent implements OnInit {
   selectBuffer(bufferContext: ProjectContext, broadcast: boolean, line?: number) {
     this.codeEditorService.selectBuffer(bufferContext, broadcast);
     this.editorBuffer = { context: bufferContext, reload: false, line: line };
+    this.updateEditorTitle();
+  }
+
+  setTitle(title?:String):void {
+    let newTitle = DEFAULT_TITLE; 
+    if(title) {
+      newTitle = title + ' - ' + newTitle;
+    }
+
+    // for multiple app mode
+    if (this.windowActions) {
+      this.windowActions.setTitle(newTitle);
+    } else {
+      // for single app mode
+      document.title = newTitle;
+    }
+  }
+
+  ngOnDestroy():void {
+    this.subscription.unsubscribe();
   }
 }
 

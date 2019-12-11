@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnDestroy, Input, OnChanges, SimpleChanges, Inject } from '@angular/core';
+
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import { Subscription } from 'rxjs/Subscription';
 import {
@@ -29,6 +30,9 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 export class MonacoComponent implements OnChanges {
   @Input() options;
   @Input() editorBuffer;
+  @ViewChild('ngxMonaco')
+  ngxMonacoRef: ElementRef;
+
 
   constructor(
     private monacoService: MonacoService,
@@ -36,6 +40,14 @@ export class MonacoComponent implements OnChanges {
     private languageService: LanguageServerService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
+  }
+
+
+  ngOnInit() {
+  }
+
+  focus(e: any) {
+    (this.ngxMonacoRef as any)._editor.focus();
   }
 
   ngOnChanges(changes: SimpleChanges) {

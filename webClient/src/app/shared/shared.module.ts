@@ -18,6 +18,7 @@ import { UtilsService } from './utils.service';
 import { EditorControlService } from './editor-control/editor-control.service';
 import { SnackBarService } from './snack-bar.service';
 import { LanguageServerService } from './language-server/language-server.service';
+import { EditorKeybindingService } from './editor-keybinding.service';
 
 @NgModule({
   imports: [
@@ -26,7 +27,7 @@ import { LanguageServerService } from './language-server/language-server.service
     MatSnackBarModule,
   ],
   declarations: [],
-  providers: [HttpService, DataAdapterService, UtilsService, EditorControlService, SnackBarService, LanguageServerService],
+  providers: [HttpService, DataAdapterService, UtilsService, ConfigService, EditorControlService, SnackBarService, LanguageServerService, EditorKeybindingService],
 })
 export class SharedModule { }
 

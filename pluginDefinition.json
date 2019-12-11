@@ -17,5 +17,26 @@
       "width": 1200,
       "height": 600
     }
+  },
+  "configurationData": {
+    "resources": {
+
+      "ui": {
+ 
+        "aggregationPolicy": "override",
+ 
+        "subResources": {
+ 
+          "history": {
+ 
+            "aggregationPolicy": "override"
+ 
+          }
+ 
+        }
+ 
+      }
+ 
+    }
   }
 }

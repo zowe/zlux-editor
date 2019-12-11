@@ -1,4 +1,5 @@
 
+
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -8,20 +9,29 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
 
-@Component({
-  selector: 'app-editor',
-  templateUrl: './editor.component.html',
-  styleUrls: ['./editor.component.scss']
-})
-export class EditorComponent implements OnInit {
+import { Injectable } from '@angular/core';
 
-  constructor() { }
+import { Subject, Observable } from 'rxjs/Rx';
 
-  ngOnInit() { }
+@Injectable()
+export class EditorKeybindingService {
+  public keyupEvent: Subject<KeyboardEvent>;
+
+  constructor() {
+    this.keyupEvent = new Subject();
+  }
+
+  registerKeyUpEvent(appChild:Element) {
+    let elm = appChild.closest('app-root');
+    const observable = Observable.fromEvent(elm, 'keyup' ) as Observable<KeyboardEvent>;
+    observable
+      .filter(value => value.altKey)
+      .subscribe(this.keyupEvent);
+  }
 }
 
+
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -31,3 +41,4 @@ export class EditorComponent implements OnInit {
   
   Copyright Contributors to the Zowe Project.
 */
+
