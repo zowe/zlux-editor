@@ -31,9 +31,10 @@ const DEFAULT_TITLE = 'Editor';
   templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.scss']
 })
+
 export class CodeEditorComponent implements OnInit, OnDestroy {
-  private openFileList: ProjectContext[];
-  private noOpenFile: boolean;
+  private openBufferList: ProjectContext[];
+  private noOpenBuffer: boolean;
   private subscription:Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
@@ -44,6 +45,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     lightbulb: {
       enabled: true
     },
+    rulers: [],
     codeLense: true,
     iconsInSuggestions: true,
     minimap: {
@@ -54,7 +56,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     theme: 'vs-dark'
   };
 
-  public editorFile: { context: ProjectContext, reload: boolean, line?: number };
+  public editorBuffer: { context: ProjectContext, reload: boolean, line?: number };
 
   constructor(private httpService: HttpService,
     private editorControl: EditorControlService,
@@ -70,20 +72,20 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       });
     }
     //respond to the request to open
-    this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
-      this.openFile(fileNode);
+    this.editorControl.openFileEmitter.subscribe((bufferNode: ProjectStructure) => {
+      this.openBuffer(bufferNode);
     });
 
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
-      this.openFileList = list;
-      list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
+      this.openBufferList = list;
+      list.length === 0 ? this.noOpenBuffer = true : this.noOpenBuffer = false;
       // update editor title
       this.updateEditorTitle();
     });
 
-    this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
-      if (!this.noOpenFile && !this.isAnySelected()) {
-        this.selectFile(this.openFileList[0], true);
+    this.editorControl.closeFile.subscribe((bufferContext: ProjectContext) => {
+      if (!this.noOpenBuffer && !this.isAnySelected()) {
+        this.selectBuffer(this.openBufferList[0], true);
       }
     });
 
@@ -118,7 +120,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   isAnySelected () {
-    return typeof(this.getActiveFile()) != "undefined";
+    return this.openBufferList.some(f=>f.active)
   }
 
   focusMonaco() {
@@ -127,46 +129,46 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   ngOnInit() { }
 
-  openFile(fileNode: ProjectStructure) {
-    // get file context
-    let fileContext = this.editorControl.fetchFileContext(fileNode);
-    if (!fileContext) { fileContext = <ProjectContext>this.editorControl.generateProjectContext(fileNode); }
+  openBuffer(bufferNode: ProjectStructure) {
+    // get buffer context
+    let bufferContext = this.editorControl.fetchFileContext(bufferNode);
+    if (!bufferContext) { bufferContext = <ProjectContext>this.editorControl.generateProjectContext(bufferNode); }
 
     // below logic is nothing to do with code editor (monaco)
-    // check if the file user want to open is already opened
+    // check if the buffer user want to open is already opened
     let exist = false;
 
-    for (const file of this.editorControl.openFileList.getValue()) {
-      if (file.name === fileContext.name && file.model.path === fileContext.model.path) {
+    for (const buffer of this.editorControl.openFileList.getValue()) {
+      if (buffer.name === bufferContext.name && buffer.model.path === bufferContext.model.path) {
         exist = true;
       }
     }
 
     if (exist) {
-      this.selectFile(fileContext, false, fileNode.line);
+      this.selectBuffer(bufferContext, false, bufferNode.line);
     } else {
-      // pass file structure to specific code editor (monaco)
-      // trigger code-editor change, let code editor open file
-      this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
-      this.editorControl.openFileHandler(fileContext);
+      // pass buffer structure to specific code editor (monaco)
+      // trigger code-editor change, let code editor open buffer
+      this.editorBuffer = { context: bufferContext, reload: true, line: bufferContext.model.line || bufferNode.line };
+      this.editorControl.openFileHandler(bufferContext);
     }
     
   }
 
   //TODO this is causing the error of nothing showing up when a tab is closed
-  closeFile(fileContext: ProjectContext) {
-    this.editorFile = undefined;
-    this.codeEditorService.closeFile(fileContext);
+  closeBuffer(bufferContext: ProjectContext) {
+    this.editorBuffer = undefined;
+    this.codeEditorService.closeBuffer(bufferContext);
   }
 
   /* 
-     this.editorFile instructs monaco to change, 
-     which in turn invokes monacoservice.openfile, 
+     this.editorBuffer instructs monaco to change, 
+     which in turn invokes monacoservice.openbuffer, 
      which kicks off discovery involving the editor controller   
   */
-  selectFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
-    this.codeEditorService.selectFile(fileContext, broadcast);
-    this.editorFile = { context: fileContext, reload: false, line: line };
+  selectBuffer(bufferContext: ProjectContext, broadcast: boolean, line?: number) {
+    this.codeEditorService.selectBuffer(bufferContext, broadcast);
+    this.editorBuffer = { context: bufferContext, reload: false, line: line };
     this.updateEditorTitle();
   }
 

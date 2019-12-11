@@ -61,8 +61,8 @@ export class ProjectTreeComponent {
     getChildren: (node: TreeNode) => {
       if (node.data.isDataset) {
         let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(node.data.path.trim(), undefined, undefined, true);
-        return this.httpService.get(requestUrl).toPromise().then((file: any) => {
-          let struct = this.dataAdapter.convertDatasetMemberList(file);
+        return this.httpService.get(requestUrl).toPromise().then((res: any) => {
+          let struct = this.dataAdapter.convertDatasetMemberList(res, node.data.datasetAttrs);
           return struct.map(f => {
             f.parent = node.data;
             return f;
@@ -138,6 +138,7 @@ export class ProjectTreeComponent {
 
     this.editorControl.openDataset.subscribe(dirName => {
       if (dirName != null && dirName !== '') {
+
         if (dirName[0] != '/') {
           dirName = dirName.toUpperCase();
           let isMember = false;
@@ -205,7 +206,7 @@ export class ProjectTreeComponent {
         isDataset: false,
         name: $event.name,
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
-    };
+      };
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);

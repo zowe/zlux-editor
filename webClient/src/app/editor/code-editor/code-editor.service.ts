@@ -17,14 +17,14 @@ export class CodeEditorService {
 
   constructor(private editorControl: EditorControlService) { }
 
-  closeFile(fileContext: ProjectContext) {
-    this.editorControl.closeFileHandler(fileContext);
-    this.editorControl.closeFile.next(fileContext);
+  closeBuffer(bufferContext: ProjectContext) {
+    this.editorControl.closeFileHandler(bufferContext);
+    this.editorControl.closeFile.next(bufferContext);
   }
 
-  selectFile(fileContext: ProjectContext, broadcast: boolean) {
-    this.editorControl.selectFileHandler(fileContext);
-    if (broadcast) { this.editorControl.selectFile.next(fileContext); }
+  selectBuffer(bufferContext: ProjectContext, broadcast: boolean) {
+    this.editorControl.selectFileHandler(bufferContext);
+    if (broadcast) { this.editorControl.selectFile.next(bufferContext); }
   }
 }
 
