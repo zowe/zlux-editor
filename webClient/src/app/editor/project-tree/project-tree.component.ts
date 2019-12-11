@@ -159,7 +159,7 @@ export class ProjectTreeComponent implements OnInit {
     });
 
     this.editorControl.deleteFile.subscribe(pathAndName => {
-      this.fileExplorer.deleteFile(pathAndName);
+      this.fileExplorer.deleteFileOrFolder(pathAndName);
     });
   }
   
