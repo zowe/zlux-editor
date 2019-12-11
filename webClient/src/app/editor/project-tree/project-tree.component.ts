@@ -194,7 +194,7 @@ export class ProjectTreeComponent {
     // Todo: Create right click menu functionality.
   }
 
-  onNodeClick($event:any){
+  onNodeClick($event: any){
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
@@ -209,12 +209,14 @@ export class ProjectTreeComponent {
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
+        this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
       if($event.type == 'file'){
         this.editorControl.openFile('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
+          this.editorControl.checkForAndSetReadOnlyMode(x.model);
         });
       }
     }
