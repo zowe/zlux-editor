@@ -10,19 +10,19 @@
 -->
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
-  Directory:
+  <label>Directory:</label>
   <mat-form-field>
-    <input matInput type="text" placeholder="Enter a directory" [(ngModel)]="results.directory">
+    <input matInput type="text" placeholder="" [(ngModel)]="results.directory">
   </mat-form-field>
   <p></p>
-  File Name:
-  <mat-form-field>
-    <input matInput type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName">
+  <label>File Name:</label>
+  <mat-form-field class="align-label">
+    <input matInput type="text" placeholder="" [(ngModel)]="results.fileName">
   </mat-form-field>
   <p></p>
-  Encoding:
+  <label>Encoding:</label>
   <mat-form-field>
-    <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+    <mat-select placeholder="Select" [(ngModel)]="results.encoding">
       <mat-option *ngFor="let option of options" [value]="option">
       {{option}}</mat-option>
     </mat-select>
