@@ -8,6 +8,14 @@
   
   Copyright Contributors to the Zowe Project.
 */
+
+.close-dialog-btn {
+  float: right;
+  border: none;
+  background: white;
+  outline: none;
+}
+
 mat-dialog-actions {
     justify-content: flex-end;
 }
