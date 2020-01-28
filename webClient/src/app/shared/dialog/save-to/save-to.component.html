@@ -8,6 +8,9 @@
   
   Copyright Contributors to the Zowe Project.
 -->
+<mat-dialog-actions>
+  <button mat-dialog-close class="right cross-button"><i class="fa fa-close"></i></button>
+</mat-dialog-actions>
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
   <label>Directory:</label>
@@ -29,7 +32,7 @@
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close class="right">Cancel</button>
+  <button mat-dialog-close class="right cancel-button">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results">Save</button>
 </mat-dialog-actions>
