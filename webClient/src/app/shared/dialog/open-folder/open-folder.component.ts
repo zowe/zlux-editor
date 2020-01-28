@@ -32,7 +32,7 @@ export class OpenFolderComponent implements OnInit {
 
   openFile(){
     this.snackBar.open("File Not Found!","", { 
-      duration: 2000,
+      duration: 2000, 
     });
   }
 } 
