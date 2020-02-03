@@ -201,17 +201,6 @@ export const MENU = [
             },              // to be rethinked.
         ],
     },
-    {
-        name: 'Language Server',
-        children: [
-            {
-                name: 'URL',
-                action: {
-                    internalName: 'languageServerSetting'
-                }
-            }
-        ],
-    }
 ];
 
 /*
