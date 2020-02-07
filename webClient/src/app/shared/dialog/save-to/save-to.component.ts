@@ -33,6 +33,12 @@ export class SaveToComponent {
     else {
       this.options = ['UTF-8','ISO-8859-1','IBM-1047'];
     }
+    if (this.data.fileName) {
+      this.results.fileName = this.data.fileName;
+    }
+    if (this.data.fileDirectory) {
+      this.results.directory = this.data.fileDirectory;
+    }
   }
   
   ngOnInit() {

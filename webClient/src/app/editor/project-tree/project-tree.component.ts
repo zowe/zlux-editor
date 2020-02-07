@@ -41,9 +41,6 @@ function getDatasetName(dirName) {
 })
 export class ProjectTreeComponent {
 
-  @ViewChild(TreeComponent)
-  private tree: TreeComponent;
-
   @ViewChild(ZluxFileExplorerComponent)
   private fileExplorer: ZluxFileExplorerComponent;
 
@@ -131,6 +128,7 @@ export class ProjectTreeComponent {
 
     this.editorControl.openDirectory.subscribe(dirName => {
       if (dirName.startsWith('/')) {
+        this.editorControl.activeDirectory = dirName;
         this.fileExplorer.updateDirectory(dirName);
       } else {
         let dsName = getDatasetName(dirName);
@@ -179,7 +177,6 @@ export class ProjectTreeComponent {
       this.fileExplorer.createDirectory(pathAndName);
     });
   }
-  
 
   onCopyClick($event: any){
     // Todo: Create right click menu functionality.
@@ -197,7 +194,7 @@ export class ProjectTreeComponent {
     // Todo: Create right click menu functionality.
   }
 
-  onNodeClick($event:any){
+  onNodeClick($event: any){
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
@@ -212,24 +209,21 @@ export class ProjectTreeComponent {
   
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
+        this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
       if($event.type == 'file'){
         this.editorControl.openFile('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
+          this.editorControl.checkForAndSetReadOnlyMode(x.model);
         });
       }
     }
   }
 
   onPathChanged($event: any) {
-    // Currently, we check for when the path's changed for Dataset viewing, so we only need to treat
-    // it within a dataset context. This will probably be removed along with other hacks for temporarily
-    // keeping the original dataset viewer.
-    this.fileExplorer.hideExplorers();
-    this.editorControl.projectName = $event;
-    this.editorControl.openDataset.next($event);
+    this.editorControl.activeDirectory = $event;
   }
 
   onRenameClick($event: any) {
@@ -257,7 +251,6 @@ export class ProjectTreeComponent {
     openDirectoryRef.afterClosed().subscribe(result => {
       if (result) {
         this.fileExplorer.showUss();
-        this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }
     });
@@ -277,21 +270,6 @@ export class ProjectTreeComponent {
   treeUpdate($event: any) {
     this.editorControl.setProjectNode($event.treeModel.nodes);
     this.editorControl.initProjectContext('', $event.treeModel.nodes);
-  }
-
-  fetchNode(nodeName: string, nodes?: ProjectStructure[]): ProjectStructure {
-    let result: ProjectStructure;
-    if (nodes == null) { nodes = this.tree.treeModel.nodes; }
-    for (let node of nodes) {
-      if (node.name === nodeName) {
-        result = node;
-        break;
-      }
-      if (node.children) {
-        result = this.fetchNode(nodeName, node.children);
-      }
-    }
-    return result;
   }
 
   nodeIcon(node: TreeNode) {

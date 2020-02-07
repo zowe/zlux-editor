@@ -53,6 +53,11 @@ function initMenus(menus) {
   }
 }
 
+// Where el is the DOM element you'd like to test for visibility
+function isHidden(el) {
+  return (el.offsetParent === null)
+}
+
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
@@ -263,6 +268,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.createFile();
         } else if (event.altKey && event.which === KeyCode.KEY_M) {
           this.getMenuSectionElements()[0].focus();
+        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+          this.openDirectory();
+        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+          this.openDatasets();
+        } else if (event.altKey && event.which === KeyCode.KEY_S) {
+          this.getSearchFocus();
+        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+          this.getEditorFocus();
         }
     }));
   }
@@ -276,6 +289,15 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     setTimeout(()=> {
       this.editorControl.getFocus();
     });
+  }
+
+  getSearchFocus() {
+    let elm = null;
+    elm = document.querySelector('.filebrowseruss-search-input');
+    if(isHidden(elm)) {
+      elm = document.querySelector('.filebrowsermvs-search-input');
+    }
+    elm.focus();
   }
 
   moveSelection(event) {
@@ -293,7 +315,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       case KeyCode.DOWN_ARROW:
           if(document.activeElement !== currentTarget) {
             nextFocusElement = document.activeElement.nextElementSibling;
-            if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+            if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
               nextFocusElement = nextFocusElement.nextElementSibling;
             }
           } 
@@ -305,7 +327,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       case KeyCode.UP_ARROW:
         if(document.activeElement != currentTarget) {
           nextFocusElement = document.activeElement.previousElementSibling;
-          if(nextFocusElement && nextFocusElement.getAttribute('tabindex')==='-1') {
+          if(nextFocusElement && nextFocusElement.getAttribute('type')==='') {
             nextFocusElement = nextFocusElement.previousElementSibling;
           }  
         } 
@@ -341,7 +363,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         menuItem.func(context, ...menuItem.params);
         return;
       } else {
-        this.log.warn(`Cant do menu action, no function to execute.`);
+        this.log.warn(`Cannnot do menu action, no function to execute.`);
         return;
       }
     }
@@ -366,7 +388,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDirectory.next(result);
       }
     });
@@ -379,7 +400,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.projectName = result;
         this.editorControl.openDataset.next(result);
       }
     });
@@ -413,11 +433,11 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   saveFile() {
     let fileContext = this.editorControl.fetchActiveFile();
     if (!fileContext) {
-      this.snackBar.open('Warning: Cannot save, no file found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+      this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
     } else if (fileContext.model.isDataset) {
-      this.snackBar.open('Dataset saving not yet supported', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
+      this.snackBar.open('Dataset saving not yet supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
     } else {
-      let sub = this.monacoService.saveFile(fileContext).subscribe(() => { sub.unsubscribe(); });
+      let sub = this.monacoService.saveFile(fileContext, this.editorControl.activeDirectory).subscribe(() => { sub.unsubscribe(); });
     }   
   }
 
@@ -426,7 +446,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   //}
 
   menuLabel(item) {
-    return `${item.name} ${item.keyMap ? item.keyMap : ''}`;
+    return `${item.name}`;
   }
 
   graphicDiagram() {
