@@ -170,7 +170,17 @@ export class ProjectTreeComponent {
     });
 
     this.editorControl.deleteFile.subscribe(pathAndName => {
-      this.fileExplorer.deleteFileOrFolder(pathAndName);
+      const openedFileContext = this.editorControl.openFileList.getValue().find(fileContext => {
+        return pathAndName === `${fileContext.model.path}/${fileContext.model.fileName}`
+      })
+      if (!openedFileContext) this.fileExplorer.deleteFileOrFolder(pathAndName);
+      else if (openedFileContext.active) {
+        this.snackBarService.open('File ' + name + ' cannot be deleted because it is currently open.',
+          'Dismiss', { duration: 5000,   panelClass: 'center' });
+      } else {
+        this.fileExplorer.deleteFileOrFolder(pathAndName);
+        // TODO: remove opened tab... need to subscribe to delete observable
+      }
     });
 
     this.editorControl.createDirectory.subscribe(pathAndName => {
