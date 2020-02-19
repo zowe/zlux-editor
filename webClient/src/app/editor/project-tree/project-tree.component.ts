@@ -23,6 +23,7 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
+import { ProjectContext } from '../../shared/model/project-context';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -172,20 +173,26 @@ export class ProjectTreeComponent {
     this.editorControl.deleteFile.subscribe(pathAndName => {
       const openedFileContext = this.editorControl.openFileList.getValue().find(fileContext => {
         return pathAndName === `${fileContext.model.path}/${fileContext.model.fileName}`
-      })
-      if (!openedFileContext) this.fileExplorer.deleteFileOrFolder(pathAndName);
+      });
+      if (!openedFileContext) this.deleteAndCloseFile(pathAndName, null);
       else if (openedFileContext.active) {
         this.snackBarService.open('File ' + name + ' cannot be deleted because it is currently open.',
           'Dismiss', { duration: 5000,   panelClass: 'center' });
-      } else {
-        this.fileExplorer.deleteFileOrFolder(pathAndName);
-        // TODO: remove opened tab... need to subscribe to delete observable
-      }
+      } else this.deleteAndCloseFile(pathAndName, openedFileContext);
     });
 
     this.editorControl.createDirectory.subscribe(pathAndName => {
       this.fileExplorer.createDirectory(pathAndName);
     });
+  }
+
+  deleteAndCloseFile(pathAndName: string, openedFileContext?: ProjectContext) {
+    let deleteObservable = this.fileExplorer.deleteFileOrFolder(pathAndName);
+    if (openedFileContext != null)
+      deleteObservable.subscribe(() => {
+        this.editorControl.closeFileHandler(openedFileContext);
+        this.editorControl.closeFile.next(openedFileContext);
+      });
   }
 
   onCopyClick($event: any){
