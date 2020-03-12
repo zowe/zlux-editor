@@ -1,8 +1,10 @@
 {
   "identifier": "org.zowe.editor",
   "apiVersion": "1.0.0",
-  "pluginVersion": "2.1.0",
+  "pluginVersion": "2.1.1",
   "pluginType": "application",
+  "homepage": "https://zowe.org",
+  "license": "EPL-2.0",
   "webContent": {
     "framework": "angular",
     "launchDefinition": {
@@ -11,32 +13,22 @@
       "imageSrc": "assets/icon.png"
     },
     "descriptionKey": "MyPluginDescription",
-    "descriptionDefault": "Zowe Editor",
-    "isSingleWindowApp": true,
-    "defaultWindowStyle": {
+    "descriptionDefault": "Zowe Editor App for files and datasets",
+     "defaultWindowStyle": {
       "width": 1200,
       "height": 600
     }
   },
   "configurationData": {
     "resources": {
-
       "ui": {
- 
         "aggregationPolicy": "override",
- 
         "subResources": {
- 
           "history": {
- 
             "aggregationPolicy": "override"
- 
           }
- 
         }
- 
       }
- 
     }
   }
 }
