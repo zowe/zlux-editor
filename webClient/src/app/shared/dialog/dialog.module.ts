@@ -21,6 +21,7 @@ import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
 import { TagComponent } from './tag/tag.component';
+import { TabbingComponent } from './tabbing/tabbing.component';
 @NgModule({
     imports: [
         CommonModule,
@@ -40,7 +41,8 @@ import { TagComponent } from './tag/tag.component';
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,
-        TagComponent
+        TagComponent,
+        TabbingComponent
     ],
     providers: [HttpService],
     entryComponents: [
@@ -51,7 +53,8 @@ import { TagComponent } from './tag/tag.component';
         NewFileComponent,
         SaveToComponent,
         LanguageServerComponent,
-        TagComponent
+        TagComponent,
+        TabbingComponent
     ]
 })
 export class DialogModule { }

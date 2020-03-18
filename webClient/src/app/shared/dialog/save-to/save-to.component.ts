@@ -8,22 +8,23 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material';
+import { Component, Inject, AfterViewInit, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
+import { TabbingComponent } from '../tabbing/tabbing.component';
 
 @Component({
   selector: 'app-save-to',
   templateUrl: './save-to.component.html',
   styleUrls: ['./save-to.component.scss',  '../../../../styles.scss']
 })
-export class SaveToComponent {
+export class SaveToComponent implements AfterViewInit {
   private results = {
     directory: '',
     fileName: '',
     encoding: '',
   };
-  
+  @ViewChild(TabbingComponent)
+  private tabbingComponent: TabbingComponent;
   private options: string[];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
@@ -40,8 +41,13 @@ export class SaveToComponent {
       this.results.directory = this.data.fileDirectory;
     }
   }
-  
-  ngOnInit() {
+
+  ngAfterViewInit() {
+    this.tabbingComponent.setTotalTabs(5);
+  }
+
+  setActiveTab(i: number) {
+    this.tabbingComponent.activeTab = i;
   }
 }
 
