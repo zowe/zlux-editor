@@ -186,17 +186,17 @@ export const MENU = [
             //},
         ],
     },
-    {
-        name: 'Language Server',
-        children: [
-            {
-                name: 'URL',
-                action: {
-                    internalName: 'languageServerSetting'
-                }
-            }
-        ],
-    }
+    //{
+    //    name: 'Language Server',
+    //    children: [
+    //        {
+    //            name: 'URL',
+    //            action: {
+    //                internalName: 'languageServerSetting'
+    //            }
+    //        }
+    //    ],
+    //}
 ];
 
 /*
