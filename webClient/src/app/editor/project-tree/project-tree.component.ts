@@ -171,14 +171,7 @@ export class ProjectTreeComponent {
     });
 
     this.editorControl.deleteFile.subscribe(pathAndName => {
-      const openedFileContext = this.editorControl.openFileList.getValue().find(fileContext => {
-        return pathAndName === `${fileContext.model.path}/${fileContext.model.fileName}`
-      });
-      if (!openedFileContext) this.deleteAndCloseFile(pathAndName, null);
-      else if (openedFileContext.active) {
-        this.snackBarService.open('File ' + name + ' cannot be deleted because it is currently open.',
-          'Dismiss', { duration: 5000,   panelClass: 'center' });
-      } else this.deleteAndCloseFile(pathAndName, openedFileContext);
+      this.fileExplorer.deleteFileOrFolder(pathAndName);
     });
 
     this.editorControl.createDirectory.subscribe(pathAndName => {
@@ -186,8 +179,8 @@ export class ProjectTreeComponent {
     });
   }
 
-  deleteAndCloseFile(pathAndName: string, openedFileContext?: ProjectContext) {
-    let deleteObservable = this.fileExplorer.deleteFileOrFolder(pathAndName);
+  deleteAndCloseFile(file: any, openedFileContext?: ProjectContext) {
+    let deleteObservable = this.fileExplorer.deleteFileOrFolder(file);
     if (openedFileContext != null)
       deleteObservable.subscribe(() => {
         this.editorControl.closeFileHandler(openedFileContext);
@@ -200,7 +193,15 @@ export class ProjectTreeComponent {
   }
 
   onDeleteClick($event: any){
-    // Todo: Create right click menu functionality.
+    const file = $event.file;
+    const openedFileContext = this.editorControl.openFileList.getValue().find(fileContext => {
+      return file.path === `${fileContext.model.path}/${fileContext.model.fileName}`
+    });
+    if (!openedFileContext) this.deleteAndCloseFile(file, null);
+      else if (openedFileContext.active) {
+        this.snackBarService.open('File ' + name + ' cannot be deleted because it is currently open.',
+          'Dismiss', { duration: 5000,   panelClass: 'center' });
+      } else this.deleteAndCloseFile(file, openedFileContext);
   }
 
   onNewFileClick($event: any){
