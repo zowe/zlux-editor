@@ -25,6 +25,7 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 
+
 @Injectable()
 export class MonacoService {
 
@@ -55,10 +56,6 @@ export class MonacoService {
         _context.model.language = e.language;
         this.editorControl.editorCore.getValue().editor.setModelLanguage(_modal, e.language);
       }
-    });
-
-    ZoweZLUX.pluginManager.loginScreenVisibilityChanged.subscribe(() => {
-      this.dialog.closeAll();
     });
 
     //this.editorControl.saveAllFile.subscribe(() => {

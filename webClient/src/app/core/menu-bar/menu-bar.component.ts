@@ -25,7 +25,7 @@ import { MonacoService } from '../../editor/code-editor/monaco/monaco.service';
 import { LanguageServerService } from '../../shared/language-server/language-server.service';
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
-import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/inject-resources';
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
@@ -89,7 +89,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     private snackBar: SnackBarService,
     private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    @Inject(Angular2InjectionTokens.SESSION_EVENTS) private sessionEvents: Angular2PluginSessionEvents
   ) {
 
     /*
@@ -147,7 +148,9 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       }
     });
 
-    
+    sessionEvents.sessionExpire.subscribe(()=> {
+      this.dialog.closeAll();
+    })
 
     // this.editorControl.saveAllFile.subscribe(x => {
     //   this.saveAll();
