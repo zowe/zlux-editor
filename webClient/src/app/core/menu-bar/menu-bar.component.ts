@@ -558,6 +558,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   ngOnDestroy():void {
     this.subscription.unsubscribe();
+    this.dialog.closeAll();
   }
 }
 
