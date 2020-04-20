@@ -9,31 +9,31 @@
   Copyright Contributors to the Zowe Project.
 -->
 <div class="save-as-modal" id="big-yeet">
-  <tabbing-component></tabbing-component>
+<tabbing-component [totalTabs]="5"></tabbing-component>
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
   File Name:
   <mat-form-field>
-    <input matInput tabindex="0" type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName" (focus)="setActiveTab(0)" id="tab-index-0">
+    <input matInput tabindex="0" type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName" id="tab-index-0">
   </mat-form-field>
   <p></p>
   Directory:
   <mat-form-field>
-    <input matInput tabindex="1" type="text" placeholder="Enter a directory" [(ngModel)]="results.directory" (focus)="setActiveTab(1)" id="tab-index-1">
+    <input matInput tabindex="1" type="text" placeholder="Enter a directory" [(ngModel)]="results.directory" id="tab-index-1">
   </mat-form-field>
   <p></p>
   Encoding:
   <mat-form-field>
-    <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding" id="tab-index-2" (focus)="setActiveTab(2)">
+    <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding" id="tab-index-2">
       <mat-option *ngFor="let option of options" [value]="option">
       {{option}}</mat-option>
     </mat-select>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close class="right" id="tab-index-3" (focus)="setActiveTab(3)">Cancel</button>
+  <button mat-button mat-dialog-close class="right" id="tab-index-3">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" id="tab-index-4" (focus)="setActiveTab(4)">Save</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" id="tab-index-4">Save</button>
 </mat-dialog-actions>
 </div>
 
