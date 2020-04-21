@@ -38,7 +38,6 @@ export class TabbingComponent implements  AfterViewInit {
   }
 
   initValues(eleRef:HTMLElement) {
-    console.log('initValue', eleRef);
     if(eleRef) {
       this.focusableArr = this.findAllFocusable(eleRef);
       this.idArr = this.getAllIds(this.focusableArr);
@@ -116,11 +115,8 @@ export class TabbingComponent implements  AfterViewInit {
 
   checkAndAddElmAgain(selector:string, elmIndex:number) {
     const root =this.parentRef || document;
-    console.log('root', root);
     const newElm = root.querySelector<HTMLElement>(selector);
-    console.log('newElm', newElm, 'elmIndex:', elmIndex);
     this.focusableArr[elmIndex] = newElm;
-    console.log('focusableArr', this.focusableArr);
     return newElm;
   }
 
@@ -133,7 +129,6 @@ export class TabbingComponent implements  AfterViewInit {
         selector+= this.getClassListSelector(elm);
       }
     }
-    console.log('selector', selector);
     return selector;
   }
 
@@ -147,13 +142,11 @@ export class TabbingComponent implements  AfterViewInit {
     const attr:string = elm.attributes[0].name;
     const val = elm[attr] || '';
     const selector = `[${attr}='${val}']`;
-    console.log('getAttributeSelector', selector);
     return selector;
   }
 
   getClassListSelector(elm:HTMLElement) {
     const selector = '.'+Array.prototype.join.call(elm.classList,',.') || '';
-    console.log('getClassListSelector', selector);
     return selector;
   }
 
@@ -194,7 +187,6 @@ export class TabbingComponent implements  AfterViewInit {
         lists.splice(val-1,0,null); 
       })
     }
-    console.log('findAllFocusable',lists);
 
     return lists;
   }
