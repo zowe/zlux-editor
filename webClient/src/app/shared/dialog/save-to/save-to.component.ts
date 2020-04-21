@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, Inject, ViewChild } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialogRef } from '@angular/material';
 import { MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
@@ -22,6 +23,7 @@ export class SaveToComponent {
     fileName: '',
     encoding: '',
   };
+  
   private options: string[];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
@@ -38,7 +40,9 @@ export class SaveToComponent {
       this.results.directory = this.data.fileDirectory;
     }
   }
-
+  
+  ngOnInit() {
+  }
 }
 
 /*

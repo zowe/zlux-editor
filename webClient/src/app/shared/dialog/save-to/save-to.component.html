@@ -8,32 +8,33 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-  <tab-trap></tab-trap>
-  <h2 mat-dialog-title>Save As</h2>
-  <mat-dialog-content>
-    File Name:
-    <mat-form-field>
-      <input matInput type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName">
-    </mat-form-field>
-    <p></p>
-    Directory:
-    <mat-form-field>
-      <input matInput type="text" placeholder="Enter a directory" [(ngModel)]="results.directory">
-    </mat-form-field>
-    <p></p>
-    Encoding:
-    <mat-form-field>
-      <mat-select tabindex="0" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
-        <mat-option *ngFor="let option of options" [value]="option">
-        {{option}}</mat-option>
-      </mat-select>
-    </mat-form-field>
-  </mat-dialog-content>
-  <mat-dialog-actions>
-    <button mat-button mat-dialog-close class="right" >Cancel</button>
-    <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-    <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" >Save</button>
-  </mat-dialog-actions>
+<tab-trap></tab-trap>
+<h2 mat-dialog-title>Save As</h2>
+<mat-dialog-content>
+  File Name:
+  <mat-form-field>
+    <input matInput type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName">
+  </mat-form-field>
+  <p></p>
+  Directory:
+  <mat-form-field>
+    <input matInput type="text" placeholder="Enter a directory" [(ngModel)]="results.directory">
+  </mat-form-field>
+  <p></p>
+  Encoding:
+  <mat-form-field>
+    <mat-select tabindex="0" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+      <mat-option *ngFor="let option of options" [value]="option">
+      {{option}}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button mat-dialog-close class="right">Cancel</button>
+  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results">Save</button>
+</mat-dialog-actions>
+
 <!-- 
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
