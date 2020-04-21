@@ -8,12 +8,13 @@
   
   Copyright Contributors to the Zowe Project.
 -->
+<tab-trap hiddenIds="open-dataset-clear" hiddenPos="2"></tab-trap>
 <h2 mat-dialog-title>Open Dataset</h2>
 <mat-dialog-content>
 
   <mat-form-field>
-      <input matInput type="text" placeholder="Dataset" [(ngModel)]="value">
-      <button mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
+      <input matInput tabindex="2" type="text" placeholder="Dataset" [(ngModel)]="value">
+      <button tabindex="1" mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dataset-clear">
         <mat-icon>close</mat-icon>
       </button>
   </mat-form-field>
