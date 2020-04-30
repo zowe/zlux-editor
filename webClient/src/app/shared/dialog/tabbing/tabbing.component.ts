@@ -48,13 +48,15 @@ export class TabbingComponent implements  AfterViewInit {
     }
   }
   
-  @HostListener('window:keydown.tab')
-  tabToNext() {
+  @HostListener('window:keydown.tab',['$event'])
+  tabToNext(e:KeyboardEvent) {
+    e.preventDefault();
     this.switchTab(true);
   }
 
-  @HostListener('window:keydown.shift.tab')
-  tabToPrev() {
+  @HostListener('window:keydown.shift.tab',['$event'])
+  tabToPrev(e:KeyboardEvent) {
+    e.preventDefault();
     this.switchTab(false);
   }
 
@@ -193,17 +195,32 @@ export class TabbingComponent implements  AfterViewInit {
 
   getAllIds(focusableArr:HTMLElement[]) {
     let lists = [];
-    lists = focusableArr.map(elm => this.getElementSelector(elm));
+    let duplicates = [];
 
+    lists = focusableArr.map(elm => this.getElementSelector(elm));
+    
     if(this.hiddenPos && this.hiddenIds) {
-      const idsArr = this.hiddenIds.split(',')
+      const idsArr = this.hiddenIds.split(',').map(s=>`#${s}`);
+      lists.forEach((selector, idx) => {
+        if(idsArr.indexOf(selector)>=0) {
+          duplicates.push(idx);
+        }
+      })
+
       this.hiddenPos.split(',').map(val=>parseInt(val)).forEach((val, idx) =>{
-        lists[val-1]=`#${idsArr[idx]}`;
+        lists[val-1]=idsArr[idx];
       })
     }
-    console.log('allselectors',lists);
+
+    // remove duplicates
+    duplicates.forEach((dupIdx)=>{
+      focusableArr.splice(dupIdx,1);
+      lists.splice(dupIdx,1);
+    })
+
     return lists;
   }
+
 
 }
 
