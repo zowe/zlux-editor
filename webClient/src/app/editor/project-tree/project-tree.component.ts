@@ -23,6 +23,7 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
+import { ProjectContext } from '../../shared/model/project-context';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -178,12 +179,29 @@ export class ProjectTreeComponent {
     });
   }
 
+  deleteAndCloseFile(file: any, openedFileContext?: ProjectContext) {
+    let deleteObservable = this.fileExplorer.deleteFileOrFolder(file);
+    if (openedFileContext != null)
+      deleteObservable.subscribe(() => {
+        this.editorControl.closeFileHandler(openedFileContext);
+        this.editorControl.closeFile.next(openedFileContext);
+      });
+  }
+
   onCopyClick($event: any){
     // Todo: Create right click menu functionality.
   }
 
   onDeleteClick($event: any){
-    // Todo: Create right click menu functionality.
+    const file = $event.file;
+    const openedFileContext = this.editorControl.openFileList.getValue().find(fileContext => {
+      return file.path === `${fileContext.model.path}/${fileContext.model.fileName}`
+    });
+    if (!openedFileContext) this.deleteAndCloseFile(file, null);
+      else if (openedFileContext.active) {
+        this.snackBarService.open('File ' + name + ' cannot be deleted because it is currently open.',
+          'Dismiss', { duration: 5000,   panelClass: 'center' });
+      } else this.deleteAndCloseFile(file, openedFileContext);
   }
 
   onNewFileClick($event: any){
