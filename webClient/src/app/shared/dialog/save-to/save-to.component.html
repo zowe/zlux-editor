@@ -8,6 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 -->
+<zlux-tab-trap></zlux-tab-trap>
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
   File Name:
@@ -22,7 +23,7 @@
   <p></p>
   Encoding:
   <mat-form-field>
-    <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+    <mat-select tabindex="0" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
       <mat-option *ngFor="let option of options" [value]="option">
       {{option}}</mat-option>
     </mat-select>

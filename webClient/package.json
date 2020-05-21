@@ -60,6 +60,7 @@
     "webpack": "~4.9.0",
     "webpack-cli": "~3.0.0",
     "webpack-config": "~7.5.0",
+    "@zlux/widgets": "git+https://github.com:zowe/zlux-widgets.git",
     "zone.js": "~0.8.26"
   }
 }
