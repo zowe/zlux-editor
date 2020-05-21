@@ -21,7 +21,8 @@ import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
 import { TagComponent } from './tag/tag.component';
-import { TabbingComponent } from './tabbing/tabbing.component';
+import { ZluxTabbingModule } from '@zlux/widgets';
+
 @NgModule({
     imports: [
         CommonModule,
@@ -32,6 +33,7 @@ import { TabbingComponent } from './tabbing/tabbing.component';
         MatDialogModule,
         MatSelectModule,
         MatButtonModule,
+        ZluxTabbingModule,
     ],
     declarations: [
         OpenProjectComponent,
@@ -42,7 +44,6 @@ import { TabbingComponent } from './tabbing/tabbing.component';
         SaveToComponent,
         LanguageServerComponent,
         TagComponent,
-        TabbingComponent
     ],
     providers: [HttpService],
     entryComponents: [
@@ -54,7 +55,6 @@ import { TabbingComponent } from './tabbing/tabbing.component';
         SaveToComponent,
         LanguageServerComponent,
         TagComponent,
-        TabbingComponent
     ]
 })
 export class DialogModule { }
