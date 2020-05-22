@@ -22,7 +22,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { ZluxFileExplorerComponent } from '@zlux/file-explorer/src/app/components/zlux-file-explorer/zlux-file-explorer.component';
+import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -37,12 +37,12 @@ function getDatasetName(dirName) {
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss']
+  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss'],
 })
 export class ProjectTreeComponent {
 
-  @ViewChild(ZluxFileExplorerComponent)
-  private fileExplorer: ZluxFileExplorerComponent;
+  @ViewChild(ZluxFileTreeComponent)
+  private fileExplorer: ZluxFileTreeComponent;
 
   nodes: ProjectStructure[];
   options = {
