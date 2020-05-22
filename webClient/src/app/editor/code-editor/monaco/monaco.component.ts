@@ -8,8 +8,10 @@
   
   Copyright Contributors to the Zowe Project.
 */
+
 import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
+import { Subscription } from 'rxjs/Subscription';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
   createMonacoServices, createConnection,
@@ -25,11 +27,12 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
   templateUrl: './monaco.component.html',
   styleUrls: ['./monaco.component.scss']
 })
-export class MonacoComponent implements OnInit, OnChanges {
+export class MonacoComponent implements OnChanges {
   @Input() options;
-  @Input() editorFile;
+  @Input() editorBuffer;
   @ViewChild('ngxMonaco')
   ngxMonacoRef: ElementRef;
+
 
   constructor(
     private monacoService: MonacoService,
@@ -38,6 +41,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
   }
+
 
   ngOnInit() {
   }
@@ -48,8 +52,8 @@ export class MonacoComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
-      if (input === 'editorFile' && changes[input].currentValue != null) {
-        this.monacoService.openFile(
+      if (input === 'editorBuffer' && changes[input].currentValue != null) {
+        this.monacoService.openBuffer(
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
@@ -139,8 +143,8 @@ export class MonacoComponent implements OnInit, OnChanges {
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convenience
       run: function (ed) {
-        let fileContext = self.editorControl.fetchActiveFile();
-        let sub = self.monacoService.saveFile(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        let bufferContext = self.editorControl.fetchActiveFile();
+        let sub = self.monacoService.saveBuffer(bufferContext).subscribe(() => sub.unsubscribe());
         return null;
       }
     });
