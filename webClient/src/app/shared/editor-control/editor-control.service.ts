@@ -219,7 +219,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     let currentOpenFileList = this._openFileList.getValue();
     if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
-      /* vendors contains the element we're looking for */
+      /* We only want to add this file into the list if it doesn't already belong there */
       currentOpenFileList.push(fileContext);
     }
     this._openFileList.next(currentOpenFileList);
@@ -241,7 +241,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.previousSessionData.stateCache = stateCache;
     /* As our cached list, we save all files *minus* the previously opened file. This is because
     that file will get opened as the last editor file in code-editor.component */
-    this.previousSessionData._openFileList = this._openFileList.getValue(); //Pop breaks things here so slice
+    this.previousSessionData._openFileList = this._openFileList.getValue();
 
     this.log.debug('Clearing all cache for files');
     stateCache = {};
@@ -255,11 +255,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       stateCache = this.previousSessionData.stateCache;
     }
     if (this.previousSessionData._openFileList) {
-      if (this.previousSessionData._openFileList.length > 0) {
-        this._openFileList.next(this.previousSessionData._openFileList);
-      } else {
-        this._openFileList.next(this.previousSessionData._openFileList);
-      }
+      this._openFileList.next(this.previousSessionData._openFileList);
     }
   }
 
