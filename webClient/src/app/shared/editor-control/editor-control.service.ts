@@ -218,7 +218,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
-    currentOpenFileList.push(fileContext);
+    if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
+      /* vendors contains the element we're looking for */
+      currentOpenFileList.push(fileContext);
+    }
     this._openFileList.next(currentOpenFileList);
   }
 
@@ -238,7 +241,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.previousSessionData.stateCache = stateCache;
     /* As our cached list, we save all files *minus* the previously opened file. This is because
     that file will get opened as the last editor file in code-editor.component */
-    this.previousSessionData._openFileList = this._openFileList.getValue().slice(0, this._openFileList.getValue().length-1); //Pop breaks things here so slice
+    this.previousSessionData._openFileList = this._openFileList.getValue(); //Pop breaks things here so slice
 
     this.log.debug('Clearing all cache for files');
     stateCache = {};
