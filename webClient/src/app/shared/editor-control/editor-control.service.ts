@@ -238,11 +238,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.previousSessionData.stateCache = stateCache;
     /* As our cached list, we save all files *minus* the previously opened file. This is because
     that file will get opened as the last editor file in code-editor.component */
-    this.previousSessionData._openFileList = this._openFileList.getValue().slice(0, this._openFileList.getValue().length-1); //pop breaks things here
+    this.previousSessionData._openFileList = this._openFileList.getValue().slice(0, this._openFileList.getValue().length-1); //Pop breaks things here so slice
 
     this.log.debug('Clearing all cache for files');
     stateCache = {};
-    //TODO: _openFileList is our storage mechanism for tabs open, we can save this as a copy for later to create a "Revert"/"Undo" feature
     let currentOpenFileList = new Array<ProjectContext>(0);
     this._openFileList.next(currentOpenFileList);
   }
@@ -255,7 +254,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     if (this.previousSessionData._openFileList) {
       if (this.previousSessionData._openFileList.length > 0) {
         this._openFileList.next(this.previousSessionData._openFileList);
-        //this.openFileHandler(this._openFileList.getValue()[this._openFileList.getValue().length-1])
       } else {
         this._openFileList.next(this.previousSessionData._openFileList);
       }
