@@ -228,8 +228,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
     }
-    !fileContext.opened ? this.log.warn(`File ${
-    fileContext.name} already closed.`) : fileContext.opened = false;
+    !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
