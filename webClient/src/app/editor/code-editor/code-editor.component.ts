@@ -56,6 +56,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   public editorFile: { context: ProjectContext, reload: boolean, line?: number };
 
+  /* TODO: This can be extended to persist in future server storage mechanisms. 
+  (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
+  private previousSessionData: any = {};
+
   constructor(private httpService: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
@@ -87,11 +91,37 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       }
     });
 
+    this.editorControl.closeAllFiles.subscribe(() => {
+      this.previousSessionData.noOpenFile = this.noOpenFile;
+      this.previousSessionData.editorFile = this.editorFile;
+
+      this.noOpenFile = true;
+      this.editorFile = undefined; 
+      this.updateEditorTitle();
+    })
+
+    this.editorControl.undoCloseAllFiles.subscribe(() => {
+      if (this.previousSessionData.noOpenFile) {
+        this.noOpenFile = this.previousSessionData.noOpenFile;
+      }
+      if (this.previousSessionData.editorFile) {
+        this.editorFile = this.previousSessionData.editorFile;
+
+        /* Let editorControl set it to active & opened naturally, otherwise verbose debug logs */
+        this.editorFile.context.active = false;
+        this.editorFile.context.opened = false;
+
+        this.selectFile(this.editorFile.context, true);
+        this.editorControl.openFileHandler(this.editorFile.context);
+      }
+      this.updateEditorTitle();
+    })
+
     this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
       if (event.altKey && event.which === KeyCode.KEY_T) {
         let fileContext = this.editorControl.fetchAdjToActiveFile();
         this.selectFile(fileContext, true);      
-      } else if (event.altKey && event.which === KeyCode.KEY_W) {
+      } else if (event.altKey && event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
         let fileContext = this.editorControl.fetchActiveFile();
         this.closeFile(fileContext);
       }

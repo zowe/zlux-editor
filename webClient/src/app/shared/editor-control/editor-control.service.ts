@@ -47,6 +47,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
+  public closeAllFiles: EventEmitter<string> = new EventEmitter();
+  public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
@@ -69,6 +71,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   private _projectName = '';
   public _isTestLangMode = false;
+  /* TODO: This can be extended to persist in future server storage mechanisms. 
+  (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
+  private previousSessionData: any = {};
 
 
   /**
@@ -223,10 +228,39 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
     }
-    !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
+    !fileContext.opened ? this.log.warn(`File ${
+    fileContext.name} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
+  }
+
+  public closeAllHandler() {
+    this.previousSessionData.stateCache = stateCache;
+    /* As our cached list, we save all files *minus* the previously opened file. This is because
+    that file will get opened as the last editor file in code-editor.component */
+    this.previousSessionData._openFileList = this._openFileList.getValue().slice(0, this._openFileList.getValue().length-1); //pop breaks things here
+
+    this.log.debug('Clearing all cache for files');
+    stateCache = {};
+    //TODO: _openFileList is our storage mechanism for tabs open, we can save this as a copy for later to create a "Revert"/"Undo" feature
+    let currentOpenFileList = new Array<ProjectContext>(0);
+    this._openFileList.next(currentOpenFileList);
+  }
+
+  public undoCloseAllHandler() {
+    this.log.debug("Attempting to restore session with data: ", this.previousSessionData);
+    if (this.previousSessionData.stateCache) {
+      stateCache = this.previousSessionData.stateCache;
+    }
+    if (this.previousSessionData._openFileList) {
+      if (this.previousSessionData._openFileList.length > 0) {
+        this._openFileList.next(this.previousSessionData._openFileList);
+        //this.openFileHandler(this._openFileList.getValue()[this._openFileList.getValue().length-1])
+      } else {
+        this._openFileList.next(this.previousSessionData._openFileList);
+      }
+    }
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
@@ -451,7 +485,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+      this.snackBar.open(`${_activeFile.name} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
       
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
@@ -471,7 +505,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${error}`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+      this.snackBar.open(`${error}`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       this.openDirectory.next(results.directory);
     });
   }
