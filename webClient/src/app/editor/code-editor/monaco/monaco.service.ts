@@ -125,16 +125,16 @@ export class MonacoService {
           });
         },
         error: (err) => {
-          this.log.warn(`${fileNode.name} could not be opened`);
+          this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
-            this.snackBar.open(`${fileNode.name} could not be opened due to permissions`,
-              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+            this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else if (err.status === 404) {
-            this.snackBar.open(`${fileNode.name} could not be found`,
-              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+            this.snackBar.open(`${fileNode.name} could not be found.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else {
-            this.snackBar.open(`${fileNode.name} could not be opened`,
-              'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+            this.snackBar.open(`${fileNode.name} could not be opened.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           }
         }
       });

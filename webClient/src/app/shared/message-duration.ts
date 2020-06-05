@@ -9,7 +9,7 @@
 */
 
 export class MessageDuration {
-  static Short: number = 2000;
+  static Short: number = 3000;
 
   static Medium: number = 6000;
 
