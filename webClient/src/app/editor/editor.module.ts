@@ -19,8 +19,7 @@ import { EditorService } from './editor.service';
 import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
-import { FileExplorerModule } from '@zlux/file-explorer/src/plugin';
-import { TreeModule } from 'angular-tree-component';
+import { FileTreeModule } from '@zowe/zlux-angular-file-tree';
 import { CodeEditorModule } from './code-editor/code-editor.module';
 
 @NgModule({
@@ -33,9 +32,8 @@ import { CodeEditorModule } from './code-editor/code-editor.module';
     MatExpansionModule,
     MatSnackBarModule,
     MatInputModule,
-    FileExplorerModule,
+    FileTreeModule,
     // EditorRoutingModule,
-    TreeModule,
     PerfectScrollbarModule,
     CodeEditorModule,
   ],

@@ -1,7 +1,10 @@
 {
   "identifier": "org.zowe.editor",
   "apiVersion": "1.0.0",
-  "pluginVersion": "2.1.0",
+  "pluginVersion": "2.1.1",
+  "license": "EPL-2.0",
+  "author": "Zowe",
+  "homepage": "https://github.com/zowe/zlux-editor",
   "pluginType": "application",
   "webContent": {
     "framework": "angular",
@@ -20,23 +23,14 @@
   },
   "configurationData": {
     "resources": {
-
       "ui": {
- 
         "aggregationPolicy": "override",
- 
         "subResources": {
- 
           "history": {
- 
             "aggregationPolicy": "override"
- 
           }
- 
         }
- 
       }
- 
     }
   }
 }
