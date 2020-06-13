@@ -13,11 +13,13 @@ var path = require('path');
 var webpackConfig = require('webpack-config');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
-// const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 if (process.env.MVD_DESKTOP_DIR == null) {
   throw new Error('You must specify MVD_DESKTOP_DIR in your environment');
 }
+const pubPath = "/ZLUX/plugins/org.zowe.editor/web/";
+process.env.ASSET_PATH=pubPath;
 
 var config = {
   'entry': {
@@ -26,6 +28,7 @@ var config = {
   'output': {
     'path': path.resolve(__dirname, '../web'),
     'filename': '[name].js',
+    publicPath: pubPath
   },
   'module': {
     'rules': [{
@@ -42,8 +45,16 @@ var config = {
               'sourceMap': false
             }
           },
-          'sass-loader'
+          {
+            'loader': 'sass-loader',
+            'options': {
+              'implementation': require('sass')
+            }
+          }
         ]
+      },  {
+        test: /\.ttf$/,
+        use: ['file-loader']
       }
     ],
   },
@@ -58,21 +69,13 @@ var config = {
       {
         from: path.resolve(__dirname, './src/mock'),
         to: path.resolve('../web/mock')
-      },
-      {
-        "context": "node_modules/ngx-monaco-editor/assets/monaco",
-        "to": "assets/monaco",
-        "from": {
-          "glob": "**/*",
-          "dot": true
-        }
-      },
+      }
     ]),
     new CompressionPlugin({
       threshold: 100000,
       minRatio: 0.8
     })
-    // new MonacoWebpackPlugin()
+    , new MonacoWebpackPlugin({publicPath: pubPath})
   ]
 };
 

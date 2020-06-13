@@ -15,13 +15,14 @@ import { HttpService } from './shared/http/http.service';
 import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
+import * as monaco from 'monaco-editor';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: [
               '../styles.scss',
-              './app.component.scss'
+    './app.component.scss'
               ]
 })
 export class AppComponent {
@@ -37,7 +38,7 @@ export class AppComponent {
               private utils: UtilsService,
               private editorControl: EditorControlService,
               private appKeyboard: EditorKeybindingService) {
-    this.log.debug(`Monaco object=`,(<any>window).monaco);
+    this.log.debug(`Monaco object=`,monaco);
   }
 
   ngOnInit() {

@@ -25,6 +25,7 @@ import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
+import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;

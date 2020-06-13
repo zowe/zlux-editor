@@ -11,7 +11,6 @@
 import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
-import { NgxEditorModel } from 'ngx-monaco-editor';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
@@ -44,6 +43,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     lightbulb: {
       enabled: true
     },
+    lineNumbers: true,
     codeLense: true,
     iconsInSuggestions: true,
     minimap: {
