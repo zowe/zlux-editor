@@ -69,6 +69,10 @@ var config = {
       {
         from: path.resolve(__dirname, './src/mock'),
         to: path.resolve('../web/mock')
+      },
+      {
+        from: path.resolve(__dirname, './node_modules/monaco-editor/min/vs/editor/editor.main.css'),
+        to: path.resolve('../web/assets/monaco/editor/editor.main.css')
       }
     ]),
     new CompressionPlugin({
