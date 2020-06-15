@@ -30,8 +30,8 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 export class MonacoComponent implements OnInit, OnChanges {
   @Input() options;
   @Input() editorFile;
-  @ViewChild('ngxMonaco')
-  ngxMonacoRef: ElementRef;
+  @ViewChild('monacoEditor')
+  monacoEditorRef: ElementRef;
   private editor: any;
   private monacoConfig: MonacoConfig;
 
@@ -44,10 +44,8 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    (<any>window).monaco.baseUrl = '/ZLUX/plugins/org.zowe.editor/web/';
     this.monacoConfig = new MonacoConfig();
     let options = Object.assign({}, this.monacoConfig.defaultOptions, this.options);
-    console.log('options to load=',options);
     const hasModel = !!options.model;
     
     if (hasModel) {
@@ -59,7 +57,7 @@ export class MonacoComponent implements OnInit, OnChanges {
         options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
       }
     }
-    let editor = monaco.editor.create(this.ngxMonacoRef.nativeElement, options);
+    let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
     if (!hasModel) {
       editor.setValue('');
     }
