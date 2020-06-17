@@ -24,7 +24,7 @@ import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.componen
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
-
+import * as monaco from 'monaco-editor'
 
 @Injectable()
 export class MonacoService {
