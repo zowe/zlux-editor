@@ -104,6 +104,13 @@ export class ProjectTreeComponent {
       this.nodes = nodes;
     });
 
+    this.editorControl.closeAllFiles.subscribe(() => {
+      this.editorControl.closeAllHandler();
+    });
+
+    this.editorControl.undoCloseAllFiles.subscribe(() => {
+      this.editorControl.undoCloseAllHandler();
+    })
 
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {

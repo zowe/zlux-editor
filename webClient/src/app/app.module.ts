@@ -14,10 +14,6 @@ import { NgModule } from '@angular/core';
 import { MatIconModule } from '@angular/material';
 // import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
-// import libraries modules
-import { MonacoEditorModule } from 'ngx-monaco-editor';
-import { MonacoConfig } from './editor/code-editor/monaco/monaco.config';
-
 import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 // import { AppRoutingModule } from './app-routing.module';
@@ -38,7 +34,6 @@ import { SharedModule } from './shared/shared.module';
     // AppRoutingModule,
     DashboardModule,
     EditorModule,
-    MonacoEditorModule.forRoot(new MonacoConfig().config),
     SharedModule,
   ],
   providers: [],
