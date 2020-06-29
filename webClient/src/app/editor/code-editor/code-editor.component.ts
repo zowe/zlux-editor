@@ -76,6 +76,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
+      this.editorControl.editor.getValue().layout();
     });
 
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
