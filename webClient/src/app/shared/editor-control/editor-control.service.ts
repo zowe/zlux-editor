@@ -25,6 +25,7 @@ import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
+import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;
@@ -47,6 +48,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
+  public closeAllFiles: EventEmitter<string> = new EventEmitter();
+  public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
@@ -69,6 +72,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   private _projectName = '';
   public _isTestLangMode = false;
+  /* TODO: This can be extended to persist in future server storage mechanisms. 
+  (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
+  private previousSessionData: any = {};
 
 
   /**
@@ -213,7 +219,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
-    currentOpenFileList.push(fileContext);
+    if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
+      /* We only want to add this file into the list if it doesn't already belong there */
+      currentOpenFileList.push(fileContext);
+    }
     this._openFileList.next(currentOpenFileList);
   }
 
@@ -227,6 +236,28 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
+  }
+
+  public closeAllHandler() {
+    this.previousSessionData.stateCache = stateCache;
+    /* As our cached list, we save all files *minus* the previously opened file. This is because
+    that file will get opened as the last editor file in code-editor.component */
+    this.previousSessionData._openFileList = this._openFileList.getValue();
+
+    this.log.debug('Clearing all cache for files');
+    stateCache = {};
+    let currentOpenFileList = new Array<ProjectContext>(0);
+    this._openFileList.next(currentOpenFileList);
+  }
+
+  public undoCloseAllHandler() {
+    this.log.debug("Attempting to restore session with data: ", this.previousSessionData);
+    if (this.previousSessionData.stateCache) {
+      stateCache = this.previousSessionData.stateCache;
+    }
+    if (this.previousSessionData._openFileList) {
+      this._openFileList.next(this.previousSessionData._openFileList);
+    }
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
@@ -451,7 +482,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${_activeFile.name} Saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+      this.snackBar.open(`${_activeFile.name} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
       
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
@@ -471,7 +502,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       /* This will probably need to be changed
        * for the sake of accessibility.
        */
-      this.snackBar.open(`${error}`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+      this.snackBar.open(`${error}`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       this.openDirectory.next(results.directory);
     });
   }

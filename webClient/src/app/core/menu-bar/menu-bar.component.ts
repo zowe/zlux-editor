@@ -78,6 +78,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   private subscription:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
+
+  /* TODO: This can be extended to persist in future server storage mechanisms. 
+  (For example, when a user re-opens the Editor they are plopped back into their workflow) */
+  private previousSessionData: any = {};
   
   constructor(
     private http: HttpService,
@@ -134,6 +138,24 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         this.log.warn(`Open file count cannot be made negative`);
       }
       this.removeLanguageMenu();
+    });
+
+    this.editorControl.closeAllFiles.subscribe(() => {
+      this.previousSessionData.fileCount = this.fileCount;
+
+      this.fileCount = 0;
+      this.log.debug('fileCount emptied');
+      this.removeLanguageMenu();
+    })
+
+    this.editorControl.undoCloseAllFiles.subscribe(() => {
+      if (this.previousSessionData.fileCount) {
+        this.fileCount = this.previousSessionData.fileCount;
+      }
+      if (this.currentLang) {
+        this.showLanguageMenu(this.currentLang);
+      }
+      this.log.debug('Attempted to restore session with data: ' + this.previousSessionData + " " + this.currentLang)
     });
 
     this.editorControl.changeLanguage.subscribe((obj:{context: any, language: string})=> {
@@ -279,6 +301,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.getSearchFocus();
         } else if (event.altKey && event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
+        } else if (event.altKey && event.which === KeyCode.KEY_W && event.shiftKey) {
+          this.closeAll();
         }
     }));
   }
@@ -384,6 +408,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
   openDirectory() {
     let openDirRef = this.dialog.open(OpenFolderComponent, {
       width: '500px'
@@ -405,6 +430,20 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       if (result) {
         this.editorControl.openDataset.next(result);
       }
+    });
+  }
+
+  closeAll() {
+    let closeAllRef;
+    if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
+      closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+    } else {
+      this.editorControl.closeAllFiles.next();
+      closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+    }
+
+    closeAllRef.onAction().subscribe(() => {
+      this.editorControl.undoCloseAllFiles.next();
     });
   }
 
@@ -460,7 +499,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.http.post(ENDPOINTS.diagram, { member: file.name, content: file.model.contents }).subscribe(r => {
       window.open(r.url, '_blank');
     });
-    this.snackBar.open(`A new window will open after the diagram generated`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+    this.snackBar.open(`A new window will open after the diagram generated.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
   }
 
   submitJob() {

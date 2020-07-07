@@ -176,7 +176,17 @@ export const MENU = [
                     internalName: 'saveFile'
                 },
                 keyMap: 'Ctrl+S'
-            },              
+            },   
+            {
+              name: 'group-end'
+            },
+            {
+              name: 'Close All',
+              action: {
+                  internalName: 'closeAll'
+              },
+              keyMap: 'Alt+W+Shift'
+            },        
             //{
             //    name: 'Save All',
             //    action: {

@@ -8,12 +8,12 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { NgxMonacoEditorConfig } from 'ngx-monaco-editor';
 import { MonacoService } from './monaco.service';
 import { EditorServiceInstance } from '../../../shared/editor-control/editor-control.service';
 
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs/Subscription';
+import * as monaco from 'monaco-editor'
 
 const HLASM_LANG = {
   id: 'hlasm',
@@ -417,11 +417,7 @@ export const JCL_DARK: Theme = {
 
 export class MonacoConfig {
   subscription: Subscription = null;
-  config = {
-    baseUrl: '../../org.zowe.editor/web/assets', // configure base path for monaco editor
-    defaultOptions: { scrollBeyondLastLine: false }, // pass default options to be used
-    onMonacoLoad: this.onLoad.bind(this),
-  };
+  defaultOptions: any = { scrollBeyondLastLine: false }; // pass default options to be used
 
   onLoad() {
     let self = this;
@@ -450,7 +446,7 @@ export class MonacoConfig {
           });
         }
 
-        editorService._editorCore.next((<any>window).monaco);
+        editorService._editorCore.next(monaco);
         if (self.subscription) { self.subscription.unsubscribe(); }
       }
     });

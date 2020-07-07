@@ -19,7 +19,6 @@ import { CodeEditorComponent } from './code-editor.component';
 import { FileTabsComponent, MouseMiddleClickDirective } from './file-tabs/file-tabs.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 
-import { MonacoEditorModule } from 'ngx-monaco-editor';
 import { CodeEditorService } from './code-editor.service';
 
 @NgModule({
@@ -28,7 +27,6 @@ import { CodeEditorService } from './code-editor.service';
     FormsModule,
     MatIconModule,
     MatDialogModule,
-    MonacoEditorModule,
     PerfectScrollbarModule,
   ],
   providers: [MonacoService, CodeEditorService],

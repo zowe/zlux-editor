@@ -15,9 +15,11 @@ import {
   createMonacoServices, createConnection,
 } from 'monaco-languageclient/lib';
 import { MonacoService } from './monaco.service';
+import { MonacoConfig } from './monaco.config';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import * as monaco from 'monaco-editor';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -28,8 +30,10 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
 export class MonacoComponent implements OnInit, OnChanges {
   @Input() options;
   @Input() editorFile;
-  @ViewChild('ngxMonaco')
-  ngxMonacoRef: ElementRef;
+  @ViewChild('monacoEditor')
+  monacoEditorRef: ElementRef;
+  private editor: any;
+  private monacoConfig: MonacoConfig;
 
   constructor(
     private monacoService: MonacoService,
@@ -40,10 +44,33 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    this.monacoConfig = new MonacoConfig();
+    let options = Object.assign({}, this.monacoConfig.defaultOptions, this.options);
+    const hasModel = !!options.model;
+    
+    if (hasModel) {
+      const model = monaco.editor.getModel(options.model.uri || '');
+      if(model) {
+        options.model = model;
+        options.model.setValue('');
+      } else {
+        options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
+      }
+    }
+    let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
+    if (!hasModel) {
+      editor.setValue('');
+    }
+    this.editor = editor;
+
+    this.monacoConfig.onLoad();
+    
+    this.onMonacoInit(editor);
+    monaco.editor.remeasureFonts();
   }
 
   focus(e: any) {
-    (this.ngxMonacoRef as any)._editor.focus();
+    this.editor.focus();
   }
 
   ngOnChanges(changes: SimpleChanges) {
