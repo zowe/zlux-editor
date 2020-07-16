@@ -10,7 +10,7 @@
   "dependencies": {
     "@angular/cdk": "~6.3.3",
     "angular-tree-component": "~7.2.0",
-    "lodash": "~4.17.10",
+    "lodash": "~4.17.19",
     "monaco-languageclient": "0.6.3",
     "ngx-bootstrap": "^2.0.4",
     "ngx-perfect-scrollbar": "~5.3.5",
