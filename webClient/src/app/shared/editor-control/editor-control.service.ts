@@ -26,6 +26,7 @@ import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 import * as monaco from 'monaco-editor'
+import { HttpClient } from '@angular/common/http';
 
 let stateCache = {};
 let lastFile;
@@ -96,14 +97,19 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
    * An event that is triggered when a buffer is destroyed.
    */
   bufferDestroyed: Subject<ZLUX.EditorBufferDestroyedEvent> = new Subject();
-
+  private plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
+  private filePath : string = 'ui/openTabs'
+  private fileNameToSave : string = 'fileList'
+  private dataToSave : {files:[string]}
   constructor(
     private utils: UtilsService,
     private http: HttpService,
     private ngHttp: Http,
     public snackBar: SnackBarService,
     private dialog: MatDialog,
-    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    private HTTP: HttpClient
   ) {
     EditorServiceInstance.next(this);
   }
@@ -210,6 +216,19 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
+    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave)).subscribe(res => {
+      if(res){
+        let fileNameWithPath:string = fileContext.model.path+"/"+fileContext.name
+        if(res.contents.files.indexOf(fileNameWithPath) == -1){
+          res.contents.files.push(fileNameWithPath)
+          this.dataToSave = {"files":res.contents.files}
+          this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
+        }
+      }else{
+        this.dataToSave = {"files":[fileContext.model.path+"/"+fileContext.name]}
+        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave),this.dataToSave).subscribe(); 
+      }
+    });
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -227,6 +246,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
+    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave)).subscribe(res => {
+      if(res){
+        res.contents.files.splice(res.contents.files.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
+        this.dataToSave = {"files":res.contents.files}
+        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
+      }
+    });
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
