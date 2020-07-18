@@ -16,6 +16,7 @@ import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
 import * as monaco from 'monaco-editor';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -37,7 +38,9 @@ export class AppComponent {
               private httpService: HttpService,
               private utils: UtilsService,
               private editorControl: EditorControlService,
-              private appKeyboard: EditorKeybindingService) {
+              private appKeyboard: EditorKeybindingService,
+              @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+              private HTTP: HttpClient) {
     this.log.debug(`Monaco object=`,monaco);
   }
 
@@ -48,6 +51,20 @@ export class AppComponent {
 
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
+    
+    let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
+    let filePath : string = 'ui/openTabs'
+    let fileName : string = 'fileList'
+    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
+      if(res){
+        res.contents.files.forEach(file => {
+          if(file[0] == '/'){
+            file = file.slice(1);
+          }
+          this.handleLaunchOrMessageObject({'type':'openFile','name':file});         
+        });
+      }
+    });
   }
 
   handleLaunchOrMessageObject(data: any) {
