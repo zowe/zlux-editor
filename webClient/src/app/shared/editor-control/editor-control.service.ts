@@ -223,14 +223,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         }else{
          fileNameWithPath = fileContext.model.path+"/"+fileContext.name
         }
-        if(res.contents.files.indexOf(fileNameWithPath) == -1 && fileContext.model.path != undefined){
+        if(res.contents.files.indexOf(fileNameWithPath) == -1){
           res.contents.files.push(fileNameWithPath)
-          this.dataToSave = {"files":res.contents.files}
-          this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
+          this.dataToSave = {"files":res.contents.files}           
         }
       }else{
         this.dataToSave = {"files":[fileContext.model.path+"/"+fileContext.name]}
-        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
+      }
+      if(fileContext.model.path != undefined){
+        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
       }
     });
   }
