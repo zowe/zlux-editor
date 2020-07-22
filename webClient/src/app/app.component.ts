@@ -58,7 +58,7 @@ export class AppComponent {
     this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
       if(res){
         res.contents.files.forEach(file => {
-          if(file[0] == '/'){
+          if(file[0] == '/' && file.startsWith("//'") == false){
             file = file.slice(1);
           }
           this.handleLaunchOrMessageObject({'type':'openFile','name':file});         

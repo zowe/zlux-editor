@@ -214,21 +214,30 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return this._openFileList;
   }
 
-  //almost like selectfilehandler, except altering the list of opened files
-  public openFileHandler(fileContext: ProjectContext) {
+  private saveFilePathSessionRestore(fileContext: ProjectContext){
     this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave)).subscribe(res => {
       if(res){
-        let fileNameWithPath:string = fileContext.model.path+"/"+fileContext.name
-        if(res.contents.files.indexOf(fileNameWithPath) == -1){
+        let fileNameWithPath:string 
+        if(fileContext.model.isDataset){
+         fileNameWithPath = "//'" + fileContext.name + "'"
+        }else{
+         fileNameWithPath = fileContext.model.path+"/"+fileContext.name
+        }
+        if(res.contents.files.indexOf(fileNameWithPath) == -1 && fileContext.model.path != undefined){
           res.contents.files.push(fileNameWithPath)
           this.dataToSave = {"files":res.contents.files}
           this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
         }
       }else{
         this.dataToSave = {"files":[fileContext.model.path+"/"+fileContext.name]}
-        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave),this.dataToSave).subscribe(); 
+        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
       }
     });
+  }
+
+  //almost like selectfilehandler, except altering the list of opened files
+  public openFileHandler(fileContext: ProjectContext) {
+    this.saveFilePathSessionRestore(fileContext);
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -519,6 +528,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           }
           return file;
         });
+      this.saveFilePathSessionRestore(_activeFile)
       this.openFileList.next(fileList);
       this.openDirectory.next(results.directory);
       if (_observer != null) { _observer.next(null); }
