@@ -100,7 +100,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
   private filePath : string = 'ui/openTabs'
   private fileNameToSave : string = 'fileList'
-  private dataToSave : {files:[string]}
+  private dataToSave : {files:string[]}
+  private openFilesAndDatasets : Array<string> = [];
   constructor(
     private utils: UtilsService,
     private http: HttpService,
@@ -215,25 +216,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   private saveFilePathSessionRestore(fileContext: ProjectContext){
-    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave)).subscribe(res => {
-      if(res){
-        let fileNameWithPath:string 
-        if(fileContext.model.isDataset){
-         fileNameWithPath = "//'" + fileContext.name + "'"
-        }else{
-         fileNameWithPath = fileContext.model.path+"/"+fileContext.name
-        }
-        if(res.contents.files.indexOf(fileNameWithPath) == -1){
-          res.contents.files.push(fileNameWithPath)
-          this.dataToSave = {"files":res.contents.files}           
-        }
-      }else{
-        this.dataToSave = {"files":[fileContext.model.path+"/"+fileContext.name]}
-      }
-      if(fileContext.model.path != undefined){
-        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
-      }
-    });
+    let fileNameWithPath:string 
+    if(fileContext.model.isDataset){
+      fileNameWithPath = "//'" + fileContext.name + "'"
+    }else{
+      fileNameWithPath = fileContext.model.path+"/"+fileContext.name
+    }
+    if(this.openFilesAndDatasets.indexOf(fileNameWithPath) == -1 && fileContext.model.path != undefined){
+      this.openFilesAndDatasets.push(fileNameWithPath)
+      this.dataToSave = {"files":this.openFilesAndDatasets}  
+      this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
+    }
   }
 
   //almost like selectfilehandler, except altering the list of opened files
@@ -256,13 +249,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave)).subscribe(res => {
-      if(res){
-        res.contents.files.splice(res.contents.files.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
-        this.dataToSave = {"files":res.contents.files}
-        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
-      }
-    });
+    this.openFilesAndDatasets.splice(this.openFilesAndDatasets.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
+    this.dataToSave = {"files":this.openFilesAndDatasets}
+    this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
