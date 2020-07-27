@@ -76,7 +76,7 @@ var config = {
       }
     ]),
     new CompressionPlugin({
-      threshold: 100000,
+      threshold: 50000,
       minRatio: 0.8
     })
     , new MonacoWebpackPlugin({publicPath: pubPath})
