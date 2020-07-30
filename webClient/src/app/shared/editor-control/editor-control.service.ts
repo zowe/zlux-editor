@@ -231,7 +231,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    this.saveFilePathSessionRestore(fileContext);
+    if(+window.localStorage.getItem("activeZluxEditors") < 2){
+      this.saveFilePathSessionRestore(fileContext);
+    }
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -249,9 +251,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    this.openFilesAndDatasets.splice(this.openFilesAndDatasets.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
-    this.dataToSave = {"files":this.openFilesAndDatasets}
-    this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe(); 
+    if(+window.localStorage.getItem("activeZluxEditors") < 2){
+      this.openFilesAndDatasets.splice(this.openFilesAndDatasets.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
+      this.dataToSave = {"files":this.openFilesAndDatasets}
+      this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
+    }
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);

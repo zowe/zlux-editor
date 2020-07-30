@@ -45,6 +45,15 @@ export class AppComponent {
   }
 
   ngOnInit() {
+    let activeZluxEditors : number = +window.localStorage.getItem("activeZluxEditors")
+    activeZluxEditors > 0 ? activeZluxEditors++ : activeZluxEditors = 1 
+    window.localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
+    window.addEventListener("beforeunload", () => { 
+      activeZluxEditors = +window.localStorage.getItem("activeZluxEditors")
+      activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
+      localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
+    });
+
     if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
       this.handleLaunchOrMessageObject(this.launchMetadata.data);
     }
@@ -52,19 +61,21 @@ export class AppComponent {
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
     
-    let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
-    let filePath : string = 'ui/openTabs'
-    let fileName : string = 'fileList'
-    this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
-      if(res){
-        res.contents.files.forEach(file => {
-          if(file[0] == '/' && file.startsWith("//'") == false){
-            file = file.slice(1);
-          }
-          this.handleLaunchOrMessageObject({'type':'openFile','name':file});         
-        });
-      }
-    });
+    if(activeZluxEditors < 2){
+      let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
+      let filePath : string = 'ui/openTabs'
+      let fileName : string = 'fileList'
+      this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
+        if(res){
+          res.contents.files.forEach(file => {
+            if(file[0] == '/' && file.startsWith("//'") == false){
+              file = file.slice(1);
+            }
+            this.handleLaunchOrMessageObject({'type':'openFile','name':file});         
+          });
+        }
+      });
+    }
   }
 
   handleLaunchOrMessageObject(data: any) {
@@ -155,6 +166,12 @@ export class AppComponent {
         return this.zluxOnMessage(eventContext);
       }      
     }
+  }
+
+  ngOnDestroy(){
+    let activeZluxEditors : number  = +window.localStorage.getItem("activeZluxEditors")
+    activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
+    window.localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
   }
 
 }
