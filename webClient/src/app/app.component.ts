@@ -45,13 +45,21 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    let activeZluxEditors : number = +window.localStorage.getItem("activeZluxEditors")
-    activeZluxEditors > 0 ? activeZluxEditors++ : activeZluxEditors = 1 
-    window.localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
+    let openWindowsStorageString : string = window.localStorage.getItem("org.zowe.editor-openWindows")
+    let activeZluxEditorsCount : number
+    let dataToSave : string
+    if(openWindowsStorageString){
+      (Date.now() - +openWindowsStorageString.split(":")[1]) < (60*60*24*1000) ? activeZluxEditorsCount = +openWindowsStorageString.split(":")[0] + 1 : activeZluxEditorsCount = 1
+    }else{
+      activeZluxEditorsCount = 1
+    }
+    dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
+    window.localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
     window.addEventListener("beforeunload", () => { 
-      activeZluxEditors = +window.localStorage.getItem("activeZluxEditors")
-      activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
-      localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
+      activeZluxEditorsCount = +window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0]
+      activeZluxEditorsCount - 1 > -1 ? activeZluxEditorsCount-- : activeZluxEditorsCount = 0;
+      dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
+      localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
     });
 
     if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
@@ -61,7 +69,7 @@ export class AppComponent {
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
     
-    if(activeZluxEditors < 2){
+    if(activeZluxEditorsCount < 2){
       let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
       let filePath : string = 'ui/openTabs'
       let fileName : string = 'fileList'
@@ -169,9 +177,10 @@ export class AppComponent {
   }
 
   ngOnDestroy(){
-    let activeZluxEditors : number  = +window.localStorage.getItem("activeZluxEditors")
+    let activeZluxEditors : number  = +window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0]
     activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
-    window.localStorage.setItem("activeZluxEditors",activeZluxEditors.toString())
+    let dataToSave = activeZluxEditors.toString() + ":" + Date.now() 
+    window.localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
   }
 
 }
