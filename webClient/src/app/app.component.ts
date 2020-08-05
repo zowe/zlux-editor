@@ -49,7 +49,7 @@ export class AppComponent {
     let activeZluxEditorsCount : number
     let dataToSave : string
     if(openWindowsStorageString){
-      (Date.now() - +openWindowsStorageString.split(":")[1]) < (60*60*24*1000) ? activeZluxEditorsCount = +openWindowsStorageString.split(":")[0] + 1 : activeZluxEditorsCount = 1
+      (+window.localStorage.getItem("ZoweZLUX.lastActive") - +openWindowsStorageString.split(":")[1]) < +window.localStorage.getItem("ZoweZLUX.expirationTime") ? activeZluxEditorsCount = +openWindowsStorageString.split(":")[0] + 1 : activeZluxEditorsCount = 1
     }else{
       activeZluxEditorsCount = 1
     }
