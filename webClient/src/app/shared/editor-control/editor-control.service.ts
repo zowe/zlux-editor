@@ -215,7 +215,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return this._openFileList;
   }
 
-  private saveFilePathSessionRestore(fileContext: ProjectContext){
+  private updateSavedTabsStorage(fileContext: ProjectContext){
     let fileNameWithPath:string 
     if(fileContext.model.isDataset){
       fileNameWithPath = "//'" + fileContext.name + "'"
@@ -232,7 +232,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
     if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2){
-      this.saveFilePathSessionRestore(fileContext);
+      this.updateSavedTabsStorage(fileContext);
     }
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
@@ -522,7 +522,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           }
           return file;
         });
-      this.saveFilePathSessionRestore(_activeFile)
+      this.updateSavedTabsStorage(_activeFile)
       this.openFileList.next(fileList);
       this.openDirectory.next(results.directory);
       if (_observer != null) { _observer.next(null); }
