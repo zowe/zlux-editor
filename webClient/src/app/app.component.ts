@@ -42,9 +42,6 @@ export class AppComponent {
               @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
               private HTTP: HttpClient) {
     this.log.debug(`Monaco object=`,monaco);
-  }
-
-  ngOnInit() {
     let openWindowsStorageString : string = window.localStorage.getItem("org.zowe.editor-openWindows")
     let activeZluxEditorsCount : number
     let dataToSave : string
@@ -61,14 +58,6 @@ export class AppComponent {
       dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
       localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
     });
-
-    if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
-      this.handleLaunchOrMessageObject(this.launchMetadata.data);
-    }
-
-    const editorheaderElement = this.editorheaderElementRef.nativeElement;
-    this.appKeyboard.registerKeyUpEvent(editorheaderElement);
-    
     if(activeZluxEditorsCount < 2){
       let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
       let filePath : string = 'ui/openTabs'
@@ -84,6 +73,15 @@ export class AppComponent {
         }
       });
     }
+  }
+
+  ngOnInit() {
+    if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
+      this.handleLaunchOrMessageObject(this.launchMetadata.data);
+    }
+
+    const editorheaderElement = this.editorheaderElementRef.nativeElement;
+    this.appKeyboard.registerKeyUpEvent(editorheaderElement);
   }
 
   handleLaunchOrMessageObject(data: any) {
