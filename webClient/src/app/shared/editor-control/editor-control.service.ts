@@ -102,6 +102,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private fileNameToSave : string = 'fileList'
   private dataToSave : {files:string[]}
   private openFilesAndDatasets : Array<string> = [];
+  public numberOfTabsToRestore : number = 0;
   constructor(
     private utils: UtilsService,
     private http: HttpService,
@@ -231,7 +232,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2){
+    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2 && this.numberOfTabsToRestore == 0){
       this.updateSavedTabsStorage(fileContext);
     }
     for (const file of this._openFileList.getValue()) {

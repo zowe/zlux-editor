@@ -68,8 +68,9 @@ export class AppComponent {
             if(file[0] == '/' && file.startsWith("//'") == false){
               file = file.slice(1);
             }
-            this.handleLaunchOrMessageObject({'type':'openFile','name':file});         
+            this.handleLaunchOrMessageObject({'type':'openFile','name':file});
           });
+          this.editorControl.numberOfTabsToRestore = res.contents.files.length - 1
         }
       });
     }
@@ -120,7 +121,8 @@ export class AppComponent {
               if (nodes[i].fileName == fileName) {
                 this.editorControl.openFile('', nodes[i]).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
-                });                
+                });
+                this.editorControl.numberOfTabsToRestore - 1 > -1 ? this.editorControl.numberOfTabsToRestore-- : this.editorControl.numberOfTabsToRestore = 0
               }
             }
           }, e => {
