@@ -217,7 +217,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   private updateSavedTabsStorage(fileContext: ProjectContext){
-    let fileNameWithPath:string 
+    let fileNameWithPath:string
     if(fileContext.model.isDataset){
       fileNameWithPath = "//'" + fileContext.name + "'"
     }else{
@@ -225,14 +225,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     if(this.openFilesAndDatasets.indexOf(fileNameWithPath) == -1 && fileContext.model.path != undefined){
       this.openFilesAndDatasets.push(fileNameWithPath)
-      this.dataToSave = {"files":this.openFilesAndDatasets}  
-      this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
+      this.dataToSave = {"files":this.openFilesAndDatasets}
+      if(this.numberOfTabsToRestore == 0){
+        this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
+      }
     }
   }
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2 && this.numberOfTabsToRestore == 0){
+    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2){
       this.updateSavedTabsStorage(fileContext);
     }
     for (const file of this._openFileList.getValue()) {
