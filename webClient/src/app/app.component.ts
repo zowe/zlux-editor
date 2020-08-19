@@ -64,7 +64,7 @@ export class AppComponent {
       let fileName : string = 'fileList'
       this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
         if(res){
-          this.editorControl.numberOfTabsToRestore = res.contents.files.length - 1
+          res.contents.files.length - 1 > -1 ? this.editorControl.numberOfTabsToRestore = res.contents.files.length - 1 : this.editorControl.numberOfTabsToRestore = 0
           res.contents.files.forEach(file => {
             if(file[0] == '/' && file.startsWith("//'") == false){
               file = file.slice(1);
