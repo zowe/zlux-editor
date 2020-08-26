@@ -42,7 +42,7 @@ export class AppComponent {
               @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
               private HTTP: HttpClient) {
     this.log.debug(`Monaco object=`,monaco);
-    let openWindowsStorageString : string = window.localStorage.getItem("org.zowe.editor-openWindows")
+    let openWindowsStorageString : string = window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows")
     let activeZluxEditorsCount : number
     let dataToSave : string
     if(openWindowsStorageString){
@@ -51,13 +51,8 @@ export class AppComponent {
       activeZluxEditorsCount = 1
     }
     dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
-    window.localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
-    window.addEventListener("beforeunload", () => { 
-      activeZluxEditorsCount = +window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0]
-      activeZluxEditorsCount - 1 > -1 ? activeZluxEditorsCount-- : activeZluxEditorsCount = 0;
-      dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
-      localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
-    });
+    window.localStorage.setItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows",dataToSave)
+    window.addEventListener("beforeunload",this.resetActiveEditorsCount);
     if(activeZluxEditorsCount < 2){
       let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
       let filePath : string = 'ui/openTabs'
@@ -176,11 +171,16 @@ export class AppComponent {
     }
   }
 
-  ngOnDestroy(){
-    let activeZluxEditors : number  = +window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0]
+  resetActiveEditorsCount = function(){
+    let activeZluxEditors : number  = +window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows").split(":")[0]
     activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
     let dataToSave = activeZluxEditors.toString() + ":" + Date.now() 
-    window.localStorage.setItem("org.zowe.editor-openWindows",dataToSave)
+    window.localStorage.setItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows",dataToSave)
+  }
+
+  ngOnDestroy(){
+    this.resetActiveEditorsCount();
+    window.removeEventListener("beforeunload",this.resetActiveEditorsCount);
   }
 
 }

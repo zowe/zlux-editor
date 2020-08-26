@@ -234,7 +234,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2){
+    if(+window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows").split(":")[0] < 2){
       this.updateSavedTabsStorage(fileContext);
     }
     for (const file of this._openFileList.getValue()) {
@@ -254,7 +254,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    if(+window.localStorage.getItem("org.zowe.editor-openWindows").split(":")[0] < 2){
+    if(+window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows").split(":")[0] < 2){
       this.openFilesAndDatasets.splice(this.openFilesAndDatasets.indexOf(fileContext.model.path+"/"+fileContext.name), 1);
       this.dataToSave = {"files":this.openFilesAndDatasets}
       this.HTTP.put(ZoweZLUX.uriBroker.pluginConfigUri(this.plugin,this.filePath,this.fileNameToSave), this.dataToSave).subscribe();
