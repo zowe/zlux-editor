@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-@import url("/ZLUX/plugins/org.zowe.editor/web/assets/monaco/editor/editor.main.css");
+@import url("~monaco-editor/min/vs/editor/editor.main.css");
+
 
 @font-face {
   font-family: 'Material Icons';
