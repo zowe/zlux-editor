@@ -18,7 +18,7 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 if (process.env.MVD_DESKTOP_DIR == null) {
   throw new Error('You must specify MVD_DESKTOP_DIR in your environment');
 }
-const pubPath = "/ZLUX/plugins/org.zowe.editor/web/";
+const pubPath = "../../plugins/org.zowe.editor/web/";
 process.env.ASSET_PATH=pubPath;
 
 var config = {
