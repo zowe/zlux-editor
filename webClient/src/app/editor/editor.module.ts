@@ -19,7 +19,7 @@ import { EditorService } from './editor.service';
 import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
-import { FileTreeModule } from '@zowe/zlux-angular-file-tree';
+import { FileTreeModule } from '@zowe/zlux-angular-file-tree/src/plugin';
 import { CodeEditorModule } from './code-editor/code-editor.module';
 
 @NgModule({
