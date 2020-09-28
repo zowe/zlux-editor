@@ -15,11 +15,9 @@ This is a Monaco-powered editor of remote files and datasets that are accessible
 
 There is an Angular module in "webClient" folder. 
 
-Go to this folder 
-Configure your npm registry to pickup Zowe dependencies
+Go to this folder and install dependencies
 
 ```
-npm config set registry https://zowe.jfrog.io/zowe/api/npm/npm-release/
 npm install
 ```
 
