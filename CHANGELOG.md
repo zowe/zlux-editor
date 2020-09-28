@@ -1,5 +1,14 @@
 # Zlux Editor Changelog
 
+## `2.2.3`
+
+- Bugfix: Fixed missing fonts used for icons
+- Updated file tree component from version 0.1.0 to 0.2.0
+
+## `2.2.2`
+
+- Bugfix: CSS would not load when using API Mediation Layer, leading to UI glitches.
+
 ## `2.2.1`
 
 - Removed .map files and large uncompressed files with .gz compressed variants, in order to reduce package size.
