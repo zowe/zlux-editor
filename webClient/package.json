@@ -35,7 +35,7 @@
     "@angular/platform-browser-dynamic": "~6.0.9",
     "@angular/router": "~6.0.9",
     "@types/node": "^6.0.112",
-    "@zlux/widgets": "git+https://github.com:zowe/zlux-widgets.git",
+    "@zlux/widgets": "git+https://github.com:timgerstel/zlux-file-explorer.git#feature/renameUSS",
     "@zowe/zlux-angular-file-tree": "0.2.0-RC3",
     "angular2-template-loader": "~0.6.2",
     "codelyzer": "~4.4.2",
