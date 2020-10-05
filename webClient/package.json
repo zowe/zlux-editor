@@ -36,7 +36,7 @@
     "@angular/router": "~6.0.9",
     "@types/node": "^6.0.112",
     "@zlux/widgets": "git+https://github.com:zowe/zlux-widgets.git",
-    "@zowe/zlux-angular-file-tree": "0.1.0-RC1",
+    "@zowe/zlux-angular-file-tree": "git+https://github.com:timgerstel/zlux-file-explorer.git#feature/renameUSS",
     "angular2-template-loader": "~0.6.2",
     "codelyzer": "~4.4.2",
     "compression-webpack-plugin": "~3.1.0",
