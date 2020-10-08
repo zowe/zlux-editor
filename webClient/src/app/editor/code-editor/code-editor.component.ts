@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
-import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions, Angular2PluginThemeEvents } from 'pluginlib/inject-resources';
 import { Response } from '@angular/http';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
@@ -67,11 +67,20 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
+    @Optional() @Inject(Angular2InjectionTokens.THEME_EVENTS) private themeEvents: Angular2PluginThemeEvents,
     private codeEditorService: CodeEditorService) {
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(()=> {
         this.focusMonaco();
       });
+    }
+
+    if (this.themeEvents) {
+      console.log("CURRENT SIZE FROM THE EDITOR! ", this.themeEvents.currentSize);
+      console.log("CURRENT COLOR FROM THE EDITOR! ", this.themeEvents.currentColor);
+      this.themeEvents.colorChanged.subscribe(() => {
+        console.log("COLOR CHANGE DETECTED FROM THE EDITOR! ");
+      })
     }
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
