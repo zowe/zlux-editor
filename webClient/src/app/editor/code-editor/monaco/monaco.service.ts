@@ -17,13 +17,14 @@ import { EditorControlService } from '../../../shared/editor-control/editor-cont
 import 'rxjs/add/operator/map';
 import { UtilsService } from '../../../shared/utils.service';
 import { DataAdapterService } from '../../../shared/http/http.data.adapter.service';
-import { Http } from '@angular/http';
+import { Http, Headers, RequestOptionsArgs } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
+
 import * as monaco from 'monaco-editor'
 
 @Injectable()
@@ -87,10 +88,61 @@ export class MonacoService {
       let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
       let _observable;
 
-      if (reload) {
+      if (reload) { 
         if (fileNode.model.isDataset) {
-          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
+          /* begin new code for ENQ */
+          /* first, get the ENQ */
+          requestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);
+          console.log('16:20 08 October.  #96 Try to obtain ENQ');
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+ 
+          _observable.subscribe({
+            next: (response: any) => {
+              //network load or switched to currently open file
+              const resJson = response;
+              this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
+                next: () => {
+                  this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
+                  if (line) {
+                    this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
+                    this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
+                      { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
+                    ])[0]);
+                    // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+                  }
+                  if (reload) {
+                    this.editorControl.initializedFile.next(fileNode);
+                  }
+                },
+                error: (err) => {
+                  this.log.warn(err);
+                }
+              });
+            },
+            error: (err) => {
+              this.log.warn(`${fileNode.name} could not be locked, status: `, err.status);
+              if (err.status === 403) {
+                this.snackBar.open(`${fileNode.name} could not be locked due to permissions.`,
+                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              } else if (err.status === 404) {
+                this.snackBar.open(`${fileNode.name} lock is not available.`,
+                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              } else {
+                this.snackBar.open(`${fileNode.name} other error 126.`,
+                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              }
+            }
+          });
+          /* end new code for ENQ */
+          /* now get the dataset contents */ 
+          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
+          // add my header to the GET request
+          const headers = new Headers({ 'ENQ': 'true'});                  // this is the header that requests ENQ
+          const getRequestOptions: RequestOptionsArgs = { headers };      // header is part of options on the GET request
+          /* use the options on the HTTP GET request */
+          console.log(getRequestOptions);                                 // debug
+          console.log('16:20 08 October. #144 Try to obtain dataset contents');
+          _observable = this.http.get(requestUrl, getRequestOptions).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
         } else {
           requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                       filePath+'/'+fileNode.model.fileName,
