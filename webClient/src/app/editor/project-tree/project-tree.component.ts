@@ -3,9 +3,9 @@
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
 import { Component, ViewChild, Inject } from '@angular/core';
@@ -22,7 +22,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
+import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -74,7 +74,7 @@ export class ProjectTreeComponent {
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
         let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                                 `${targetPath}/${node.data.fileName}`);
-                                                                
+
         return this.httpService.get(requestUrl).toPromise().then((dirList: any) => {
           let fileStructure = this.dataAdapter.convertDirectoryList(dirList);
           return fileStructure.map(f => {
@@ -169,7 +169,7 @@ export class ProjectTreeComponent {
             }, e => {
               // TODO
             });
-          
+
         } else {
           this.fileExplorer.updateDirectory(dirName);
         }
@@ -213,7 +213,7 @@ export class ProjectTreeComponent {
         name: $event.name,
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
     };
-  
+
       this.editorControl.openFile('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
         this.editorControl.checkForAndSetReadOnlyMode(x.model);
@@ -299,8 +299,8 @@ export class ProjectTreeComponent {
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */

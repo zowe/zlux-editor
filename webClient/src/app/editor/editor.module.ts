@@ -3,9 +3,9 @@
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
 import { NgModule } from '@angular/core';
@@ -19,7 +19,7 @@ import { EditorService } from './editor.service';
 import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
-import { FileTreeModule } from '@zowe/zlux-angular-file-tree';
+import { FileTreeModule } from '@zowe/zlux-angular-file-tree/src/plugin';
 import { CodeEditorModule } from './code-editor/code-editor.module';
 
 @NgModule({
@@ -47,8 +47,8 @@ export class EditorModule { }
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
 */
