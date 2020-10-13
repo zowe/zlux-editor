@@ -1,5 +1,10 @@
 # Zlux Editor Changelog
 
+## `2.3.0`
+
+- Added ability to change owner and permissions of files and folders similar to the commands `chown` and `chmod`
+- Added ability to change tagging of a file or folder of files similar to the command `chtag`
+
 ## `2.2.3`
 
 - Bugfix: Fixed missing fonts used for icons
