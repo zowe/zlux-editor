@@ -15,7 +15,7 @@ import { OpenProjectComponent } from '../../shared/dialog/open-project/open-proj
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { ProjectStructure, DatasetAttributes } from '../../shared/model/editor-project';
+import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
@@ -23,8 +23,6 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
-import { catchError, switchMap, map } from 'rxjs/operators';
-import { of, Observable } from 'rxjs';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -206,16 +204,6 @@ export class ProjectTreeComponent {
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
-      const isMigrated = data.datasetAttrs && data.datasetAttrs.volser === 'MIGRAT';
-      if (isMigrated) {
-        const datasetName = data.path.trim();
-        this.log.debug(`Dataset ${datasetName} is migrated`);
-        this.recallDataset(datasetName).subscribe(
-          datasetAttrs => this.log.info(`dataset ${datasetName} recalled, attrs ${JSON.stringify(datasetAttrs)}, update tree here`),
-          _err => this.log.warn(`unable to recall dataset ${datasetName}`)
-        );
-        return;
-      }
       if($event.type == 'file'){
         this.editorControl.openFile('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
@@ -223,17 +211,6 @@ export class ProjectTreeComponent {
         });
       }
     }
-  }
-
-  private recallDataset(datasetName: string): Observable<DatasetAttributes> {
-    const contentsURI = ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
-    const metadataURI = ZoweZLUX.uriBroker.datasetMetadataUri(datasetName, undefined, undefined, true);
-    return this.httpService.get(contentsURI)
-      .pipe(
-        catchError(_err => of({})),
-        switchMap(() => this.httpService.get(metadataURI)),
-        map(data => data.datasets[0]),
-      );
   }
 
   onPathChanged($event: any) {
