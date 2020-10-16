@@ -22,7 +22,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
+import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
 import { catchError, switchMap, map } from 'rxjs/operators';
 import { of, Observable } from 'rxjs';
 
@@ -185,22 +185,6 @@ export class ProjectTreeComponent {
     this.editorControl.createDirectory.subscribe(pathAndName => {
       this.fileExplorer.createDirectory(pathAndName);
     });
-  }
-
-  onCopyClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onDeleteClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onNewFileClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onNewFolderClick($event: any){
-    // Todo: Create right click menu functionality.
   }
 
   onNodeClick($event: any){
