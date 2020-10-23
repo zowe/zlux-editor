@@ -185,22 +185,6 @@ export class ProjectTreeComponent {
     });
   }
 
-  onCopyClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onDeleteClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onNewFileClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
-  onNewFolderClick($event: any){
-    // Todo: Create right click menu functionality.
-  }
-
   onNodeClick($event: any){
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
