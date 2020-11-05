@@ -467,7 +467,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     /* Send the HTTP PUT request to the server
      * to save the file.
      */
-    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {
+    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {  
       
       /* It was a new file, we
        * can set the new fileName. */
@@ -506,6 +506,56 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.openDirectory.next(results.directory);
     });
   }
+
+
+  doSavingDataset(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
+    _observer: Observer<void>, _observable: Observable<void>) {
+
+      this.snackBar.open(`Attempting to save Dataset ${results}`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+
+      /* Send the HTTP PUT request to the server
+    * to save the file.
+    */
+    /*  POST ... */
+    this.ngHttp.post(requestUrl, _activeFile.model.contents).subscribe(r => {
+
+        /* It was a new file, we
+        * can set the new fileName. */
+        // if (results && !isUntagged) {
+        //   _activeFile.name = results.fileName;
+        //   _activeFile.model.name = results.fileName;
+        //   _activeFile.model.fileName = results.fileName;
+        //   _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        //   _activeFile.model.path = results.directory;
+        //   _activeFile.temp = false;
+        // }
+        /* This will probably need to be changed
+        * for the sake of accessibility.
+        */
+        this.snackBar.open(`Dataset ${results} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+
+        /* Send buffer saved event */
+        this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
+        let fileList = this.openFileList.getValue()
+          .map(file => {
+            if (file.id === context.id) {
+              file.changed = false;
+            }
+            return file;
+          });
+        this.openFileList.next(fileList);
+        this.openDirectory.next(results.directory);
+        if (_observer != null) { _observer.next(null); }
+    }, e => {
+        let error = e.json().error;
+
+        /* This will probably need to be changed
+        * for the sake of accessibility.
+        */
+        this.snackBar.open(`Dataset ${results} could not be saved.  ${error}`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        this.openDirectory.next(results.directory);
+        });
+}
   
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
@@ -624,6 +674,72 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }); 
     }
+
+    return _observable;
+  }
+
+  
+  saveDatasetHandler(context?: ProjectContext, results?: any): Observable<void> {
+    const _openFile = this.openFileList.getValue();
+    let _activeFile: ProjectContext;
+    let _observer: Observer<void>;
+    let _observable: Observable<void>;
+    let sessionID: number;
+    
+    if (context != null) {
+      this.log.warn('context is not null');
+      _activeFile = context;
+    } else {
+      this.log.warn('context is null');
+      _activeFile = _openFile.filter(file => file.active === true)[0];
+    }
+    
+    let requestUrl: string;
+    let isUntagged: boolean;
+    
+    _observable = new Observable((observer) => {
+      _observer = observer;
+    });
+    
+    this.log.warn('file contents =', _activeFile.model.contents);
+    // Convert a string of joined records to JSON
+    const records = _activeFile.model.contents.split('\n', -1);
+    this.log.warn('records =', records);
+    const body = { records };
+    this.log.warn('body =', JSON.stringify(body, null, 2));
+    _activeFile.model.contents =  JSON.stringify(body, null, 2); 
+    this.log.warn('file contents =', _activeFile.model.contents);
+    requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
+
+    this.doSavingDataset(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+
+    /* to pad, do this ... */
+    // const padRight = (record: string, recordLen: number) => {
+    //   return record + ' '.repeat(recordLen - record.length);
+    // }
+    // const records = contents.split('\n').map(record => padRight(record, 80));
+    // const body = { records };
+
+      // /* Request to get sessionID */
+      // requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path, sessionID)
+      // // +'?sourceEncoding=UTF-8&targetEncoding=UTF-8&forceOverwrite=true&responseType=raw'
+      // ; 
+      // sessionID = 0;
+      // this.log.warn('requestUrl =', requestUrl);
+      // this.log.warn('file contents =', _activeFile.model.contents);
+      
+      // /* PUT or POST? */
+      // var encodedFileContents = new Buffer(_activeFile.model.contents).toString('base64');
+      // this.ngHttp.post(requestUrl, null).subscribe(r => {
+      //   this.log.warn('Entering subscribe.');
+      //   sessionID = r.json().sessionID;
+      //   requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path, sessionID);
+       
+      //   this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+      // }, e => {
+      //   this.snackBar.open(`${_activeFile.model.path} could not be saved! There was a problem getting sessionID ${sessionID}. Please try again.`, 
+      //                      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+      // }); 
 
     return _observable;
   }
@@ -830,6 +946,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.saveFile.emit(<ProjectContext>buffer);
     return this.saveFileHandler(buffer, path);
   }
+    /**
+     * Save a buffer into a dataset.
+     *
+     * @param   buffer          The buffer that should be saved
+     * @param   datasetName     The name of the dataset into which the buffer should be saved
+     * @returns                 An observable that pushes when the file has been saved
+     */
+    saveBufferToDataset(buffer: ZLUX.EditorBufferHandle, datasetName: string | null): Observable<void> {
+      this.saveFile.emit(<ProjectContext>buffer);
+      return this.saveDatasetHandler(buffer, datasetName);
+    }
   /**
     * Get the contents of a buffer.
     *

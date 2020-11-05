@@ -26,6 +26,8 @@ import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 
 import * as monaco from 'monaco-editor'
+import { map, switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Injectable()
 export class MonacoService {
@@ -87,14 +89,25 @@ export class MonacoService {
       let requestUrl: string;
       let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
       let _observable;
+      let dummySessionID: number;
 
       if (reload) { 
         if (fileNode.model.isDataset) {
           /* begin new code for ENQ */
-          /* first, get the ENQ */
+          /* Send ENQ and dataset contents requests in order */
+          const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
+          _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
+            catchError(err => { console.log(filePath, ` ENQ error `, err); return of(null); }),  /* ignore the ENQ error and continue for now */
+            switchMap(() => this.http.get(requestUrl)),                           /* send the contents request once the ENQ has responded */
+            map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
+          );
+
+          /* first, get the ENQ 
           requestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);
           console.log('16:20 08 October.  #96 Try to obtain ENQ');
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+          */
  
           _observable.subscribe({
             next: (response: any) => {
@@ -120,30 +133,34 @@ export class MonacoService {
               });
             },
             error: (err) => {
-              this.log.warn(`${fileNode.name} could not be locked, status: `, err.status);
+              this.log.warn(`${fileNode.name} could not be accessed, status: `, err.status);
+              
               if (err.status === 403) {
-                this.snackBar.open(`${fileNode.name} could not be locked due to permissions.`,
+                this.snackBar.open(`${fileNode.name} could not be accessed due to permissions.`,
                   'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               } else if (err.status === 404) {
                 this.snackBar.open(`${fileNode.name} lock is not available.`,
                   'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               } else {
-                this.snackBar.open(`${fileNode.name} other error 126.`,
+                this.snackBar.open(`${fileNode.name} other error 140.`,
                   'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               }
             }
           });
           /* end new code for ENQ */
-          /* now get the dataset contents */ 
-          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
-          // add my header to the GET request
-          const headers = new Headers({ 'ENQ': 'true'});                  // this is the header that requests ENQ
-          const getRequestOptions: RequestOptionsArgs = { headers };      // header is part of options on the GET request
-          /* use the options on the HTTP GET request */
-          console.log(getRequestOptions);                                 // debug
-          console.log('16:20 08 October. #144 Try to obtain dataset contents');
-          _observable = this.http.get(requestUrl, getRequestOptions).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
-        } else {
+
+          /* we don't need to put ENQ on the header now, because it's a separate REST API call: ... */
+          // requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
+          // // add my header to the GET request
+          // const headers = new Headers({ 'ENQ': 'true'});                  // this is the header that requests ENQ
+          // const getRequestOptions: RequestOptionsArgs = { headers };      // header is part of options on the GET request
+          // /* use the options on the HTTP GET request */
+          // console.log(getRequestOptions);                                 // debug
+          // console.log('16:20 08 October. #144 Try to obtain dataset contents');
+          // _observable = this.http.get(requestUrl, getRequestOptions).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+
+          
+        } else /* it's not a dataset */ {
           requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                       filePath+'/'+fileNode.model.fileName,
                                                       { responseType: 'b64' });
@@ -274,6 +291,7 @@ export class MonacoService {
   
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
+      this.log.warn(`saveFile context `, fileContext, ` directory `, fileDirectory);
       
       /* If the file is not new, and the encoding 
        * has already been set inside of USS via
@@ -338,6 +356,84 @@ export class MonacoService {
           saveRef.afterClosed().subscribe(result => {
           if (result) {
             this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+          }
+          });
+        }
+      }
+    });
+  }
+
+  /* save a dataset, not a file */
+  saveDataset(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
+    return new Observable((obs) => {
+      this.log.warn(`saveDataset name `, fileContext.model.fileName, ` directory `, fileDirectory );
+      
+      /* always save it, for now.  Fix it properly later */
+      this.editorControl.saveBufferToDataset(fileContext, fileContext.model.fileName).subscribe(() => obs.next());
+      return;      
+      /* If the file is not new, and the encoding 
+       * has already been set inside of USS via
+       * chtag.
+       */
+      if (!fileContext.temp && 
+          fileContext.model.encoding != undefined &&
+          fileContext.model.encoding != null && 
+          fileContext.model.encoding != 0
+          ){
+        this.editorControl.saveBufferToDataset(fileContext, null).subscribe(() => obs.next());
+      }
+      /* The file is new or is untagged,
+       * so we must prompt a dialog.
+       */
+      else {
+        /* Issue a presave check to see if the
+         * file can be saved as ISO-8859-1,
+         * perhaps this should be done in real
+         * time as an enhancement.
+         */
+        let x = this.preSaveCheck(fileContext);
+        
+        /* The file is temporary, which means that
+         * it was never tagged.
+         */
+        if (fileContext.temp) {
+          /* Open up a dialog with the standard,
+           * "save as" format.
+           */
+          let activeDirectory = '';
+          if (fileDirectory) {
+            activeDirectory = fileDirectory;
+          }
+          let saveRef = this.dialog.open(SaveToComponent, {
+            width: '500px',
+            data: { canBeISO: x, 
+              fileName: fileContext.model.fileName,
+              fileDirectory: activeDirectory }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBufferToDataset(fileContext, result).subscribe(() => obs.next());
+          }
+          });
+        }
+        /* The file was never tagged, so we should
+         * ask the user if they would like to tag
+         * it.
+         */
+        else {
+          /* Open up a dialog asking if the user
+           * wants to tag their file. Again,
+           * we are checking if ISO-8859-1 is
+           * an option.
+           */
+          let saveRef = this.dialog.open(TagComponent, {
+            width: '500px',
+            data: { canBeISO: x,
+                    fileName: fileContext.model.fileName }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBufferToDataset(fileContext, result).subscribe(() => obs.next());
           }
           });
         }

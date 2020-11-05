@@ -167,7 +167,11 @@ export class MonacoComponent implements OnInit, OnChanges {
       // @param editor The editor instance is passed in as a convenience
       run: function (ed) {
         let fileContext = self.editorControl.fetchActiveFile();
-        let sub = self.monacoService.saveFile(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        if (fileContext.model.isDataset){
+          let sub = self.monacoService.saveDataset(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        } else {
+          let sub = self.monacoService.saveFile(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        }        
         return null;
       }
     });
