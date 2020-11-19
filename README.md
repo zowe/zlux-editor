@@ -11,26 +11,15 @@ This is a Monaco-powered editor of remote files and datasets that are accessible
 
 **To request features or report bugs, please use the issues page at the [zlux repo](https://github.com/zowe/zlux/issues) with the editor or app tags**
 
-## Install Dependencies
+## Building
 
-There is an Angular module in "webClient" folder. 
+This repo uses the zlux angular file tree component, which is hosted on Zowe's artifactory.
+To install that as a prereq, you must first do:
 
-Go to this folder 
-Configure your npm registry to pickup Zowe dependencies
+`npm config set @zowe:registry https://zowe.jfrog.io/zowe/api/npm/npm-release/`
 
-```
-npm config set registry https://zowe.jfrog.io/zowe/api/npm/npm-release/
-npm install
-```
+Afterwards, read this wiki on building: https://github.com/zowe/zlux/wiki/Building-Plugins
 
-## Build
+## Installing
 
-Run ```npm run build``` and you will find a folder named "web" in root directory. Then this application is able to run in a zLUX environment.
-
-This program and the accompanying materials are
-made available under the terms of the Eclipse Public License v2.0 which accompanies
-this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-
-SPDX-License-Identifier: EPL-2.0
-
-Copyright Contributors to the Zowe Project.
+Read this wiki on installing: https://github.com/zowe/zlux/wiki/Installing-Plugins
