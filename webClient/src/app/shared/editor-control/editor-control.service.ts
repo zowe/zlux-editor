@@ -210,6 +210,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
+    console.log(`openFileHandler File ${fileContext.name}\n`);
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -227,14 +228,40 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
+    console.log(`closeFileHandler start\n`);
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
     }
-    !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
-    !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
+
+    /* dequeue dataset */
+    console.log(`closeFileHandler model File name is ${fileContext.model.fileName}`);
+    
+          /* Send DEQ dataset  */
+          let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
+          const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+          let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
+
+          console.log(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
+
+          /* subscribe to the DELETE request */  
+          _observable.subscribe({
+            next: (response: any) => {
+              console.log(`closeFileHandler delete request OK`);              
+            },
+            error: (err) => {
+              // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
+              console.log(`closeFileHandler delete request FAILED.  Error is: `, err);             
+            }
+          });
+          /* end of subscribe */
+          
+    /* end of dequeue dataset */
+    !fileContext.opened ? this.log.warn(`File ${fileContext.model.fileName} already closed.`) : fileContext.opened = false;
+    !fileContext.active ? this.log.warn(`File ${fileContext.model.fileName} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
+    /* TBD is the line below correct? */
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
   }
 
@@ -707,8 +734,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.log.warn('records =', records);
     const body = { records };
     this.log.warn('body =', JSON.stringify(body, null, 2));
-    _activeFile.model.contents =  JSON.stringify(body, null, 2); 
-    this.log.warn('file contents =', _activeFile.model.contents);
+    _activeFile.model.contents =  JSON.stringify(body, null, 2); /* ? */
+    this.log.warn('new file contents =', _activeFile.model.contents);
     requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
 
     this.doSavingDataset(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
@@ -719,27 +746,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     // }
     // const records = contents.split('\n').map(record => padRight(record, 80));
     // const body = { records };
-
-      // /* Request to get sessionID */
-      // requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path, sessionID)
-      // // +'?sourceEncoding=UTF-8&targetEncoding=UTF-8&forceOverwrite=true&responseType=raw'
-      // ; 
-      // sessionID = 0;
-      // this.log.warn('requestUrl =', requestUrl);
-      // this.log.warn('file contents =', _activeFile.model.contents);
-      
-      // /* PUT or POST? */
-      // var encodedFileContents = new Buffer(_activeFile.model.contents).toString('base64');
-      // this.ngHttp.post(requestUrl, null).subscribe(r => {
-      //   this.log.warn('Entering subscribe.');
-      //   sessionID = r.json().sessionID;
-      //   requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path, sessionID);
-       
-      //   this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-      // }, e => {
-      //   this.snackBar.open(`${_activeFile.model.path} could not be saved! There was a problem getting sessionID ${sessionID}. Please try again.`, 
-      //                      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-      // }); 
 
     return _observable;
   }

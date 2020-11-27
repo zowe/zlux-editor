@@ -19,6 +19,17 @@ export class CodeEditorService {
 
   closeFile(fileContext: ProjectContext) {
     this.editorControl.closeFileHandler(fileContext);
+    /* dequeue */
+    // this.log.warn(`code-editor.service ${fileContext.model.fileName}`);
+          //     /* Send ENQ and dataset contents requests in order */
+          // const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+          // requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
+          // _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
+          //   catchError(err => { console.log(filePath, ` ENQ error `, err); return of(null); }),  /* ignore the ENQ error and continue for now */
+          //   switchMap(() => this.http.get(requestUrl)),                           /* send the contents request once the ENQ has responded */
+          //   map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
+          // );
+    /* end of dequeue */
     this.editorControl.closeFile.next(fileContext);
   }
 

@@ -85,7 +85,8 @@ export class MonacoService {
           // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
         }
       });
-    } else {
+    } else 
+    {
       let requestUrl: string;
       let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
       let _observable;
@@ -95,6 +96,7 @@ export class MonacoService {
         if (fileNode.model.isDataset) {
           /* begin new code for ENQ */
           /* Send ENQ and dataset contents requests in order */
+          console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests in order `);
           const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
           requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
           _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
@@ -103,12 +105,16 @@ export class MonacoService {
             map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
           );
 
-          /* first, get the ENQ 
-          requestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);
-          console.log('16:20 08 October.  #96 Try to obtain ENQ');
-          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
-          */
- 
+          /* subscribe to the ENQ request */  
+          _observable.subscribe({
+            next: (response: any) => {
+              console.log(`openFile enqueue request OK`);              
+            },
+            error: (err) => {
+              console.log(`openFile enqueue request FAILED, error status ${err.status}`);              
+            }
+          });
+
           _observable.subscribe({
             next: (response: any) => {
               //network load or switched to currently open file
@@ -148,18 +154,9 @@ export class MonacoService {
             }
           });
           /* end new code for ENQ */
+          console.log(`openFile ended 157`); 
+          return; /* we have dealt with reloading datasets, so we can quit */
 
-          /* we don't need to put ENQ on the header now, because it's a separate REST API call: ... */
-          // requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
-          // // add my header to the GET request
-          // const headers = new Headers({ 'ENQ': 'true'});                  // this is the header that requests ENQ
-          // const getRequestOptions: RequestOptionsArgs = { headers };      // header is part of options on the GET request
-          // /* use the options on the HTTP GET request */
-          // console.log(getRequestOptions);                                 // debug
-          // console.log('16:20 08 October. #144 Try to obtain dataset contents');
-          // _observable = this.http.get(requestUrl, getRequestOptions).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
-
-          
         } else /* it's not a dataset */ {
           requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                       filePath+'/'+fileNode.model.fileName,
@@ -167,9 +164,12 @@ export class MonacoService {
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
         }
 
-      } else {
+      } else { /* not reloading */
         _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
       }
+      
+      /* this is always executed, reloading or not,
+          but not when reloading a dataset. */
       _observable.subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
@@ -208,6 +208,7 @@ export class MonacoService {
         }
       });
     }
+    // }
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
