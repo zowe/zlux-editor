@@ -90,8 +90,7 @@ export class MonacoService {
       let requestUrl: string;
       let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
       let _observable;
-      let dummySessionID: number;
-
+      
       if (reload) { 
         if (fileNode.model.isDataset) {
           /* begin new code for ENQ */
