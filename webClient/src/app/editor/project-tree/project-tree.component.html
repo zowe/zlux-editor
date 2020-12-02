@@ -11,13 +11,9 @@
 
 <div class="file-explorer-container">
   <zlux-file-tree #fileExplorer
-  (nodeClick)="onNodeClick($event)"
-  (newFileClick)="onNewFileClick($event)"
-  (newFolderClick)="onNewFolderClick($event)"
-  (deleteClick)="onDeleteClick($event)"
-  (copyClick)="onCopyClick($event)"
-  (pathChanged)="onPathChanged($event)"
-  [style]="{'height': '100%', 'padding-bottom': '100px'}"
+    (nodeClick)="onNodeClick($event)"
+    (pathChanged)="onPathChanged($event)"
+    [style]="{'height': '100%', 'padding-bottom': '100px'}"
   >
   </zlux-file-tree>
 </div>
