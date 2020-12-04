@@ -95,28 +95,36 @@ export class MonacoService {
         if (fileNode.model.isDataset) {
           /* begin new code for ENQ */
           /* Send ENQ and dataset contents requests in order */
-          console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests in order `);
+          // console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests in order `);
+          console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests separately 16:35 `);
           const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
           requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
-          _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
-            catchError(err => { console.log(filePath, ` ENQ error `, err); return of(null); }),  /* ignore the ENQ error and continue for now */
-            switchMap(() => this.http.get(requestUrl)),                           /* send the contents request once the ENQ has responded */
-            map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
-          );
+          // _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
+          //   catchError(err => { console.log(filePath, ` ENQ error `, err); return of(null); }),  /* ignore the ENQ error and continue for now */
+          //   switchMap(() => this.http.get(requestUrl)),                           /* send the contents request once the ENQ has responded */
+          //   map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
+          // );
 
-          /* subscribe to the ENQ request */  
+          _observable = this.http.get(enqRequestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+
+          /* subscribe to the ENQ request */ 
+          /* the HTTP GET that consumes this message insists that the response body be JSON,
+             otherwise you are sent down the 'error' path. */ 
           _observable.subscribe({
             next: (response: any) => {
-              console.log(`openFile enqueue request OK`);              
+              console.log(`ZWED0110I openFile enqueue request OK`);              
             },
             error: (err) => {
-              console.log(`openFile enqueue request FAILED, error status ${err.status}`);              
+              console.log(`ZWED0113I openFile enqueue request FAILED, error ${err}`);              
             }
           });
+
+          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
 
           _observable.subscribe({
             next: (response: any) => {
               //network load or switched to currently open file
+              console.log(`ZWED0120I network load or switched to currently open file`);              
               const resJson = response;
               this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
                 next: () => {
@@ -138,6 +146,7 @@ export class MonacoService {
               });
             },
             error: (err) => {
+              console.log(`ZWED0142I could not be accessed`);
               this.log.warn(`${fileNode.name} could not be accessed, status: `, err.status);
               
               if (err.status === 403) {
@@ -147,7 +156,7 @@ export class MonacoService {
                 this.snackBar.open(`${fileNode.name} lock is not available.`,
                   'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               } else {
-                this.snackBar.open(`${fileNode.name} other error 140.`,
+                this.snackBar.open(`${fileNode.name} other error 152.`,
                   'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               }
             }
@@ -172,6 +181,7 @@ export class MonacoService {
       _observable.subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
+          console.log(`ZWED0176I network load or switched to currently open file`);
           const resJson = response;
           this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
             next: () => {
@@ -193,6 +203,7 @@ export class MonacoService {
           });
         },
         error: (err) => {
+          console.log(`ZWED0199I could not be opened`);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
