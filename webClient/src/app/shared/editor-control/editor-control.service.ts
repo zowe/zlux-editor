@@ -733,11 +733,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     const records = _activeFile.model.contents.split('\n', -1);
     this.log.warn('734 records =', records);
     const body = { records };
-    this.log.warn('736 body =', JSON.stringify(body, null, 2));
-    _activeFile.model.contents =  JSON.stringify(body, null, 2); /* ? */
-    this.log.warn('738 new file contents =', _activeFile.model.contents);
+    // let _updatedFile = _activeFile; /* create new copy of file */
+    const jsonBody = JSON.stringify(body, null, 2); /* DEBUG only */
+    this.log.warn('736 json body =', jsonBody);     /* DEBUG only */
+    _activeFile.model.contents =  JSON.stringify(body, null, 2); /* update contents of new file */
+    this.log.warn('740 new file contents =', _activeFile.model.contents);
     requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
 
+    /* save new file with updated contents */
     this.doSavingDataset(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
 
     /* to pad, do this ... */
