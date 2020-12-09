@@ -86,7 +86,6 @@ export class MouseMiddleClickDirective {
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);
-    this.log.warn(`file-tabs.component ${this.fileContext.model.fileName}`);
     this.editorControl.closeFile.next(this.fileContext);
   }
   constructor(private editorControl: EditorControlService,

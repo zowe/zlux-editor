@@ -17,7 +17,8 @@ import { EditorControlService } from '../../../shared/editor-control/editor-cont
 import 'rxjs/add/operator/map';
 import { UtilsService } from '../../../shared/utils.service';
 import { DataAdapterService } from '../../../shared/http/http.data.adapter.service';
-import { Http, Headers, RequestOptionsArgs } from '@angular/http';
+// import { Http, Headers, RequestOptionsArgs } from '@angular/http';
+import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
@@ -94,16 +95,9 @@ export class MonacoService {
       if (reload) { 
         if (fileNode.model.isDataset) {
           /* begin new code for ENQ */
-          /* Send ENQ and dataset contents requests in order */
-          // console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests in order `);
-          console.log(filePath, `ZWED0098I Reload dataset.  Send ENQ and dataset contents requests separately 16:35 `);
+          /* Send ENQ and dataset contents requests separately */
           const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
           requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
-          // _observable = this.http.get(enqRequestUrl).pipe(                        /* pipe the ENQ */
-          //   catchError(err => { console.log(filePath, ` ENQ error `, err); return of(null); }),  /* ignore the ENQ error and continue for now */
-          //   switchMap(() => this.http.get(requestUrl)),                           /* send the contents request once the ENQ has responded */
-          //   map((res: any) => this.dataAdapter.convertDatasetContent(res._body)),
-          // );
 
           _observable = this.http.get(enqRequestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
 
@@ -112,10 +106,10 @@ export class MonacoService {
              otherwise you are sent down the 'error' path. */ 
           _observable.subscribe({
             next: (response: any) => {
-              console.log(`ZWED0110I openFile enqueue request OK`);              
+              this.log.warn(`openFile enqueue request OK`);              
             },
             error: (err) => {
-              console.log(`ZWED0113I openFile enqueue request FAILED, error ${err}`);              
+              this.log.warn(`openFile enqueue request FAILED, error ${err}`);             
             }
           });
 
@@ -124,7 +118,6 @@ export class MonacoService {
           _observable.subscribe({
             next: (response: any) => {
               //network load or switched to currently open file
-              console.log(`ZWED0120I network load or switched to currently open file`);              
               const resJson = response;
               this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
                 next: () => {
@@ -146,7 +139,6 @@ export class MonacoService {
               });
             },
             error: (err) => {
-              console.log(`ZWED0142I could not be accessed`);
               this.log.warn(`${fileNode.name} could not be accessed, status: `, err.status);
               
               if (err.status === 403) {
@@ -181,7 +173,6 @@ export class MonacoService {
       _observable.subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
-          console.log(`ZWED0176I network load or switched to currently open file`);
           const resJson = response;
           this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
             next: () => {
@@ -203,7 +194,6 @@ export class MonacoService {
           });
         },
         error: (err) => {
-          console.log(`ZWED0199I could not be opened`);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
@@ -218,7 +208,6 @@ export class MonacoService {
         }
       });
     }
-    // }
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {

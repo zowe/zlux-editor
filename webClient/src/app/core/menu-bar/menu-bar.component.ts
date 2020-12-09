@@ -478,8 +478,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     if (!fileContext) {
       this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
     } else if (fileContext.model.isDataset) {
-      this.snackBar.open('Dataset saving is now supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
-    // } else {
       let sub = this.monacoService.saveDataset(fileContext, this.editorControl.activeDirectory).subscribe(() => { sub.unsubscribe(); });
     }   
   }
