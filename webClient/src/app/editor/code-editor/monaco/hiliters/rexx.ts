@@ -4,13 +4,6 @@ export const REXX_HILITE = {
   defaultToken: 'default',
   ignoreCase: true,
 
-  //open, close, color
-  /*
-  "brackets": [
-    ["{", "}"], ["[", "]"], ["(", ")"]
-  ],
-  */
-  
   "autoClosingPairs": [
     ["{", "}"], ["[", "]"], ["(", ")"], ["\"", "\""], ["'", "'"]
   ],
@@ -32,7 +25,14 @@ export const REXX_HILITE = {
     'words', 'xrange', 'x2b', 'x2c', 'x2d'
   ],
 
-  
+/*******************
+  Unused due to having other pattern matches to do the same in the root scope
+*******************
+
+  "brackets": [
+    ["{", "}"], ["[", "]"], ["(", ")"]
+  ],
+
   keywords: [
     'address',
     'by',
@@ -65,10 +65,7 @@ export const REXX_HILITE = {
     'when',
     'while',
 
-    
-//    'do', 'forever', 'while', 'until', 'to', 'by', 'for', 'end', 'exit', 'if', 'then', 'else', 'iterate', 'leave', 'nop', 'return', 'select', 'when', 'otherwise'
-    //|call(\s+(off|on)\s+(error|failure(\s+name)?|halt))?|signal(\s+(off|on)\s+(error|failure(\s+name)?|halt|novalue|syntax))|address\s+\w+|arg|drop|interpret|numeric\s+(digits|form(\s+(scientific|engineering|value))?|fuzz)|options|parse(\s+upper)?\s+(external|numeric|source|value|var|version)?|with|procedure(\s+expose)?|pull|push|queue|say|trace\s+\w+|upper)\b(?!\.)</string>
-  ],
+*/
   
   operators: [
     '+', '-', '*', '/', '%', '//', '**',
@@ -83,53 +80,88 @@ export const REXX_HILITE = {
     '<>'
   ],
 
-  // we include these common regular expressions
-  symbols:  /[=><&|+\-*\/\%]+/,
-
-//no string escapes in rexx
-  // C# style strings
-//  escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/,
-
+  // symbols to see if they match with the operators above
+  symbols:  /[=><&|+\-*\/\%¬\\]+/,
   
   tokenizer: {
     root: [
-      //procedure
-      [/^[ \t]*[A-Za-z0-9]+\:/, {token: 'constructor'}],
-
-      [/([A-Za-z0-9.]+)(\()/, [{ cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}, '@brackets']],
-
-      [/(call)(\s+[A-Za-z0-9]+)/, ['keyword', { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}]],
-      
-      // identifiers and keywords
-      [/[a-z_$][\w$]*/, { cases: { '@keywords': 'keyword' } }],
-
-      // whitespace
-      [/[ \t\r\n]+/, ''],
-
       [/\/\*/, 'comment', '@comment' ],
-
-      // delimiters and operators
-      [/[{}()\[\]]/, '@brackets'],
-
-      // numbers
-      [/[0-9]+(\.)?[0-9]*/, 'number'],
-         //(?i:e[-+]?[0-9]+)?|[0-9]*(\.)?[0-9]+)(?i:e[-+]?[0-9]+)?\b/, 'number'],
-//      [/([0-9]+(\.)?[0-9]*(?i:e[-+]?[0-9]+)?|[0-9]*(\.)?[0-9]+)(?i:e[-+]?[0-9]+)?\b/, 'number'],
-      //[/\d*\.\d+([eE][\-+]?\d+)?/, 'number.float'],
-      //[/0[xX][0-9a-fA-F]+/, 'number.hex'],
-//      [/\d+/, 'number'],
-
-      [/@symbols/, { cases: { '@operators': 'operator' } } ],
-
-      // delimiter: after number because of .\d floats
-      [/[;,.]/, 'delimiter'],
-
       
+      //constants
+      [/(['"])[01 ]+\1(b)/, {token: 'constant.rexx'}],
+      [/(['"])[0-9a-fA-F ]+\1(x)/, {token: 'constant.rexx'}],
+
       // strings
       [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
 			[/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
 			[/"/, 'string', '@doublestring'],
 			[/'/, 'string', '@singlestring'],
+
+      //procedure
+      //entity.name.function.rexx
+      [/\b[A-Za-z@#$!?_][A-Za-z@#$!?_0-9]*:/, {token: 'constructor'}],
+
+      // numbers
+      [/([0-9]+(\.)?[0-9]*(e[-+]?[0-9]+)?|[0-9]*(\.)?[0-9]+)(e[-+]?[0-9]+)?\b/, 'number'],
+
+      //other constants
+//disabled because the coloring was overbearing
+//      [/[0-9\.][A-Za-z0-9@#$¢.!?_]*/, {token: 'constant.other.rexx'}],
+
+      //operators
+//disabled because theoperator section above root is used instead
+//      [/([\+-/*%&amp;|()¬\\=&lt;&gt;])/, {token: 'operators.rexx'}],
+
+      //call function calls
+      [/(call)(\s+[A-Za-z@#$!?_0-9]+)/, ['keyword', { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}]],
+
+      //keywords
+      [/\b(do|forever|while|until|to|by|for|end|exit|if|then|else|iterate|leave|nop|return|select|when|otherwise|call(\s+(off|on)\s+(error|failure(\s+name)?|halt))?|signal(\s+(off|on)\s+(error|failure(\s+name)?|halt|novalue|syntax))|address\s+\w+|arg|drop|interpret|numeric\s+(digits|form(\s+(scientific|engineering|value))?|fuzz)|options|parse(\s+upper)?\s+(external|numeric|source|value|var|version)?|with|procedure(\s+expose)?|pull|push|queue|say|trace\s+\w+|upper)\b(?!\.)/, {token: 'keyword'}],
+
+      //non-call function calls
+      [/\b[A-Za-z@#$!?_0-9]+(?=\()/, { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}],
+
+      //variables
+//disabled because the coloring was overbearing
+//      [/\b[A-Za-z@#$¢!?_][A-Za-z0-9@#$¢.!?_]*/, {token: 'variable.name'}],
+
+      // delimiters and operators
+      [/[{}()\[\]]/, '@brackets'],
+
+      //math symbols
+      [/@symbols/, { cases: { '@operators': 'operator' } } ],
+
+      // delimiter: after number because of .\d floats
+      [/[;,.]/, 'delimiter'],
+
+
+//------------------------
+//Section below is made redundant by code above inspired by other open source libraries
+//------------------------
+
+//procedure
+//      [/^[ \t]*[A-Za-z0-9]+\:/, {token: 'constructor'}],
+
+//function calls
+//      [/([A-Za-z0-9.]+)(\()/, [{ cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}, '@brackets']],
+//      [/(call)(\s+[A-Za-z0-9]+)/, ['keyword', { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}]],
+      
+// identifiers and keywords
+//      [/[a-z_$][\w$]*/, { cases: { '@keywords': 'keyword' } }],
+
+// whitespace
+[/[ \t\r\n]+/, ''],
+
+//      [/\/\*/, 'comment', '@comment' ],
+      
+// strings
+//      [/"([^"\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+//			[/'([^'\\]|\\.)*$/, 'string.invalid'], // non-teminated string
+//			[/"/, 'string', '@doublestring'],
+//			[/'/, 'string', '@singlestring'],
+//------------------------
+//end of unused section
+//------------------------
     ],
 
     comment: [

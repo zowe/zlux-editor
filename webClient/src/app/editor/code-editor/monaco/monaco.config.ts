@@ -57,7 +57,7 @@ const JCL_LANG = {
 const REXX_LANG = {  
   id: 'rexx',
   extensions: ['.rexx', '.zrx'],
-  filenamePatterns: ['\\.rexx\\.','\\.rexx'],
+  filenamePatterns: ['\\.rexx\\.','\\.rexx','\\.exec\\.','\\.exec'],
   aliases: ['REXX', 'rexx'],
   mimetypes: ['application/rexx']
 };
