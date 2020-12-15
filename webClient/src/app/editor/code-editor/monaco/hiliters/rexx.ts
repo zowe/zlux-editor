@@ -116,7 +116,7 @@ export const REXX_HILITE = {
       [/(call)(\s+[A-Za-z@#$!?_0-9]+)/, ['keyword', { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}]],
 
       //keywords
-      [/\b(do|forever|while|until|to|by|for|end|exit|if|then|else|iterate|leave|nop|return|select|when|otherwise|call(\s+(off|on)\s+(error|failure(\s+name)?|halt))?|signal(\s+(off|on)\s+(error|failure(\s+name)?|halt|novalue|syntax))|address\s+\w+|arg|drop|interpret|numeric\s+(digits|form(\s+(scientific|engineering|value))?|fuzz)|options|parse(\s+upper)?\s+(external|numeric|source|value|var|version)?|with|procedure(\s+expose)?|pull|push|queue|say|trace\s+\w+|upper)\b(?!\.)/, {token: 'keyword'}],
+      [/\b(do|forever|while|until|to|by|for|end|exit|if|then|else|iterate|leave|nop|return|select|when|otherwise|call(\s+(off|on)\s+(error|failure(\s+name)?|halt))?|signal(\s+(off|on)\s+(error|failure(\s+name)?|halt|novalue|syntax))|address\s+|arg|drop|interpret|numeric\s+(digits|form(\s+(scientific|engineering|value))?|fuzz)|options|parse(\s+upper)?\s+(external|numeric|source|value|var|version)?|with|procedure(\s+expose)?|pull|push|queue|say|trace\s+|upper)\b(?!\.)/, {token: 'keyword'}],
 
       //non-call function calls
       [/\b[A-Za-z@#$!?_0-9]+(?=\()/, { cases: { '@functions': 'builtin-fcall', '@default': 'fcall'}}],

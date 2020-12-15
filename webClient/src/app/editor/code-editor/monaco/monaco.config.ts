@@ -91,7 +91,7 @@ export const REXX_DARK: Theme = {
   inherit: true,
   colors: {
   },
-	rules: [ // The following ruleset aims to match a JCL theme similar to one in ISPF
+	rules: [ // additional tokens for getting distinct and useful colors for important parts of the language
     { token: 'constructor', foreground: 'fffd23', fontStyle: 'bold' },
     { token: 'fcall', foreground: 'fffd23' },
     { token: 'builtin-fcall', foreground: 'FFB516' },
