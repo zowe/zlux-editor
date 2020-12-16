@@ -112,6 +112,10 @@ export class ProjectTreeComponent {
       this.editorControl.undoCloseAllHandler();
     })
 
+    this.editorControl.undoCloseFile.subscribe(() => {
+      this.editorControl.undoCloseFileHandler();
+    })
+
     this.editorControl.openProject.subscribe(projectName => {
       if (projectName != null) {
         // start get project structure
