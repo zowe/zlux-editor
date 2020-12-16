@@ -306,23 +306,23 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     }       
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent
-      .filter(value => value.altKey).subscribe((event) => {
-        if (event.altKey && event.which === KeyCode.KEY_N) {
+      .subscribe((event) => {
+        if (event.which === KeyCode.KEY_N) {
           this.createFile();
-        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+        } else if (event.which === KeyCode.KEY_M) {
           this.getMenuSectionElements()[0].focus();
-        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+        } else if (event.which === KeyCode.KEY_O) {
           this.openDirectory();
-        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+        } else if (event.which === KeyCode.KEY_K) {
           this.openDatasets();
-        } else if (event.altKey && event.which === KeyCode.KEY_P) {
+        } else if (event.which === KeyCode.KEY_P) {
           this.getSearchFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+        } else if (event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_W && event.shiftKey) {
+        } else if (event.which === KeyCode.KEY_W && event.shiftKey) {
           this.closeAll();
         }
-        // else if (event.altKey && event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
+        // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
         //   this.saveAll();
         // }
     }));

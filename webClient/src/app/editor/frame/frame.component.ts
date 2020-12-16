@@ -80,7 +80,7 @@ export class FrameComponent implements OnInit, OnDestroy {
     });
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
-      if (event.altKey && event.which === KeyCode.KEY_B) {
+      if (event.which === KeyCode.KEY_B) {
         this.showExplorer = !this.showExplorer;
         if (this.windowActions) { // Window manager lack of re-rendering bug
           this.windowActions.maximize();

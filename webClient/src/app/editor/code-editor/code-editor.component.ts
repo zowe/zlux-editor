@@ -138,19 +138,19 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     })
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
-      if (event.altKey && event.which === KeyCode.KEY_T && event.ctrlKey) {
+      if (event.which === KeyCode.KEY_T && event.ctrlKey) {
         this.editorControl.undoCloseFile.next();
       }
     }));
 
     this.keyBindingSub.add(this.appKeyboard.keyupEvent.subscribe((event) => {
-      if (event.altKey && (event.which === KeyCode.PAGE_DOWN || event.which === KeyCode.PERIOD)) {
+      if (event.which === KeyCode.PAGE_DOWN || event.which === KeyCode.PERIOD) {
         let fileContext = this.editorControl.fetchRightOfActiveFile();
         this.selectFile(fileContext, true);      
-      } else if (event.altKey && (event.which === KeyCode.PAGE_UP || event.which === KeyCode.COMMA)) {
+      } else if (event.which === KeyCode.PAGE_UP || event.which === KeyCode.COMMA) {
         let fileContext = this.editorControl.fetchLeftOfActiveFile();
         this.selectFile(fileContext, true);      
-      } else if (event.altKey && event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
+      } else if (event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
         let fileContext = this.editorControl.fetchActiveFile();
         this.closeFile(fileContext);
         setTimeout(()=> {
