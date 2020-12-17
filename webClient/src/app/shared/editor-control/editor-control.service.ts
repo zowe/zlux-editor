@@ -924,6 +924,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('jcl-dark');
         break; 
       }
+      case 'rexx': {
+        monaco.editor.setTheme('rexx-dark');
+        break; 
+      }
       default: { 
         // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
         monaco.editor.setTheme('vs-dark');
