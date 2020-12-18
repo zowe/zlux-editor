@@ -86,6 +86,8 @@ export class FrameComponent implements OnInit, OnDestroy {
           this.windowActions.maximize();
           this.windowActions.restore();
         }
+        event.stopImmediatePropagation();
+        event.preventDefault();
       }
     }));
   }
