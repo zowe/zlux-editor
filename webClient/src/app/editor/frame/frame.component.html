@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 -->
 <div class="main-container">
-  <aside class="gz-tree">
+  <aside class="gz-tree" [style.maxWidth]="showExplorer ? '315px':'0px'">
     <div class="section-container" [ngClass]="{'active':this.activityBar[0].active}">
       <app-project-tree></app-project-tree>
     </div>

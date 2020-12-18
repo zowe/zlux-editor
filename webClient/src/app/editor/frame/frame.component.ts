@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit, Optional } from '@angular/core';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { ProjectContext } from '../../shared/model/project-context';
 import { LineMapping } from '../../shared/model/line-mapping';
@@ -17,13 +17,18 @@ import { ENDPOINTS } from '../../../environments/environment';
 import { HttpService } from '../../shared/http/http.service';
 import { MonacoService } from '../code-editor/monaco/monaco.service';
 import * as _ from 'lodash';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
+import { KeyCode } from '../../shared/keycode-enum';
+import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
+
 
 @Component({
   selector: 'app-frame',
   templateUrl: './frame.component.html',
   styleUrls: ['./frame.component.scss',  '../../../styles.scss']
 })
-export class FrameComponent implements OnInit {
+export class FrameComponent implements OnInit, OnDestroy {
 
   private expendPanelOptions = {
     collapsedHeight: '24px',
@@ -35,6 +40,8 @@ export class FrameComponent implements OnInit {
   private fileResultList = [];
   private contentResultList: LineMapping[] = [];
   private cantSearch = true;
+  private showExplorer = true;
+  private keyBindingSub: Subscription = new Subscription();
   private activityBar = [
     {
       name: 'Explorer',
@@ -58,7 +65,9 @@ export class FrameComponent implements OnInit {
     private editorControl: EditorControlService,
     private utils: UtilsService,
     private http: HttpService,
-    private monacoService: MonacoService) {
+    private monacoService: MonacoService,
+    private appKeyboard: EditorKeybindingService,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {
     // this.editorControl.context.subscribe((context) => {
     //   context != null ? this.showSearchBar = true : this.showSearchBar = false;
     // });
@@ -69,9 +78,23 @@ export class FrameComponent implements OnInit {
     this.editorControl.openProject.subscribe(() => {
       this.cantSearch = false;
     });
+
+    this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
+      if (event.which === KeyCode.KEY_B) {
+        this.showExplorer = !this.showExplorer;
+        if (this.windowActions) { // Window manager lack of re-rendering bug
+          this.windowActions.maximize();
+          this.windowActions.restore();
+        }
+      }
+    }));
   }
 
   ngOnInit() {
+  }
+
+  ngOnDestroy() {
+    this.keyBindingSub.unsubscribe();
   }
 
   disableInput() {

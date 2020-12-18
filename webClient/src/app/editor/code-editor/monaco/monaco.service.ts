@@ -45,6 +45,10 @@ export class MonacoService {
       this.closeFile(fileContext);
     });
 
+    this.editorControl.closeAllFiles.subscribe(() => {
+      this.closeAllFiles();
+    });
+
     this.editorControl.changeLanguage.subscribe(e => {
       let openList = this.editorControl.openFileList.getValue();
       if (openList.length > 0) {
@@ -203,6 +207,19 @@ export class MonacoService {
       if (model.uri === fileUri) {
         model.dispose();
       }
+    }
+  }
+
+  closeAllFiles() {
+    const editorCore = this.editorControl.editorCore.getValue();
+    if (!editorCore) {
+      console.warn(`Editor core null on closeFile()`);
+      return;
+    }
+    const _editor = editorCore.editor;
+    const models = _editor.getModels();
+    for (const model of models) {
+      model.dispose();
     }
   }
 
