@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild, AfterViewChecked, Optional} from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, AfterViewChecked} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
