@@ -4,7 +4,7 @@
   "license": "EPL-2.0",
   "scripts": {
     "start": "NODE_OPTIONS=--max_old_space_size=2048 webpack --config ./webpack.build.config.js --watch --progress",
-    "build": "NODE_OPTIONS=--max_old_space_size=2048 && webpack --config ./webpack.build.config.js --progress && node prune.js",
+    "build": "NODE_OPTIONS=--max_old_space_size=2048 webpack --config ./webpack.build.config.js --progress && node prune.js",
     "lint": "tslint -c tslint.json \"./**/*.ts\""
   },
   "dependencies": {
