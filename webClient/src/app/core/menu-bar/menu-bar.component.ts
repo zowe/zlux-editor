@@ -321,6 +321,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.getEditorFocus();
         } else if (event.which === KeyCode.KEY_W && event.shiftKey) {
           this.closeAll();
+        } else if (event.which === KeyCode.KEY_R && event.shiftKey) {
+          this.refreshFile();
         }
         // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
         //   this.saveAll();
@@ -466,6 +468,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     closeAllRef.onAction().subscribe(() => {
       this.editorControl.undoCloseAllFiles.next();
     });
+    this.editorControl.fetchActiveFile()
+  }
+
+  refreshFile() {
+    if (this.fileCount == 0) {
+      this.snackBar.open('No files are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+    } else { // TODO: This needs a confirmation modal
+      let activeFile = this.editorControl.fetchActiveFile();
+      this.monacoService.refreshFile(activeFile, true);
+    }
   }
 
   // saveAll() {

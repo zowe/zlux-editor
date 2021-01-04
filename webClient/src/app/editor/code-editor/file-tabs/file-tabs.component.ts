@@ -9,10 +9,10 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild, AfterViewChecked} from '@angular/core';
+         Directive, HostListener, Inject, ViewChild, AfterViewChecked, Optional} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 @Component({
@@ -25,6 +25,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
   @Output() select = new EventEmitter<ProjectContext>();
+  @Output() refresh = new EventEmitter<ProjectContext>();
   @ViewChild(PerfectScrollbarComponent) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
@@ -42,7 +43,8 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 
   constructor(
     private editorControl: EditorControlService,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {}
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {}
 
   ngOnInit() {
     this.viewportEvents.resized.subscribe(()=> {
@@ -72,6 +74,22 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     this.select.next(item);
   }
 
+  onRightClickTab(event: any, item: ProjectContext) {
+    if (this.windowActions) {
+      this.windowActions.spawnContextMenu(event.clientX, event.clientY, [
+        {
+          text: 'Close',
+          action: () => this.remove.next(item)               
+        },
+        {
+          text: "Refresh Contents", // TODO: This needs a confirmation modal
+          action: () => this.refresh.next(item)
+        }
+      ], true)
+      event.stopImmediatePropagation();
+      event.preventDefault();
+    }
+  }
   
 }
 
@@ -82,7 +100,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 export class MouseMiddleClickDirective {
   @Input('fileContext') fileContext: ProjectContext;
   @HostListener('click', ['$event']) onMouseMiddleClick($event: Event) {
-    this.log.debug(`Click. Event=${$event}`);
+    // this.log.debug(`Click. Event=${$event}`);
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);
