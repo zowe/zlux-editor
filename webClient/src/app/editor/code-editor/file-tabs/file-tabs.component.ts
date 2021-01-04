@@ -12,7 +12,7 @@ import { Component, OnInit, Input, Output, EventEmitter,
          Directive, HostListener, Inject, ViewChild, AfterViewChecked, Optional} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 @Component({
@@ -43,8 +43,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 
   constructor(
     private editorControl: EditorControlService,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
-    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {}
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {}
 
   ngOnInit() {
     this.viewportEvents.resized.subscribe(()=> {
@@ -75,20 +74,18 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   }
 
   onRightClickTab(event: any, item: ProjectContext) {
-    if (this.windowActions) {
-      this.windowActions.spawnContextMenu(event.clientX, event.clientY, [
-        {
-          text: 'Close',
-          action: () => this.remove.next(item)               
-        },
-        {
-          text: "Refresh Contents", // TODO: This needs a confirmation modal
-          action: () => this.refresh.next(item)
-        }
-      ], true)
-      event.stopImmediatePropagation();
-      event.preventDefault();
-    }
+    this.viewportEvents.spawnContextMenu(event.clientX, event.clientY, [
+      {
+        text: 'Close',
+        action: () => this.remove.next(item)               
+      },
+      {
+        text: "Refresh Contents", // TODO: This needs a confirmation modal
+        action: () => this.refresh.next(item)
+      }
+    ], true)
+    event.stopImmediatePropagation();
+    event.preventDefault();
   }
   
 }
