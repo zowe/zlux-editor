@@ -230,6 +230,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.updateEditorTitle();
   }
 
+  refreshFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
+    this.monacoService.refreshFile(fileContext, broadcast, line)
+    // We don't want to kick off openfile from the editor controller, so talk to monaco directly
+  }
+
   setTitle(title?:String):void {
     let newTitle = DEFAULT_TITLE; 
     if(title) {
