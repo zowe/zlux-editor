@@ -55,6 +55,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public undoCloseFile: EventEmitter<string> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
   public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -228,6 +229,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   public closeFileHandler(fileContext: ProjectContext) {
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
+    this.previousSessionData.stateCache = stateCache;
+    this.previousSessionData._openFileList = this._openFileList.getValue();
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
@@ -236,6 +239,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
+  }
+
+  public undoCloseFileHandler() {
+    this.log.debug("Attempting to restore session with data: ", this.previousSessionData);
+    if (this.previousSessionData.stateCache) {
+      stateCache = this.previousSessionData.stateCache;
+    }
+    if (this.previousSessionData._openFileList) {
+      this._openFileList.next(this.previousSessionData._openFileList);
+    }
   }
 
   public closeAllHandler() {
@@ -341,9 +354,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return activeFile;
   }
 
-  public fetchAdjToActiveFile(): ProjectContext {
+  public fetchRightOfActiveFile(): ProjectContext {
     let openFileListVal = this._openFileList.getValue();
     let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
+  }
+
+  public fetchLeftOfActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())-1)%openFileListVal.length;
+    if (adjIdx < 0) {
+      adjIdx = openFileListVal.length-1;
+    }
     return openFileListVal[adjIdx];
   }
 
@@ -922,6 +944,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       // in ISPF that we decide to create syntax highlighting for,
       case 'jcl': { 
         monaco.editor.setTheme('jcl-dark');
+        break; 
+      }
+      case 'rexx': {
+        monaco.editor.setTheme('rexx-dark');
         break; 
       }
       default: { 

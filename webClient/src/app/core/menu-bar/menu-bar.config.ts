@@ -145,6 +145,13 @@ export const MENU = [
               keyMap: 'Alt+N'
             },
             {
+              name: 'Refresh File',
+              action: {
+                internalName: 'refreshFile'
+              },
+              keyMap: 'Alt+R+Shift'
+            },
+            {
               name: 'group-end'
             },
           // {
