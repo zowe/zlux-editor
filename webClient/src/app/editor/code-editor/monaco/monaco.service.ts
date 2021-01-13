@@ -25,8 +25,8 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 import * as monaco from 'monaco-editor';
-import { finalize } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { finalize, map, switchMap, tap } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
 
 @Injectable()
@@ -73,18 +73,19 @@ export class MonacoService {
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
-    let _observable;
-    this.loadingStatusChanged.next('loading');
     if (fileNode.model.isDataset) {
       requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
-      _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
     } else {
       requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                   filePath+'/'+fileNode.model.fileName,
                                                   { responseType: 'b64' });
-      _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
     }
-    return _observable.pipe(finalize(() => this.loadingStatusChanged.next('complete')));
+    return of({}).pipe(
+      tap(() => this.loadingStatusChanged.next('loading')),
+      switchMap(() => this.http.get(requestUrl)),
+      map((res: any) => this.dataAdapter.convertFileContent(res._body)),
+      finalize(() => this.loadingStatusChanged.next('complete'))
+    );
   }
 
   refreshFile(fileNode: ProjectContext, reload: boolean, line?: number) {
