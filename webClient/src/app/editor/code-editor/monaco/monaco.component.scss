@@ -27,6 +27,15 @@
       color: black;
     }
   }
+  .loading-indicator {
+    position: absolute;
+    font-size: 50px;
+    background: transparent;
+    left: 50%;
+    top: 50%;
+    z-index: 1000;
+    color: white;
+  }
 }
 
 /*

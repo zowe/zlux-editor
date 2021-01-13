@@ -24,11 +24,14 @@ import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.componen
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor';
+import { finalize } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { LoadingStatus } from '../loading-status';
 
 @Injectable()
 export class MonacoService {
-
+  loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
   
   constructor(
@@ -71,15 +74,17 @@ export class MonacoService {
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
     let _observable;
+    this.loadingStatusChanged.next('loading');
     if (fileNode.model.isDataset) {
       requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
-      return _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+      _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
     } else {
       requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                   filePath+'/'+fileNode.model.fileName,
                                                   { responseType: 'b64' });
-      return _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
+      _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
     }
+    return _observable.pipe(finalize(() => this.loadingStatusChanged.next('complete')));
   }
 
   refreshFile(fileNode: ProjectContext, reload: boolean, line?: number) {
