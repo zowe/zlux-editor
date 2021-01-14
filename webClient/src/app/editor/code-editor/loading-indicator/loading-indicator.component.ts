@@ -15,9 +15,8 @@ import { LoadingStatus } from '../loading-status';
 
 @Component({
   selector: 'app-loading-indicator',
-  template: '',
+  templateUrl: './loading-indicator.component.html',
   styleUrls: ['./loading-indicator.component.scss'],
-  host: { 'class': 'fa fa-spinner fa-spin' }
 })
 export class LoadingIndicatorComponent implements OnDestroy {
   private loadingStatus: LoadingStatus = 'complete';

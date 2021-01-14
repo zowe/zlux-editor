@@ -8,10 +8,18 @@
   Copyright Contributors to the Zowe Project.
 */
 
-/* default style */
 :host {
-  color: white;
-  font-size: 5rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* default style */
+div {
+  color: inherit;
+  font-size: inherit;
 }
 /*
   This program and the accompanying materials are
