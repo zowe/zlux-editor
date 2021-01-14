@@ -20,6 +20,7 @@ import { FileTabsComponent, MouseMiddleClickDirective } from './file-tabs/file-t
 import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 
 import { CodeEditorService } from './code-editor.service';
+import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
 
 @NgModule({
   imports: [
@@ -31,7 +32,13 @@ import { CodeEditorService } from './code-editor.service';
   ],
   providers: [MonacoService, CodeEditorService],
   exports: [CodeEditorComponent],
-  declarations: [MonacoComponent, CodeEditorComponent, FileTabsComponent, MouseMiddleClickDirective]
+  declarations: [
+    CodeEditorComponent,
+    FileTabsComponent,
+    LoadingIndicatorComponent,
+    MonacoComponent,
+    MouseMiddleClickDirective,
+  ]
 })
 export class CodeEditorModule { }
 
