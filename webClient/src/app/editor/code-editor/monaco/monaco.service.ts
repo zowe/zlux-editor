@@ -71,6 +71,9 @@ export class MonacoService {
   }
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
+    if (!reload) {
+      return of({contents: fileNode.model.contents});
+    }
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
     if (fileNode.model.isDataset) {
