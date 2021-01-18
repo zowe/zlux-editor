@@ -86,7 +86,13 @@ export class MonacoService {
     return of({}).pipe(
       tap(() => this.loadingStatusChanged.next('loading')),
       switchMap(() => this.http.get(requestUrl)),
-      map((res: any) => this.dataAdapter.convertFileContent(res._body)),
+      map((res: any) => {
+        if (fileNode.model.isDataset) {
+          return this.dataAdapter.convertDatasetContent(res._body);
+        } else {
+          return this.dataAdapter.convertFileContent(res._body);
+        }
+      }),
       finalize(() => this.loadingStatusChanged.next('complete'))
     );
   }
