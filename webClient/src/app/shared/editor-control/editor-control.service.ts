@@ -220,7 +220,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
-    if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
+    if (!(currentOpenFileList.filter(function(e) { return e.model.path === fileContext.model.path && e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
       /* We only want to add this file into the list if it doesn't already belong there */
       currentOpenFileList.push(fileContext);
     }
