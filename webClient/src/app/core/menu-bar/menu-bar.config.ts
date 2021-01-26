@@ -145,7 +145,7 @@ export const MENU = [
               keyMap: 'Alt+N'
             },
             {
-              name: 'Refresh File',
+              name: 'Refresh File Content',
               action: {
                 internalName: 'refreshFile'
               },
