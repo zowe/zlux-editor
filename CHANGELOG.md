@@ -1,5 +1,14 @@
 # Zlux Editor Changelog
 
+## `2.5.0`
+
+- Added a refresh file option to fetch up to date contents (right click file tab OR top left menu)
+- Fixed the unsaved changes file tab icon
+
+## `2.4.0`
+
+- Added syntax highlighter for REXX and autodetection of REXX files and datasets
+
 ## `2.3.0`
 
 - Added ability to change owner and permissions of files and folders similar to the commands `chown` and `chmod`

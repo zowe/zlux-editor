@@ -25,6 +25,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   @Input() data: ProjectContext[];
   @Output() remove = new EventEmitter<ProjectContext>();
   @Output() select = new EventEmitter<ProjectContext>();
+  @Output() refresh = new EventEmitter<ProjectContext>();
   @ViewChild(PerfectScrollbarComponent) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
@@ -72,6 +73,20 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     this.select.next(item);
   }
 
+  onRightClickTab(event: any, item: ProjectContext) {
+    this.viewportEvents.spawnContextMenu(event.clientX, event.clientY, [
+      {
+        text: 'Close',
+        action: () => this.remove.next(item)               
+      },
+      {
+        text: "Refresh Contents", // TODO: This needs a confirmation modal
+        action: () => this.refresh.next(item)
+      }
+    ], true)
+    event.stopImmediatePropagation();
+    event.preventDefault();
+  }
   
 }
 
@@ -82,7 +97,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 export class MouseMiddleClickDirective {
   @Input('fileContext') fileContext: ProjectContext;
   @HostListener('click', ['$event']) onMouseMiddleClick($event: Event) {
-    this.log.debug(`Click. Event=${$event}`);
+    // this.log.debug(`Click. Event=${$event}`);
   }
   @HostListener('dblclick', ['$event']) onMouseDoubleClick($event: Event) {
     this.editorControl.closeFileHandler(this.fileContext);

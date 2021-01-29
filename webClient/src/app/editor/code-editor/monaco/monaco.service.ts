@@ -45,6 +45,10 @@ export class MonacoService {
       this.closeFile(fileContext);
     });
 
+    this.editorControl.closeAllFiles.subscribe(() => {
+      this.closeAllFiles();
+    });
+
     this.editorControl.changeLanguage.subscribe(e => {
       let openList = this.editorControl.openFileList.getValue();
       if (openList.length > 0) {
@@ -54,7 +58,7 @@ export class MonacoService {
         const _modal = _editor.getModel(this.generateUri(_context.model));
 
         _context.model.language = e.language;
-        this.editorControl.editorCore.getValue().editor.setModelLanguage(_modal, e.language);
+        _editor.setModelLanguage(_modal, e.language);
       }
     });
 
@@ -63,16 +67,72 @@ export class MonacoService {
     //});
   }
 
+  getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
+    let requestUrl: string;
+    let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
+    let _observable;
+    if (fileNode.model.isDataset) {
+      requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
+      return _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+    } else {
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                  filePath+'/'+fileNode.model.fileName,
+                                                  { responseType: 'b64' });
+      return _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
+    }
+  }
+
+  refreshFile(fileNode: ProjectContext, reload: boolean, line?: number) {
+    this.getFileRequestObservable(fileNode, reload, line).subscribe({
+      next: (response: any) => {
+        //network load or switched to currently open file
+        const resJson = response;
+        this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, false).subscribe({
+          next: () => {
+            this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
+            if (line) {
+              this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
+              this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
+                { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
+              ])[0]);
+              // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
+            }
+            if (reload) {
+              this.editorControl.initializedFile.next(fileNode);
+            }
+          },
+          error: (err) => {
+            this.log.warn(err);
+          }
+        });
+      },
+      error: (err) => {
+        this.log.warn(`${fileNode.name} could not be refreshed, status: `, err.status);
+        if (err.status === 403) {
+          this.snackBar.open(`${fileNode.name} could not be refreshed due to permissions.`,
+            'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        } else if (err.status === 404) {
+          this.snackBar.open(`${fileNode.name} could not be found.`,
+            'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        } else {
+          this.snackBar.open(`${fileNode.name} could not be opened.`,
+            'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        }
+      }
+    });
+  }
+
   /*
-     Tab selection tells monaco to switch its buffer, this is interpreted as an open file operation
-     But, the file may already be open, so within this we have to determine whether to fire an event
-     From the controller to say whether this is new, or just a selection change
+    Tab selection tells monaco to switch its buffer, this is interpreted as an open file operation
+    But, the file may already be open, so within this we have to determine whether to fire an event
+    From the controller to say whether this is new, or just a selection change
+    reload - Tells Editor to reload file language settings & other file init actions
    */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
     this.editorControl.saveCursorState();
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -83,29 +143,11 @@ export class MonacoService {
         }
       });
     } else {
-      let requestUrl: string;
-      let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
-      let _observable;
-
-      if (reload) {
-        if (fileNode.model.isDataset) {
-          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
-          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
-        } else {
-          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                      filePath+'/'+fileNode.model.fileName,
-                                                      { responseType: 'b64' });
-          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
-        }
-
-      } else {
-        _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
-      }
-      _observable.subscribe({
+      this.getFileRequestObservable(fileNode, reload, line).subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
           const resJson = response;
-          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
+          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, true).subscribe({
             next: () => {
               this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
               if (line) {
@@ -141,7 +183,7 @@ export class MonacoService {
     }
   }
 
-  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }): Observable<void> {
+  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
         .subscribe((value) => {
@@ -173,16 +215,23 @@ export class MonacoService {
               } else {
                 newModel = editorCore.getModel(model.uri);
               }
-              newModel.onDidChangeContent((e: any) => {
-                this.fileContentChangeHandler(e, fileNode, newModel);
-              });
-              const subscriber = this.editorControl.editor.subscribe((value)=> {
-                if (value) {
-                  value.setModel(newModel);
-                  if (subscriber){subscriber.unsubscribe();}
-                  obs.next();
-                }
-              });
+              if (!makeActiveModel) {
+                newModel.setValue(fileNode.model.contents);
+                this.snackBar.open(`${fileNode.name} was refreshed successfully.`,
+                  'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+                fileNode.changed = false;
+              } else {
+                newModel.onDidChangeContent((e: any) => {
+                  this.fileContentChangeHandler(e, fileNode, newModel);
+                });
+                const subscriber = this.editorControl.editor.subscribe((value)=> {
+                  if (value) {
+                    value.setModel(newModel);
+                    if (subscriber){subscriber.unsubscribe();}
+                    obs.next();
+                  }
+                });
+              }
             });
             if (coreSubscriber) {coreSubscriber.unsubscribe();}
           }
@@ -203,6 +252,19 @@ export class MonacoService {
       if (model.uri === fileUri) {
         model.dispose();
       }
+    }
+  }
+
+  closeAllFiles() {
+    const editorCore = this.editorControl.editorCore.getValue();
+    if (!editorCore) {
+      console.warn(`Editor core null on closeFile()`);
+      return;
+    }
+    const _editor = editorCore.editor;
+    const models = _editor.getModels();
+    for (const model of models) {
+      model.dispose();
     }
   }
 

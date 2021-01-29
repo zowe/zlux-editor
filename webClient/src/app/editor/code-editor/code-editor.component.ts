@@ -33,7 +33,7 @@ const DEFAULT_TITLE = 'Editor';
 export class CodeEditorComponent implements OnInit, OnDestroy {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
-  private subscription:Subscription = new Subscription();
+  private keyBindingSub:Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
 
@@ -87,10 +87,30 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     });
 
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
+      this.previousSessionData.noOpenFile = this.noOpenFile;
+      this.previousSessionData.editorFile = this.editorFile;
+      this.previousSessionData.openFileList = this.openFileList;
+
       if (!this.noOpenFile && !this.isAnySelected()) {
         this.selectFile(this.openFileList[0], true);
       }
     });
+
+    this.editorControl.undoCloseFile.subscribe(() => {
+      if (this.previousSessionData.noOpenFile) {
+        this.noOpenFile = this.previousSessionData.noOpenFile;
+      }
+      if (this.previousSessionData.editorFile) {
+        this.editorFile = this.previousSessionData.editorFile;
+
+        this.editorFile.context.active = true;
+        this.editorFile.context.opened = true;
+
+        this.selectFile(this.editorFile.context, true);
+        this.editorControl.openFileHandler(this.editorFile.context);
+      }
+      this.updateEditorTitle();
+    })
 
     this.editorControl.closeAllFiles.subscribe(() => {
       this.previousSessionData.noOpenFile = this.noOpenFile;
@@ -108,9 +128,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       if (this.previousSessionData.editorFile) {
         this.editorFile = this.previousSessionData.editorFile;
 
-        /* Let editorControl set it to active & opened naturally, otherwise verbose debug logs */
-        this.editorFile.context.active = false;
-        this.editorFile.context.opened = false;
+        this.editorFile.context.active = true;
+        this.editorFile.context.opened = true;
 
         this.selectFile(this.editorFile.context, true);
         this.editorControl.openFileHandler(this.editorFile.context);
@@ -118,13 +137,25 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.updateEditorTitle();
     })
 
-    this.subscription.add(this.appKeyboard.keyupEvent.subscribe((event) => {
-      if (event.altKey && event.which === KeyCode.KEY_T) {
-        let fileContext = this.editorControl.fetchAdjToActiveFile();
+    this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
+      if (event.which === KeyCode.KEY_T && event.ctrlKey) {
+        this.editorControl.undoCloseFile.next();
+      }
+    }));
+
+    this.keyBindingSub.add(this.appKeyboard.keyupEvent.subscribe((event) => {
+      if (event.which === KeyCode.PAGE_DOWN || event.which === KeyCode.PERIOD) {
+        let fileContext = this.editorControl.fetchRightOfActiveFile();
         this.selectFile(fileContext, true);      
-      } else if (event.altKey && event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
+      } else if (event.which === KeyCode.PAGE_UP || event.which === KeyCode.COMMA) {
+        let fileContext = this.editorControl.fetchLeftOfActiveFile();
+        this.selectFile(fileContext, true);      
+      } else if (event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
         let fileContext = this.editorControl.fetchActiveFile();
         this.closeFile(fileContext);
+        setTimeout(()=> {
+          this.editorControl.getFocus();
+        });
       }
     }));
 
@@ -184,9 +215,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     
   }
 
-  //TODO this is causing the error of nothing showing up when a tab is closed
   closeFile(fileContext: ProjectContext) {
-    this.editorFile = undefined;
     this.codeEditorService.closeFile(fileContext);
   }
 
@@ -199,6 +228,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.codeEditorService.selectFile(fileContext, broadcast);
     this.editorFile = { context: fileContext, reload: false, line: line };
     this.updateEditorTitle();
+  }
+
+  refreshFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
+    this.monacoService.refreshFile(fileContext, broadcast, line)
+    // We don't want to kick off openfile from the editor controller, so talk to monaco directly
   }
 
   setTitle(title?:String):void {
@@ -217,7 +251,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy():void {
-    this.subscription.unsubscribe();
+    this.keyBindingSub.unsubscribe();
   }
 }
 

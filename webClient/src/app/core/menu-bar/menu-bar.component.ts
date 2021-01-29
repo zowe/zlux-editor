@@ -76,7 +76,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     children: []
   };
 
-  private subscription:Subscription = new Subscription();
+  private keyBindingSub:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
 
   /* TODO: This can be extended to persist in future server storage mechanisms. 
@@ -131,6 +131,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
 
     this.editorControl.closeFile.subscribe(()=> {
+      this.previousSessionData.fileCount = this.fileCount;
       if (this.fileCount != 0) {
         this.fileCount--;
         this.log.debug(`fileCount now=`,this.fileCount);
@@ -138,6 +139,21 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         this.log.warn(`Open file count cannot be made negative`);
       }
       this.removeLanguageMenu();
+    });
+
+    this.editorControl.undoCloseFile.subscribe(() => {
+      if (this.previousSessionData.fileCount) {
+        if (this.fileCount == 0) {
+          // Reactivate languages menu. Select file selects correct language down stream
+          let menus = [];
+          menus.push(this.languageSelectionMenu);
+          this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+        }
+        this.fileCount = this.previousSessionData.fileCount;
+      }
+      this.snackBar.dismiss(); // Removes a bug where you can use an undo hotkey, then undo again via snackbar still showing
+
+      this.log.debug('Attempted to restore session with data: ' + this.previousSessionData + " " + this.currentLang)
     });
 
     this.editorControl.closeAllFiles.subscribe(() => {
@@ -152,9 +168,11 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       if (this.previousSessionData.fileCount) {
         this.fileCount = this.previousSessionData.fileCount;
       }
-      if (this.currentLang) {
-        this.showLanguageMenu(this.currentLang);
-      }
+      // Reactivate languages menu. Select file selects correct language down stream
+      let menus = [];
+      menus.push(this.languageSelectionMenu);
+      this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+
       this.log.debug('Attempted to restore session with data: ' + this.previousSessionData + " " + this.currentLang)
     });
 
@@ -285,25 +303,30 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     if (this.editorControl._isTestLangMode) {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
-    }
+    }       
 
-    this.subscription.add(this.appKeyboard.keyupEvent
-      .filter(value => value.altKey).subscribe((event) => {
-        if (event.altKey && event.which === KeyCode.KEY_N) {
+    this.keyBindingSub.add(this.appKeyboard.keydownEvent
+      .subscribe((event) => {
+        if (event.which === KeyCode.KEY_N) {
           this.createFile();
-        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+        } else if (event.which === KeyCode.KEY_M) {
           this.getMenuSectionElements()[0].focus();
-        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+        } else if (event.which === KeyCode.KEY_O) {
           this.openDirectory();
-        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+        } else if (event.which === KeyCode.KEY_K) {
           this.openDatasets();
-        } else if (event.altKey && event.which === KeyCode.KEY_S) {
+        } else if (event.which === KeyCode.KEY_P) {
           this.getSearchFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+        } else if (event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_W && event.shiftKey) {
+        } else if (event.which === KeyCode.KEY_W && event.shiftKey) {
           this.closeAll();
+        } else if (event.which === KeyCode.KEY_R && event.shiftKey) {
+          this.refreshFile();
         }
+        // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
+        //   this.saveAll();
+        // }
     }));
   }
 
@@ -445,6 +468,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     closeAllRef.onAction().subscribe(() => {
       this.editorControl.undoCloseAllFiles.next();
     });
+    this.editorControl.fetchActiveFile()
+  }
+
+  refreshFile() {
+    if (this.fileCount == 0) {
+      this.snackBar.open('No files are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+    } else { // TODO: This needs a confirmation modal
+      let activeFile = this.editorControl.fetchActiveFile();
+      this.monacoService.refreshFile(activeFile, true);
+    }
   }
 
   // saveAll() {
@@ -596,7 +629,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy():void {
-    this.subscription.unsubscribe();
+    this.keyBindingSub.unsubscribe();
     this.dialog.closeAll();
   }
 }
