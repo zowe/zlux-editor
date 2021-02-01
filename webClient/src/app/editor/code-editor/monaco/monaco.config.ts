@@ -98,10 +98,328 @@ export const REXX_DARK: Theme = {
 	]
 }
 
+export enum ConfigItemType {
+  array = 0,
+  number = 1,
+  string = 2,
+  boolean = 3
+}
+
+export type MonacoConfigItem = {
+  attribute: string;
+  defaultName?: string;
+  type: ConfigItemType;
+  types?: string[];
+  values?: any[];
+  value?: any;
+  default: any;
+}
+
+export const DEFAULT_CONFIG: MonacoConfigItem[] = [
+    {
+      attribute: 'theme',
+      type: ConfigItemType.array,
+      values: ['vs', 'vs-dark'],
+      default: 'vs-dark'
+    },
+    {
+      attribute: 'autoClosingBrackets',
+      type: ConfigItemType.array,
+      values: ['always', 'languageDefined', 'beforeWhitespace', 'never'],
+      default: 'languageDefined'
+    },
+    {
+      attribute: 'autoClosingOvertype',
+      type: ConfigItemType.array,
+      values: ['always', 'auto', 'never'],
+      default: undefined
+    },
+    {
+      attribute: 'autoClosingQuotes',
+      type: ConfigItemType.array,
+      values: ['always', 'languageDefined', 'beforeWhitespace', 'never'],
+      default: 'languageDefined'
+    },
+    {
+      attribute: 'autoIndent',
+      type: ConfigItemType.array,
+      values: ['none', 'keep', 'brackets', 'advanced', 'full'],
+      default: 'advanced'
+    },
+    {
+      attribute: 'codeLens',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'colorDecorators',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'codeBlinking',
+      type: ConfigItemType.array,
+      values: ['blink','smooth','phase','expand','solid'],
+      default: 'blink'
+    },
+    {
+      attribute: 'cursorStyle',
+      type: ConfigItemType.array,
+      values: ['line','block','underline','line-thin','block-outline','underline-thin'],
+      default: 'line'
+    },
+    {
+      attribute: 'folding',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'foldingHighlight',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'fontFamily',
+      type: ConfigItemType.string,
+      default: ''
+    },
+    {
+      attribute: 'fontSize',
+      type: ConfigItemType.number,
+      default: -1
+    },
+    {
+      attribute: 'formatOnPaste',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'formatOnType',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'hover.delay',
+      type: ConfigItemType.number,
+      default: 300
+    },
+    {
+      attribute: 'hover.enabled',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'lineNumbers',
+      type: ConfigItemType.array,
+      values: ['on','off','relative','interval'],
+      default: 'on'
+    },
+    {
+      attribute: 'links',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'matchBrackets',
+      type: ConfigItemType.array,
+      values: ['never','near','always'],
+      default: 'always'
+    },
+    {
+      attribute: 'minimap.enabled',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'minimap.maxColumn',
+      type: ConfigItemType.number,
+      default: 120
+    },
+    {
+      attribute: 'minimap.side',
+      type: ConfigItemType.array,
+      values: ['left','right'],
+      default: 'right'
+    },
+    {
+      attribute: 'occurrencesHighlight',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'parameterHints.enabled',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'quickSuggestions',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'quickSuggestionsDelay',
+      type: ConfigItemType.number,
+      default: 10
+    },
+    {
+      attribute: 'renderControlCharacters',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'renderFinalNewline',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'renderIndentGuides',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'renderLineHighlight',
+      type: ConfigItemType.array,
+      values: ['none','gutter','line','all'],
+      default: 'all'
+    },
+    {
+      attribute: 'renderLineHighlightOnlyWhenFocus',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'renderValidationDecorations',
+      type: ConfigItemType.array,
+      values: ['editable','on','off'],
+      default: 'editable'
+    },
+    {
+      attribute: 'renderWhitespace',
+      type: ConfigItemType.array,
+      values: ['none','boundary','selection','trailing','all'],
+      default: 'none'
+    },
+    {
+      attribute: 'roundedSelection',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'ruler[0]',
+      type: ConfigItemType.number,
+      default: 0
+    },
+    {
+      attribute: 'scrollBeyondLastColumn',
+      type: ConfigItemType.number,
+      default: 5
+    },
+    {
+      attribute: 'scrollBeyondLastLine',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'selectOnLineNumbers',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'selectionHighlight',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'showDeprecated',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'showFoldingControls',
+      type: ConfigItemType.array,
+      values: ['always', 'mouseover'],
+      default: 'mouseover'
+    },
+    {
+      attribute: 'showUnused',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'smoothScrolling',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'snippetSuggestions',
+      type: ConfigItemType.array,
+      values: ['top','bottom','inline','none'],
+      default: true
+    },
+    {
+      attribute: 'stickyTabStops',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'stopRenderingLineAfter',
+      type: ConfigItemType.number,
+      default: 10000
+    },
+    {
+      attribute: 'suggestOnTriggerCharacters',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'suggestSelection',
+      type: ConfigItemType.array,
+      values: ['first','recentlyUsed','recentlyUsedByPrefix'],
+      default: undefined
+    },
+    {
+      attribute: 'tabCompletion',
+      type: ConfigItemType.array,
+      values: ['on','off','onlySnippets'],
+      default: undefined
+    },
+    {
+      attribute: 'unfoldOnClickAfterEndOfLine',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'useTabStops',
+      type: ConfigItemType.boolean,
+      default: false
+    },
+    {
+      attribute: 'wordSeparators',
+      type: ConfigItemType.string,
+      default: '`~!@#$%^&*()-=+[{]}\|;:\'",.<>/?'
+    },
+    {
+      attribute: 'wordWrap',
+      type: ConfigItemType.array,
+      values: ['off','on','wordWrapColumn','bounded'],
+      default: 'off'
+    },
+    {
+      attribute: 'wordWrapColumn',
+      type: ConfigItemType.number,
+      default: 80
+    },
+    {
+      attribute: 'wrappingIndent',
+      type: ConfigItemType.array,
+      values: ['none','same','indent','deepIndent'],
+      default: 'none'
+    }
+];
+
 
 export class MonacoConfig {
   subscription: Subscription = null;
-  defaultOptions: any = { scrollBeyondLastLine: false }; // pass default options to be used
 
   onLoad() {
     let self = this;

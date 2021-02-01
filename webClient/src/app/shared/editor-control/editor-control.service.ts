@@ -70,6 +70,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  private _defaultTheme: string;
 
   private _projectName = '';
   public _isTestLangMode = false;
@@ -929,6 +930,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.changeLanguage.next({ context: buffer, language: language });
   }
 
+  _setDefaultTheme(theme: string) {
+    this._defaultTheme = theme;
+  }
+
   /**
    * Sets the theme for a unique language, if necessary.
    *
@@ -950,9 +955,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('rexx-dark');
         break; 
       }
-      default: { 
-        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
-        monaco.editor.setTheme('vs-dark');
+      default: {
+        if (this._defaultTheme) {
+          monaco.editor.setTheme(this._defaultTheme);
+        }
         break; 
       } 
     } 

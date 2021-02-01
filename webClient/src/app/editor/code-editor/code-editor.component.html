@@ -21,6 +21,7 @@
     (refresh)="refreshFile($event, true)" 
     (select)="selectFile($event, true)" 
     (remove)="closeFile($event)"></app-file-tabs>
+  <!--<app-monaco-settings *ngIf="showSettings"></app-monaco-settings>-->
   <app-monaco [editorFile]="editorFile" [options]="options" #monaco></app-monaco>
 </div>
 

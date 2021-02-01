@@ -22,6 +22,7 @@ import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs/Rx';
+import {HttpClient} from '@angular/common/http';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -37,8 +38,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   @ViewChild('monaco')
   monacoRef: ElementRef;
 
+  public showSettings: boolean = false;
+
   //TODO load from configservice
-  public options = {
+  public options;
+  /*
+    = {
     glyphMargin: true,
     lightbulb: {
       enabled: true
@@ -53,6 +58,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     quickSuggestions: true,
     theme: 'vs-dark'
   };
+  */
 
   public editorFile: { context: ProjectContext, reload: boolean, line?: number };
 
@@ -61,18 +67,27 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   private previousSessionData: any = {};
 
   constructor(private httpService: HttpService,
+    private http: HttpClient,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     private codeEditorService: CodeEditorService) {
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(()=> {
         this.focusMonaco();
       });
     }
+    this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
+      if (response.contents) {
+        this.options = response.contents.config;
+        console.log('code-editor.component.ts set options=',this.options);
+      }
+    });
+    
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.openFile(fileNode);
