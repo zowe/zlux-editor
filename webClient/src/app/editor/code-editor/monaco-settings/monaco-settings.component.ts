@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject, EventEmitter } from '@angular/core';
+import { Component, OnInit, Inject, EventEmitter, Output } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
@@ -67,6 +67,8 @@ export class MonacoSettingsComponent {
   public config:any;
   public jsonText:string;
   public items: MonacoConfigItem[];
+
+  @Output() options = new EventEmitter<any>();
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -74,14 +76,46 @@ export class MonacoSettingsComponent {
     private http: HttpClient
   ) {
     this.resetToDefault();
-    this.initConfig();
-    this.jsonText = this.configToText();
+    this.setConfigFromConfigService();
+  }
+
+  private setConfigFromConfigService() {
+    this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
+      if (response.contents) {
+        this.config = response.contents.config;
+        this.jsonText = this.configToText();
+        this.items.forEach((item)=> {
+          let parts = item.attribute.split('.');
+          let currentObj = this.config
+          for (let i = 0; i < parts.length-1; i++) {
+            let part = parts[i];
+            currentObj = currentObj[part];
+            if (!currentObj) {
+              break;
+            }
+          }
+          if (currentObj) {
+            item.value = currentObj[parts[parts.length-1]];
+          }
+        });
+      } else {
+        this.initConfig();
+        this.jsonText = this.configToText();
+      }
+    },
+    //in case of error, just default                                                                                                                                            
+    (e:any)=> {
+      this.initConfig();
+      this.jsonText = this.configToText();
+    });
   }
 
   setConfig(attribute: string, value?: any, defaultValue?: any) {
     let val = value ? value : defaultValue;
     let parts = attribute.split('.');
     let parentObj = {};
+    let mirrored = true;
+    let configMirrorObj = this.config;
     let lastObj = parentObj;
     let currentObj = parentObj;
     let pos = 0;
@@ -90,11 +124,21 @@ export class MonacoSettingsComponent {
       currentObj[parts[pos]] = newObj;
       lastObj = currentObj;
       currentObj = newObj;
+      if (mirrored) {
+        try {
+          configMirrorObj = configMirrorObj[parts[pos]];
+        } catch (e) {
+          mirrored = false;
+        }
+      }
       pos++;
     }
-    lastObj[parts[parts.length-1]] = val;
-    this.config = Object.assign(this.config, parentObj);
-    
+    if (configMirrorObj && !val && val !== 0) {
+      delete configMirrorObj[parts[parts.length-1]];
+    } else {
+      lastObj[parts[parts.length-1]] = val;
+      this.config = Object.assign(this.config, parentObj);
+    }
   }
 
   update(item: MonacoConfigItem) {
@@ -115,6 +159,7 @@ export class MonacoSettingsComponent {
         }).subscribe((result: any)=> {
         this.log.info('Save return');
     });
+    this.options.next(this.config);
   }
   
   public isTypeDropdown(type: number) {

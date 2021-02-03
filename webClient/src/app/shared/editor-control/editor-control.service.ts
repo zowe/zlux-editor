@@ -63,7 +63,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
-
+  public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
+  public closeSettings: EventEmitter<void> = new EventEmitter(); 
+  public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);

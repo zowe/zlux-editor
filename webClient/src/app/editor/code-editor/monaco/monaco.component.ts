@@ -41,10 +41,10 @@ export class MonacoComponent implements OnInit, OnChanges {
         this.editorControl._setDefaultTheme(options.theme);
         try {
           this.editor._themeService.setTheme(options.theme);
+          this.log.info("Updated monaco theme");
         } catch (e) {
           this.log.warn("Monaco _themeService.setTheme could not be called");
         }
-        this.log.info("Updated monaco theme");
       }
       
       this.editor.updateOptions(options);
@@ -84,6 +84,9 @@ export class MonacoComponent implements OnInit, OnChanges {
     }
     this.log.info("Creating new editor with options=",options);
     let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
+    if (options.theme) {
+      this.editorControl._setDefaultTheme(options.theme);
+    }
     if (!hasModel) {
       editor.setValue('');
     }
@@ -98,6 +101,10 @@ export class MonacoComponent implements OnInit, OnChanges {
   focus(e: any) {
     this.editor.focus();
   }
+  layout(e: any) {
+    this.editor.layout();
+  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {

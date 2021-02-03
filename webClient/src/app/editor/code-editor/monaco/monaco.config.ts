@@ -181,12 +181,12 @@ export const DEFAULT_CONFIG: MonacoConfigItem[] = [
     {
       attribute: 'fontFamily',
       type: ConfigItemType.string,
-      default: ''
+      default: undefined
     },
     {
       attribute: 'fontSize',
       type: ConfigItemType.number,
-      default: -1
+      default: undefined
     },
     {
       attribute: 'formatOnPaste',
