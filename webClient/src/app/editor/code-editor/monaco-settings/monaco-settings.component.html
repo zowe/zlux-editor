@@ -41,18 +41,16 @@
       </div>
     </div>
     <div class="button-row">
-      <button mat-raised-button class="menu-button" (click)="applyToPreview()">Preview</button>
-      <button mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Reset to default</button>
-    </div>
-    <div class="button-row">
+      <button mat-raised-button class="menu-button" color="warn" (click)="resetEditor()">Reset</button>
       <button mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
     </div>
   </div>
   <div class="preview">
-    <h2>JSON Preview</h2>
-    <mat-form-field class="form-field" style="height: 100%">
-      <textarea matInput placeholder="Monaco JSON Preview" [(ngModel)]="jsonText"></textarea>
-    </mat-form-field>
+    <h2 style="padding: 0.5em">JSON Preview</h2>
+    <div class="monaco-editor-preview" #monacoPreview></div>
+    <div class="button-row">
+      <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview</button>
+    </div>
   </div>
 </div>
 <!--

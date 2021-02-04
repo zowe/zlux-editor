@@ -8,11 +8,12 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject, EventEmitter, Output } from '@angular/core';
+import { Component, OnInit, Inject, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
-import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import { DEFAULT_CONFIG, MonacoConfigItem, ConfigItemType } from '../monaco/monaco.config';
+import * as monaco from 'monaco-editor';
 
 function getValueNameFromValue(value: string) {
   if (typeof value != 'string') {
@@ -43,8 +44,9 @@ function getValueNames(values: string[]) {
   templateUrl: './monaco-settings.component.html',
   styleUrls: ['./monaco-settings.component.scss',  '../../../../styles.scss']
 })
-export class MonacoSettingsComponent {
-  resetToDefault() {
+export class MonacoSettingsComponent implements OnInit {
+  
+  private resetToDefault() {
     let items = [];
     DEFAULT_CONFIG.forEach((item)=> {
       let newItem:MonacoConfigItem = Object.assign({},item);
@@ -67,16 +69,39 @@ export class MonacoSettingsComponent {
   public config:any;
   public jsonText:string;
   public items: MonacoConfigItem[];
+  private editor;
+  private model;
+  private checkInterval;
+
+  @ViewChild('monacoPreview')
+  monacoPreviewRef: ElementRef;
 
   @Output() options = new EventEmitter<any>();
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
     private http: HttpClient
   ) {
     this.resetToDefault();
-    this.setConfigFromConfigService();
+  }
+
+  private setConfigFromJson() {
+    this.items.forEach((item)=> {
+      let parts = item.attribute.split('.');
+      let currentObj = this.config;
+      for (let i = 0; i < parts.length-1; i++) {
+        let part = parts[i];
+        currentObj = currentObj[part];
+        if (!currentObj) {
+          break;
+        }
+      }
+      if (currentObj) {
+        item.value = currentObj[parts[parts.length-1]];
+      }
+    });
   }
 
   private setConfigFromConfigService() {
@@ -84,20 +109,7 @@ export class MonacoSettingsComponent {
       if (response.contents) {
         this.config = response.contents.config;
         this.jsonText = this.configToText();
-        this.items.forEach((item)=> {
-          let parts = item.attribute.split('.');
-          let currentObj = this.config
-          for (let i = 0; i < parts.length-1; i++) {
-            let part = parts[i];
-            currentObj = currentObj[part];
-            if (!currentObj) {
-              break;
-            }
-          }
-          if (currentObj) {
-            item.value = currentObj[parts[parts.length-1]];
-          }
-        });
+        this.setConfigFromJson();
       } else {
         this.initConfig();
         this.jsonText = this.configToText();
@@ -110,8 +122,10 @@ export class MonacoSettingsComponent {
     });
   }
 
+  
+  
   setConfig(attribute: string, value?: any, defaultValue?: any) {
-    let val = value ? value : defaultValue;
+    let val = value !== undefined ? value : defaultValue;
     let parts = attribute.split('.');
     let parentObj = {};
     let mirrored = true;
@@ -133,7 +147,7 @@ export class MonacoSettingsComponent {
       }
       pos++;
     }
-    if (configMirrorObj && !val && val !== 0) {
+    if (configMirrorObj && val === undefined) {
       delete configMirrorObj[parts[parts.length-1]];
     } else {
       lastObj[parts[parts.length-1]] = val;
@@ -141,16 +155,55 @@ export class MonacoSettingsComponent {
     }
   }
 
+  resetEditor() {
+    this.setConfigFromConfigService();
+    this.updateEditor();
+  }
+  
   update(item: MonacoConfigItem) {
     this.log.info('monaco config update item=%s, value=%s',item.attribute, item.value);
     this.setConfig(item.attribute, item.value, item.default);
     this.jsonText = this.configToText();
+    this.updateEditor();
+  }
+
+  private updateEditor() {
+    this.editor._themeService.setTheme(this.config.theme);
+    this.editor.updateOptions(this.config);
+    this.editor.setValue(this.jsonText);
+  }
+
+  updateFromPreview() {
+    let config = this.config;
+    try {
+      this.config = JSON.parse(this.editor.getValue());
+      this.jsonText = this.configToText();
+      this.updateEditor();
+      this.setConfigFromConfigService();
+    } catch (e) {
+      this.log.warn('Could not use preview JSON for config; Falling back to menu config');
+      this.config = config;
+      //ignore
+    }
   }
   
   ngOnInit() {
+    this.editor = monaco.editor.create(this.monacoPreviewRef.nativeElement, this.config);
+    this.viewportEvents.resized.subscribe(()=> {
+      this.editor.layout()
+    });
+    monaco.editor.remeasureFonts();
+    this.setConfigFromConfigService();
+    setTimeout(()=> {
+      this.updateEditor();
+      this.editor.setModelLanguage('json');
+    },500);
+    
   }
-
+  
   commitToConfigService() {
+    this.updateFromPreview();
+
     this.http.put(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(), 'user', 'monaco', 'editorconfig.json'),
         {
           "_objectType": "org.zowe.zlux.editor.monaco.editor.config",

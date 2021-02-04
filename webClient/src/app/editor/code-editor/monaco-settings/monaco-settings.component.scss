@@ -22,12 +22,15 @@ mat-dialog-actions {
     height: 100%;
     max-width: 24em;
     text-align: right;
-    display: flex;
     flex-direction: column;
+    display: flex;
 }
 
 .preview {
     flex: auto;
+    display: flex;
+    border-left: ridge;
+    flex-direction: column;
 }
 
 .button-row {
@@ -37,6 +40,11 @@ mat-dialog-actions {
 .menu-button {
     margin: 0.5em;
     flex: auto;
+}
+
+.monaco-editor-preview {
+    width: 100%;
+    height: calc(100% - 6.25em);
 }
 
 .scrolling-list {
