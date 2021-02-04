@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.6.0`
+
+- Added a preferences menu to customize the editing behavior and color theme. The preferences can be previewed in realtime, but can also be saved to the app-server so that they are applied every time the editor is opened.
+
 ## `2.5.0`
 
 - Added a refresh file option to fetch up to date contents (right click file tab OR top left menu)

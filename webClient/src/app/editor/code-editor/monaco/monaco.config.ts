@@ -305,11 +305,6 @@ export const DEFAULT_CONFIG: MonacoConfigItem[] = [
       default: true
     },
     {
-      attribute: 'ruler[0]',
-      type: ConfigItemType.number,
-      default: 0
-    },
-    {
       attribute: 'scrollBeyondLastColumn',
       type: ConfigItemType.number,
       default: 5

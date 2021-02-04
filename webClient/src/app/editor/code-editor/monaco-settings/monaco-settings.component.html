@@ -41,7 +41,7 @@
       </div>
     </div>
     <div class="button-row">
-      <button mat-raised-button class="menu-button" color="warn" (click)="resetEditor()">Reset</button>
+      <button mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Defaults</button>
       <button mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
     </div>
   </div>
@@ -49,6 +49,7 @@
     <h2 style="padding: 0.5em">JSON Preview</h2>
     <div class="monaco-editor-preview" #monacoPreview></div>
     <div class="button-row">
+      <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert</button>
       <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview</button>
     </div>
   </div>

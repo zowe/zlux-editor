@@ -46,7 +46,7 @@ function getValueNames(values: string[]) {
 })
 export class MonacoSettingsComponent implements OnInit {
   
-  private resetToDefault() {
+  private resetUI() {
     let items = [];
     DEFAULT_CONFIG.forEach((item)=> {
       let newItem:MonacoConfigItem = Object.assign({},item);
@@ -57,6 +57,16 @@ export class MonacoSettingsComponent implements OnInit {
       items.push(newItem);
     });
     this.items = items;
+  }
+
+  private resetToDefault() {
+    this.http.delete<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
+      this.log.info('Delete complete');
+      this.resetUI();
+      this.initConfig();
+      this.jsonText = this.configToText();
+      this.updateEditor();
+    });
   }
 
   private initConfig() {
@@ -70,7 +80,7 @@ export class MonacoSettingsComponent implements OnInit {
   public jsonText:string;
   public items: MonacoConfigItem[];
   private editor;
-  private model;
+  private editorModel;
   private checkInterval;
 
   @ViewChild('monacoPreview')
@@ -84,7 +94,7 @@ export class MonacoSettingsComponent implements OnInit {
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
     private http: HttpClient
   ) {
-    this.resetToDefault();
+    this.resetUI();
   }
 
   private setConfigFromJson() {
@@ -106,7 +116,7 @@ export class MonacoSettingsComponent implements OnInit {
 
   private setConfigFromConfigService() {
     this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
-      if (response.contents) {
+      if (response && response.contents && response.contents.config) {
         this.config = response.contents.config;
         this.jsonText = this.configToText();
         this.setConfigFromJson();
@@ -179,7 +189,7 @@ export class MonacoSettingsComponent implements OnInit {
       this.config = JSON.parse(this.editor.getValue());
       this.jsonText = this.configToText();
       this.updateEditor();
-      this.setConfigFromConfigService();
+      this.setConfigFromJson();
     } catch (e) {
       this.log.warn('Could not use preview JSON for config; Falling back to menu config');
       this.config = config;
@@ -195,8 +205,16 @@ export class MonacoSettingsComponent implements OnInit {
     monaco.editor.remeasureFonts();
     this.setConfigFromConfigService();
     setTimeout(()=> {
+      let uri = monaco.Uri.parse('org.zowe.editor://settings/preview');
+      this.editorModel = monaco.editor.getModel(uri);
+      if (!this.editorModel) {
+        this.editorModel = monaco.editor.createModel(this.jsonText, 'json', uri);
+      }
+      this.editor.setModel(this.editorModel);
       this.updateEditor();
-      this.editor.setModelLanguage('json');
+//      let models = this.editor._modelData.model;
+//      console.log('model',models);
+//      this.models.setModelLanguage(models,'json');
     },500);
     
   }
@@ -206,7 +224,7 @@ export class MonacoSettingsComponent implements OnInit {
 
     this.http.put(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(), 'user', 'monaco', 'editorconfig.json'),
         {
-          "_objectType": "org.zowe.zlux.editor.monaco.editor.config",
+          "_objectType": "org.zowe.editor.monaco.editor.config",
           "_metaDataVersion": "1.0.0",
           "config": this.config
         }).subscribe((result: any)=> {

@@ -22,7 +22,7 @@
     (select)="selectFile($event, true)" 
     (remove)="closeFile($event)"></app-file-tabs>
   <app-monaco-settings (options)="setOptions($event)" *ngIf="showSettings"></app-monaco-settings>
-  <app-monaco *ngIf="!showSettings" [editorFile]="editorFile" [options]="options" #monaco></app-monaco>
+  <app-monaco [editorFile]="editorFile" [options]="options" #monaco></app-monaco>
 </div>
 
 <!-- 
