@@ -120,9 +120,12 @@ export class MonacoSettingsComponent implements OnInit {
         this.config = response.contents.config;
         this.jsonText = this.configToText();
         this.setConfigFromJson();
+        this.updateEditor();
       } else {
+        this.resetUI();
         this.initConfig();
         this.jsonText = this.configToText();
+        this.updateEditor();
       }
     },
     //in case of error, just default                                                                                                                                            
@@ -167,7 +170,6 @@ export class MonacoSettingsComponent implements OnInit {
 
   resetEditor() {
     this.setConfigFromConfigService();
-    this.updateEditor();
   }
   
   update(item: MonacoConfigItem) {
