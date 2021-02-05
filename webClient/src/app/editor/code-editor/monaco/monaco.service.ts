@@ -58,7 +58,6 @@ export class MonacoService {
         // get monaco modal
         const _context: ProjectContext = e.context;
         const _editor = this.editorControl.editorCore.getValue().editor;
-        console.log('editor=',_editor);
         const _modal = _editor.getModel(this.generateUri(_context.model));
 
         _context.model.language = e.language;

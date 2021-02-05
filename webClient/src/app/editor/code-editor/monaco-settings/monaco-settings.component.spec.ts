@@ -10,21 +10,21 @@
 */
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SettingsMenuComponent } from './settings-menu.component';
+import { MonacoSettingsComponent } from './monaco-settings.component';
 
-describe('SettingsMenuComponent', () => {
-  let component: SettingsMenuComponent;
-  let fixture: ComponentFixture<SettingsMenuComponent>;
+describe('MonacoSettingsComponent', () => {
+  let component: MonacoSettingsComponent;
+  let fixture: ComponentFixture<MonacoSettingsComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ SettingsMenuComponent ]
+      declarations: [ MonacoSettingsComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(SettingsMenuComponent);
+    fixture = TestBed.createComponent(MonacoSettingsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -61,7 +61,7 @@ export class MonacoSettingsComponent implements OnInit {
 
   private resetToDefault() {
     this.http.delete<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
-      this.log.info('Delete complete');
+      this.log.info('Restored editor defaults by removing old configuration');
       this.resetUI();
       this.initConfig();
       this.jsonText = this.configToText();
@@ -212,9 +212,6 @@ export class MonacoSettingsComponent implements OnInit {
       }
       this.editor.setModel(this.editorModel);
       this.updateEditor();
-//      let models = this.editor._modelData.model;
-//      console.log('model',models);
-//      this.models.setModelLanguage(models,'json');
     },500);
     
   }
@@ -228,7 +225,7 @@ export class MonacoSettingsComponent implements OnInit {
           "_metaDataVersion": "1.0.0",
           "config": this.config
         }).subscribe((result: any)=> {
-        this.log.info('Save return');
+        this.log.debug('Settings store success');
     });
     this.options.next(this.config);
   }

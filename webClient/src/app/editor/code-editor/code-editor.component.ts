@@ -159,9 +159,9 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         this.openFileList.push({
           type: ProjectContextType.menu,
           name: "Settings",
-          id: "org.zowe.zlux.editor.settings",
+          id: "org.zowe.editor.settings",
           model: {
-            id: "org.zowe.zlux.editor.settings",
+            id: "org.zowe.editor.settings",
             name: "Settings",
             hasChildren: false,
             isDataset: false
@@ -177,7 +177,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         this.showSettings = false;
         this.settingsOpen = false;
         for (let i = 0; i < this.openFileList.length; i++) {
-          if (this.openFileList[i].id == 'org.zowe.zlux.editor.settings') {
+          if (this.openFileList[i].id == 'org.zowe.editor.settings') {
             this.openFileList.splice(i, 1);
           }
         }

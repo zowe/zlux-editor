@@ -41,16 +41,14 @@ export class MonacoComponent implements OnInit, OnChanges {
         this.editorControl._setDefaultTheme(options.theme);
         try {
           this.editor._themeService.setTheme(options.theme);
-          this.log.info("Updated monaco theme");
         } catch (e) {
           this.log.warn("Monaco _themeService.setTheme could not be called");
         }
       }
       
       this.editor.updateOptions(options);
-      this.log.info("Updated monaco with options");
     } else {
-      this.log.info("Editor options passed prior to editor init. Cached.");
+      this.log.debug("Editor options passed prior to editor init. Cached.");
     }
   };
   
@@ -82,7 +80,7 @@ export class MonacoComponent implements OnInit, OnChanges {
         options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
       }
     }
-    this.log.info("Creating new editor with options=",options);
+    this.log.debug("New editor with options=",options);
     let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
     if (options.theme) {
       this.editorControl._setDefaultTheme(options.theme);
