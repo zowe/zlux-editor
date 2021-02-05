@@ -675,6 +675,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  undo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).undo();
+  }
+
+  redo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).redo();
+  }
+
   languageServerSetting() {
     let newFileRef = this.dialog.open(LanguageServerComponent, {
       width: '500px'
