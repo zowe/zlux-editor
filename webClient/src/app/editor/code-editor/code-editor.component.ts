@@ -82,7 +82,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       });
     }
     this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
-      if (response.contents) {
+      if (response && response.contents && response.contents.config) {
         this.options = response.contents.config;
       }
     });
