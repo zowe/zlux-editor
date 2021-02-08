@@ -63,13 +63,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
-
+  public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
+  public closeSettings: EventEmitter<void> = new EventEmitter(); 
+  public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  private _defaultTheme: string;
 
   private _projectName = '';
   public _isTestLangMode = false;
@@ -929,6 +933,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.changeLanguage.next({ context: buffer, language: language });
   }
 
+  _setDefaultTheme(theme: string) {
+    this._defaultTheme = theme;
+  }
+
   /**
    * Sets the theme for a unique language, if necessary.
    *
@@ -950,9 +958,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('rexx-dark');
         break; 
       }
-      default: { 
-        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
-        monaco.editor.setTheme('vs-dark');
+      default: {
+        if (this._defaultTheme) {
+          monaco.editor.setTheme(this._defaultTheme);
+        }
         break; 
       } 
     } 

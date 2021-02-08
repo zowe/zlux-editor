@@ -1,0 +1,66 @@
+
+<!-- 
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+  -->
+<div class="outer">
+  <div class="container">
+    <h2>Editor Settings</h2>
+    <div class="scrolling-list">
+      <div *ngFor="let item of items; index as i">
+        <div style="display: flex; margin: 10px 0px 10px 0px" *ngIf="isTypeDropdown(item.type)">
+          <mat-form-field class="form-field">
+            <mat-label style="margin-right: 10px">{{getName(item)}}</mat-label>
+            <mat-select disableRipple="true" [(value)]="items[i].value" (selectionChange)="update(item)">
+              <mat-option *ngFor="let value of items[i].values; index as j" [value]="items[i].values[j]">
+                {{item.types[j]}}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div *ngIf="isTypeNumber(item.type)">
+          <mat-form-field class="form-field">
+            <mat-label>{{getName(item)}}</mat-label>
+            <input matInput type="number" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+          </mat-form-field>
+        </div>
+        <div *ngIf="isTypeString(item.type)">
+          <mat-form-field class="form-field">
+            <mat-label>{{getName(item)}}</mat-label>
+            <input matInput type="text" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+          </mat-form-field>
+        </div>
+        <div *ngIf="isTypeToggle(item.type)">
+          <mat-checkbox disableRipple="true" labelPosition="before" [(ngModel)]="items[i].value" (change)="update(item)">{{getName(items[i])}}</mat-checkbox>
+        </div>
+        <br>
+      </div>
+    </div>
+    <div class="button-row">
+      <button mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Defaults</button>
+      <button mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
+    </div>
+  </div>
+  <div class="preview">
+    <h2 style="padding: 0.5em">JSON Preview</h2>
+    <div class="monaco-editor-preview" #monacoPreview></div>
+    <div class="button-row">
+      <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert</button>
+      <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview</button>
+    </div>
+  </div>
+</div>
+
+<!-- 
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+-->

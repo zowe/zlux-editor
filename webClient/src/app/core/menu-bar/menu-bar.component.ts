@@ -29,6 +29,7 @@ import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
+import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -115,9 +116,17 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
       this.resetLanguageSelectionMenu();
     });
+
+    this.editorControl.openSettings.subscribe(() => {
+      this.hideFileMenus();
+    });
+    
+    this.editorControl.selectMenu.subscribe((fileContext)=> {
+      this.setMenus(fileContext);
+    });
     
     this.editorControl.selectFile.subscribe((fileContext)=> {
-      if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+      if (this.fileCount != 0){this.showFileMenus(fileContext);}
          // get focus of editor
       setTimeout(()=> {
         this.editorControl.getFocus();
@@ -125,7 +134,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
 
     this.editorControl.initializedFile.subscribe((fileContext)=> {
-      this.showLanguageMenu(fileContext.model.language);
+      this.showFileMenus(fileContext);
       this.fileCount++;
       this.log.debug(`fileCount now=`,this.fileCount);
     });
@@ -138,7 +147,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       } else {
         this.log.warn(`Open file count cannot be made negative`);
       }
-      this.removeLanguageMenu();
+      this.hideFileMenus();
     });
 
     this.editorControl.undoCloseFile.subscribe(() => {
@@ -161,7 +170,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
       this.fileCount = 0;
       this.log.debug('fileCount emptied');
-      this.removeLanguageMenu();
+      this.hideFileMenus();
     })
 
     this.editorControl.undoCloseAllFiles.subscribe(() => {
@@ -198,6 +207,61 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   }
 
+  private hideFileMenus() {
+    this.removeLanguageMenu();
+    this.hideEditOptions();
+  }
+
+  private setMenus(fileContext: ProjectContext) {
+    if (fileContext.type == ProjectContextType.menu) {
+      this.hideFileMenus(); 
+    } else {
+      this.showFileMenus(fileContext);
+    }
+  }
+
+  private showFileMenus(fileContext: ProjectContext) {
+    this.showLanguageMenu(fileContext.model.language);
+    this.showEditOptions();
+  }
+
+  private showEditOptions() {
+    for (let i = 0; i < this.menuList.length; i++) {
+      let menu = this.menuList[i];
+      if (menu.name == 'Edit' && menu.children.length == 1) {
+        menu.children.unshift({
+          name: 'Undo',
+          action: {
+            internalName: 'undo'
+          }
+        });
+        menu.children.unshift({
+          name: 'Redo',
+          action: {
+            internalName: 'redo'
+          }
+        });
+        return;
+      }
+    }
+  }
+
+  private hideEditOptions() {
+    for (let i = 0; i < this.menuList.length; i++) {
+      let menu = this.menuList[i];
+      if (menu.name == 'Edit' && menu.children.length > 1) {
+        menu.children.shift();//redo
+        menu.children.shift();//undo
+        return;
+      }
+    }
+  }
+  
+  private showSettings() {
+    this.editorControl.openSettings.next();
+  }
+
+  
   getMenuSectionElements() {
     return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
   }
@@ -609,6 +673,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         this.editorControl.deleteFile.next(result);
       }
     });
+  }
+
+  undo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).undo();
+  }
+
+  redo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).redo();
   }
 
   languageServerSetting() {
