@@ -25,13 +25,13 @@
         <div *ngIf="isTypeNumber(item.type)">
           <mat-form-field class="form-field">
             <mat-label>{{getName(item)}}</mat-label>
-            <input matInput type="number" placeholder="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+            <input matInput type="number" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
           </mat-form-field>
         </div>
         <div *ngIf="isTypeString(item.type)">
           <mat-form-field class="form-field">
             <mat-label>{{getName(item)}}</mat-label>
-            <input matInput type="text" placeholder="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+            <input matInput type="text" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
           </mat-form-field>
         </div>
         <div *ngIf="isTypeToggle(item.type)">
