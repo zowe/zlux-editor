@@ -151,7 +151,7 @@ export class MonacoSettingsComponent implements OnInit {
       currentObj[parts[pos]] = newObj;
       lastObj = currentObj;
       currentObj = newObj;
-      if (mirrored) {
+      if (mirrored && pos < parts.length - 1) {
         try {
           configMirrorObj = configMirrorObj[parts[pos]];
         } catch (e) {
@@ -162,6 +162,8 @@ export class MonacoSettingsComponent implements OnInit {
     }
     if (configMirrorObj && val === undefined) {
       delete configMirrorObj[parts[parts.length-1]];
+    } else if (configMirrorObj) {
+      configMirrorObj[parts[parts.length-1]] = val;
     } else {
       lastObj[parts[parts.length-1]] = val;
       this.config = Object.assign(this.config, parentObj);
