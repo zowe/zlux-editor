@@ -11,9 +11,10 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule, MatDialogModule } from '@angular/material';
+import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 
 import { MonacoComponent } from './monaco/monaco.component';
+import { MonacoSettingsComponent } from './monaco-settings/monaco-settings.component';
 import { MonacoService } from './monaco/monaco.service';
 import { CodeEditorComponent } from './code-editor.component';
 import { FileTabsComponent, MouseMiddleClickDirective } from './file-tabs/file-tabs.component';
@@ -28,6 +29,10 @@ import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator
     FormsModule,
     MatIconModule,
     MatDialogModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatInputModule,
+    MatCheckboxModule,
     PerfectScrollbarModule,
   ],
   providers: [MonacoService, CodeEditorService],
@@ -37,6 +42,7 @@ import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator
     FileTabsComponent,
     LoadingIndicatorComponent,
     MonacoComponent,
+    MonacoSettingsComponent,
     MouseMiddleClickDirective,
   ]
 })

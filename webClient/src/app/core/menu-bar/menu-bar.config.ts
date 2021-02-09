@@ -203,6 +203,17 @@ export const MENU = [
             //},
         ],
     },
+    {
+        name: 'Edit',
+        children: [
+            {
+                name: 'Preferences',
+                action: {
+                    internalName: 'showSettings'
+                }
+            }
+        ]
+    }
     // {
     //     name: 'Language Server',
     //     children: [
