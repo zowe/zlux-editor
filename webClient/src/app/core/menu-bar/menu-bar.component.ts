@@ -110,6 +110,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       
     });
     */
+    this.addFileTreeMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
@@ -298,6 +299,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
     }
   }
+
+  addFileTreeMenus(list) {
+    list[0].children.push({
+      name: 'Show/Hide Tree Search',
+      action: {
+          internalName: 'toggleFileTreeSearch'
+      },
+      keyMap: 'Alt+P'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
@@ -315,7 +326,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.openDirectory();
         } else if (event.which === KeyCode.KEY_K) {
           this.openDatasets();
-        } else if (event.which === KeyCode.KEY_P) {
+        } else if (event.which === KeyCode.KEY_P && event.ctrlKey) {
           this.getSearchFocus();
         } else if (event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
@@ -454,6 +465,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         this.editorControl.openDataset.next(result);
       }
     });
+  }
+
+  toggleFileTreeSearch() {
+    this.editorControl.toggleFileTreeSearch.next();
   }
 
   closeAll() {
