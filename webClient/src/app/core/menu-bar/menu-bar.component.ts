@@ -29,6 +29,7 @@ import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
+import * as _ from 'lodash';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -67,7 +68,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   @ViewChild('menubar') menuBarRef: ElementRef<any>;
 
-  private menuList: any = MENU.slice(0);//clone to prevent language from persisting
+  private menuList: any = _.cloneDeep(MENU);
+  //  MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
   private monaco: any;
