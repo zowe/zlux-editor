@@ -2,6 +2,7 @@
 
 ## `2.6.0`
 
+- Added a quick search to the File Tree that filters opened files, folders, and datasets.
 - Added a preferences menu to customize the editing behavior and color theme. The preferences can be previewed in realtime, but can also be saved to the app-server so that they are applied every time the editor is opened.
 - Added undo and redo menu items when editing a file
 

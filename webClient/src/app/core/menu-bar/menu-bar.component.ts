@@ -29,6 +29,7 @@ import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
+import * as _ from 'lodash';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 
 function initMenu(menuItems) {
@@ -68,7 +69,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   @ViewChild('menubar') menuBarRef: ElementRef<any>;
 
-  private menuList: any = MENU.slice(0);//clone to prevent language from persisting
+  private menuList: any = _.cloneDeep(MENU);
+  //  MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
   private monaco: any;
@@ -111,6 +113,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       
     });
     */
+    this.addFileTreeMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
@@ -362,6 +365,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
     }
   }
+
+  addFileTreeMenus(list) {
+    list[0].children.push({
+      name: 'Show/Hide Tree Search',
+      action: {
+          internalName: 'toggleFileTreeSearch'
+      },
+      keyMap: 'Alt+P'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
@@ -379,7 +392,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.openDirectory();
         } else if (event.which === KeyCode.KEY_K) {
           this.openDatasets();
-        } else if (event.which === KeyCode.KEY_P) {
+        } else if (event.which === KeyCode.KEY_P && event.ctrlKey) {
           this.getSearchFocus();
         } else if (event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
@@ -518,6 +531,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         this.editorControl.openDataset.next(result);
       }
     });
+  }
+
+  toggleFileTreeSearch() {
+    this.editorControl.toggleFileTreeSearch.next();
   }
 
   closeAll() {
