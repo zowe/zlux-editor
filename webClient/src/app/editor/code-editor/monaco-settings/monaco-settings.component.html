@@ -10,7 +10,7 @@
   -->
 <div class="outer">
   <div class="container">
-    <h4 style="text-align: left;background-color: #303030;padding-top: .25em;padding-left: .5em;padding-bottom: .25em;margin-left: -15px;margin-right: -15px;">Basic</h4>
+    <h4 class="title-card title-card-first">Basic</h4>
     <div class="scrolling-list">
       <div *ngFor="let item of items; index as i">
         <div style="display: flex; margin: 10px 0px 10px 0px" *ngIf="isTypeDropdown(item.type)">
@@ -41,16 +41,13 @@
       </div>
     </div>
     <div class="button-row">
-      <button style="margin-left: -5px;
-      margin-right: 0px;
-      width: 50%;" mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Defaults</button>
-      <button style="width: 50%;
-      margin-right: -8px;" mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
+      <button mat-raised-button class="menu-button defaults-button" color="warn" (click)="resetToDefault()">Defaults</button>
+      <button mat-raised-button class="menu-button save-button" color="primary" (click)="commitToConfigService()">Save</button>
     </div>
   </div>
   <div class="divider"></div>
   <div class="preview">
-    <h4 style="padding-top: .25em;padding-left: .5em;padding-bottom: .25em;background-color: #303030;">Advanced</h4>
+    <h4 class="title-card">Advanced</h4>
     <div class="monaco-editor-preview" #monacoPreview></div>
     <div class="button-row">
       <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert Preview</button>

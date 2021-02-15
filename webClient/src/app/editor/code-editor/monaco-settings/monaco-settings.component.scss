@@ -19,6 +19,30 @@ mat-dialog-actions {
     display: flex;
 }
 
+.title-card {
+    padding-top: .25em;
+    padding-left: .5em;
+    padding-bottom: .25em;
+    background-color: #303030;
+}
+
+.title-card-first {
+    text-align: left;
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+.defaults-button {
+    margin-left: -5px !important;
+    margin-right: 0px !important;
+    width: 50%;
+}
+
+.save-button {
+    width: 50%;
+    margin-right: -8px !important;
+}
+
 .container {
     height: 100%;
     width: 50%;
