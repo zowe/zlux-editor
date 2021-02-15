@@ -10,27 +10,27 @@
   -->
 <div class="outer">
   <div class="container">
-    <h2>Editor Settings</h2>
+    <h4 style="text-align: left;background-color: #303030;padding-top: .25em;padding-left: .5em;padding-bottom: .25em;margin-left: -15px;margin-right: -15px;">Basic</h4>
     <div class="scrolling-list">
       <div *ngFor="let item of items; index as i">
         <div style="display: flex; margin: 10px 0px 10px 0px" *ngIf="isTypeDropdown(item.type)">
           <mat-form-field class="form-field">
-            <mat-label style="margin-right: 10px">{{getName(item)}}</mat-label>
+            <mat-label class="list-view-label" style="margin-right: 10px">{{getName(item)}}</mat-label>
             <mat-select disableRipple="true" [(value)]="items[i].value" (selectionChange)="update(item)">
-              <mat-option *ngFor="let value of items[i].values; index as j" [value]="items[i].values[j]">
+              <mat-option class="list-view-label" *ngFor="let value of items[i].values; index as j" [value]="items[i].values[j]">
                 {{item.types[j]}}</mat-option>
             </mat-select>
           </mat-form-field>
         </div>
         <div *ngIf="isTypeNumber(item.type)">
           <mat-form-field class="form-field">
-            <mat-label>{{getName(item)}}</mat-label>
+            <mat-label class="list-view-label">{{getName(item)}}</mat-label>
             <input matInput type="number" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
           </mat-form-field>
         </div>
         <div *ngIf="isTypeString(item.type)">
           <mat-form-field class="form-field">
-            <mat-label>{{getName(item)}}</mat-label>
+            <mat-label class="list-view-label">{{getName(item)}}</mat-label>
             <input matInput type="text" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
           </mat-form-field>
         </div>
@@ -41,16 +41,20 @@
       </div>
     </div>
     <div class="button-row">
-      <button mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Defaults</button>
-      <button mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
+      <button style="margin-left: -5px;
+      margin-right: 0px;
+      width: 50%;" mat-raised-button class="menu-button" color="warn" (click)="resetToDefault()">Defaults</button>
+      <button style="width: 50%;
+      margin-right: -8px;" mat-raised-button class="menu-button" color="primary" (click)="commitToConfigService()">Save</button>
     </div>
   </div>
+  <div class="divider"></div>
   <div class="preview">
-    <h2 style="padding: 0.5em">JSON Preview</h2>
+    <h4 style="padding-top: .25em;padding-left: .5em;padding-bottom: .25em;background-color: #303030;">Advanced</h4>
     <div class="monaco-editor-preview" #monacoPreview></div>
     <div class="button-row">
-      <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert</button>
-      <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview</button>
+      <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert Preview</button>
+      <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview In-line</button>
     </div>
   </div>
 </div>

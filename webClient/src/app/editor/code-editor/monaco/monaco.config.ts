@@ -119,7 +119,7 @@ export const DEFAULT_CONFIG: MonacoConfigItem[] = [
     {
       attribute: 'theme',
       type: ConfigItemType.array,
-      values: ['vs', 'vs-dark'],
+      values: ['vs (Beta)', 'vs-dark'],
       default: 'vs-dark'
     },
     {

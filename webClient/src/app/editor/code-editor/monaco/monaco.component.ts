@@ -38,11 +38,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     if (this.editor) {
       if (options.theme) {
         this.editorControl._setDefaultTheme(options.theme);
-        try {
-          this.editor._themeService.setTheme(options.theme);
-        } catch (e) {
-          this.log.warn("Monaco _themeService.setTheme could not be called");
-        }
+        this.editorControl.setTheme(options.theme);
       }
       
       this.editor.updateOptions(options);
