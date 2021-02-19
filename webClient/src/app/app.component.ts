@@ -48,6 +48,7 @@ export class AppComponent {
 
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
+    this.appKeyboard.registerKeyDownEvent(editorheaderElement);
   }
 
   handleLaunchOrMessageObject(data: any) {

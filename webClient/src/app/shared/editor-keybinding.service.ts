@@ -17,9 +17,11 @@ import { Subject, Observable } from 'rxjs/Rx';
 @Injectable()
 export class EditorKeybindingService {
   public keyupEvent: Subject<KeyboardEvent>;
+  public keydownEvent: Subject<KeyboardEvent>;
 
   constructor() {
     this.keyupEvent = new Subject();
+    this.keydownEvent = new Subject();
   }
 
   registerKeyUpEvent(appChild:Element) {
@@ -28,6 +30,14 @@ export class EditorKeybindingService {
     observable
       .filter(value => value.altKey)
       .subscribe(this.keyupEvent);
+  }
+
+  registerKeyDownEvent(appChild:Element) {
+    let elm = appChild.closest('app-root');
+    const observable = Observable.fromEvent(elm, 'keydown' ) as Observable<KeyboardEvent>;
+    observable
+      .filter(value => value.altKey)
+      .subscribe(this.keydownEvent);
   }
 }
 

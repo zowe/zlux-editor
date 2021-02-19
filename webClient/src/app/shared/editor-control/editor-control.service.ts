@@ -48,6 +48,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
+  public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
@@ -55,6 +56,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public undoCloseFile: EventEmitter<string> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
   public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -62,13 +64,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
-
+  public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
+  public closeSettings: EventEmitter<void> = new EventEmitter(); 
+  public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  private _defaultTheme: string;
 
   private _projectName = '';
   public _isTestLangMode = false;
@@ -220,7 +226,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
-    if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
+    if (!(currentOpenFileList.filter(function(e) { return e.model.path === fileContext.model.path && e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
       /* We only want to add this file into the list if it doesn't already belong there */
       currentOpenFileList.push(fileContext);
     }
@@ -230,6 +236,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeFileHandler(fileContext: ProjectContext) {
     console.log(`closeFileHandler start\n`);
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
+    this.previousSessionData.stateCache = stateCache;
+    this.previousSessionData._openFileList = this._openFileList.getValue();
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
@@ -263,6 +271,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     fileContext.changed = false;
     /* TBD is the line below correct? */
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
+  }
+
+  public undoCloseFileHandler() {
+    this.log.debug("Attempting to restore session with data: ", this.previousSessionData);
+    if (this.previousSessionData.stateCache) {
+      stateCache = this.previousSessionData.stateCache;
+    }
+    if (this.previousSessionData._openFileList) {
+      this._openFileList.next(this.previousSessionData._openFileList);
+    }
   }
 
   public closeAllHandler() {
@@ -368,9 +386,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return activeFile;
   }
 
-  public fetchAdjToActiveFile(): ProjectContext {
+  public fetchRightOfActiveFile(): ProjectContext {
     let openFileListVal = this._openFileList.getValue();
     let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
+  }
+
+  public fetchLeftOfActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())-1)%openFileListVal.length;
+    if (adjIdx < 0) {
+      adjIdx = openFileListVal.length-1;
+    }
     return openFileListVal[adjIdx];
   }
 
@@ -1043,6 +1070,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.changeLanguage.next({ context: buffer, language: language });
   }
 
+  _setDefaultTheme(theme: string) {
+    this._defaultTheme = theme;
+  }
+
   /**
    * Sets the theme for a unique language, if necessary.
    *
@@ -1060,9 +1091,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('jcl-dark');
         break; 
       }
-      default: { 
-        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
-        monaco.editor.setTheme('vs-dark');
+      case 'rexx': {
+        monaco.editor.setTheme('rexx-dark');
+        break; 
+      }
+      default: {
+        if (this._defaultTheme) {
+          monaco.editor.setTheme(this._defaultTheme);
+        }
         break; 
       } 
     } 
