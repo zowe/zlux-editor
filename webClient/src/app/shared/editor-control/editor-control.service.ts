@@ -575,7 +575,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     * to save the file.
     */
     /*  POST ... */
-    this.ngHttp.post(requestUrl, JSON.stringify(body, null, 2)).subscribe(r => {
+    this.ngHttp.post(requestUrl, jsonBody).subscribe(r => {
 
         /* It was a new file, we
         * can set the new fileName. */
@@ -591,9 +591,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         * for the sake of accessibility.
         */
         this.snackBar.open(`Dataset ${results} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
-
-        //_activeFile.model.contents = JSON.stringify(body, null, 2);
-        this.log.warn('740 new file contents =', _activeFile.model.contents);
         /* Send buffer saved event */
         this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
         let fileList = this.openFileList.getValue()
@@ -762,14 +759,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     });
     
     this.log.warn('731 file contents =', _activeFile.model.contents);
-    // Convert a string of joined records to JSON
-    //const records = _activeFile.model.contents.split('\n', -1);
-    //this.log.warn('734 records =', records);
-    //const body = { records };
-    // let _updatedFile = _activeFile; /* create new copy of file */
-    //const jsonBody = JSON.stringify(body, null, 2); /* DEBUG only */
-    //this.log.warn('736 json body =', jsonBody);     /* DEBUG only */
-    //_activeFile.model.contents =  JSON.stringify(body, null, 2); /* update contents of new file */
     requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
 
     /* save new file with updated contents */
