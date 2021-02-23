@@ -243,29 +243,29 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       delete stateCache[cacheFileName];
     }
 
-    /* dequeue dataset */
-    console.log(`closeFileHandler model File name is ${fileContext.model.fileName}`);
-    
-          /* Send DEQ dataset  */
-          let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
-          const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
-          let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
+    if (fileContext.model.isDataset) {
+      /* dequeue dataset */
+      this.log.debug(`closeFileHandler model File name is ${fileContext.model.fileName}`);
+      
+      /* Send DEQ dataset  */
+      let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
+      const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+      let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
 
-          console.log(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
+      this.log.debug(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
 
-          /* subscribe to the DELETE request */  
-          _observable.subscribe({
-            next: (response: any) => {
-              console.log(`closeFileHandler delete request OK`);              
-            },
-            error: (err) => {
-              // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
-              console.log(`closeFileHandler delete request FAILED.  Error is: `, err);             
-            }
-          });
-          /* end of subscribe */
-          
-    /* end of dequeue dataset */
+      /* subscribe to the DELETE request */  
+      _observable.subscribe({
+        next: (response: any) => {
+          this.log.debug(`closeFileHandler delete request OK`);              
+        },
+        error: (err) => {
+          // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
+          this.log.warn(`closeFileHandler delete request FAILED.  Error is: `, err);             
+        }
+      });
+    }
+
     !fileContext.opened ? this.log.warn(`File ${fileContext.model.fileName} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.model.fileName} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
