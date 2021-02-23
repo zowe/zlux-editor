@@ -10,7 +10,7 @@
   -->
 <div class="outer">
   <div class="container">
-    <h4 class="title-card title-card-first">Basic</h4>
+    <h4 class="title-card title-card-first">List View</h4>
     <div class="scrolling-list">
       <div *ngFor="let item of items; index as i">
         <div style="display: flex; margin: 10px 0px 10px 0px" *ngIf="isTypeDropdown(item.type)">
@@ -47,11 +47,11 @@
   </div>
   <div class="divider"></div>
   <div class="preview">
-    <h4 class="title-card">Advanced</h4>
+    <h4 class="title-card">Preview</h4>
     <div class="monaco-editor-preview" #monacoPreview></div>
     <div class="button-row">
-      <button mat-raised-button class="menu-button" (click)="resetEditor()">Revert Preview</button>
-      <button mat-raised-button class="menu-button" (click)="updateFromPreview()">Preview In-line</button>
+      <button mat-raised-button class="menu-button preview-button" (click)="resetEditor()">Revert Preview</button>
+      <button mat-raised-button class="menu-button preview-button" (click)="updateFromPreview()">Apply Preview</button>
     </div>
   </div>
 </div>

@@ -63,6 +63,11 @@ mat-dialog-actions {
     border-left-style: solid;
     border-left-color: #222222;
     flex-direction: column;
+    width: 50%;
+}
+
+.preview-button {
+    min-width: 130px;
 }
 
 .list-view-label {
