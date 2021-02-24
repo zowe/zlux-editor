@@ -216,7 +216,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    console.log(`openFileHandler File ${fileContext.name}\n`);
+    this.log.debug(`openFileHandler File ${fileContext.name}\n`);
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -234,7 +234,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    console.log(`closeFileHandler start\n`);
+    this.log.debug(`closeFileHandler start\n`);
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     this.previousSessionData.stateCache = stateCache;
     this.previousSessionData._openFileList = this._openFileList.getValue();
