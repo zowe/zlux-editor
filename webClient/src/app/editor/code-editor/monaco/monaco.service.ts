@@ -226,8 +226,8 @@ export class MonacoService {
             }
           });
           /* end new code for ENQ */
-          console.log(`openFile ended 157`); 
-          return; /* we have dealt with reloading datasets, so we can quit */
+          // Investigate: Causes Dataset content to not appear in Monaco since Monaco model wasn't set. So why should we be quitting here?
+          // return; /* we have dealt with reloading datasets, so we can quit */
 
         } else /* it's not a dataset */ {
           requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',

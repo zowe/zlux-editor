@@ -587,7 +587,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   // }
 
   saveFile() {
-    this.snackBar.open('You requested SAVE', 'Dismiss', {duration: MessageDuration.ExtraLong, panelClass: 'center'});
     let fileContext = this.editorControl.fetchActiveFile();
     if (!fileContext) {
       this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
