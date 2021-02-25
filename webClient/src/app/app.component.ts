@@ -98,6 +98,10 @@ export class AppComponent {
         this.log.info(`Opening dataset=${data.name}`);
         this.editorControl.openDataset.next(data.name);
       }
+      if(data.hidetree.toString() == "true")
+      {
+        this.editorControl.hideTree.next();
+      }
       break;
     case 'openDataset':
       if (data.name) {
