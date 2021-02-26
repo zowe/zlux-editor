@@ -260,7 +260,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           this.log.debug(`closeFileHandler delete request OK`);              
         },
         error: (err) => {
-          // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
           this.log.warn(`closeFileHandler delete request FAILED.  Error is: `, err);             
         }
       });

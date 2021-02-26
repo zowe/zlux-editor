@@ -341,7 +341,7 @@ export class MonacoService {
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
@@ -357,7 +357,7 @@ export class MonacoService {
   closeAllFiles() {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
