@@ -34,6 +34,9 @@ import { LoadingStatus } from '../loading-status';
 export class MonacoService {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
+  private openDatasets = 0;
+  private heartbeat: any;
+  private heartbeatInterval = 5000;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -164,21 +167,35 @@ export class MonacoService {
       let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
       let _observable;
       
-      if (reload) { 
+      if (reload) {
         if (fileNode.model.isDataset) {
+          this.openDatasets++;
           /* begin new code for ENQ */
           /* Send ENQ and dataset contents requests separately */
+          const heartbeatUrl = ZoweZLUX.uriBroker.serverRootUri('datasetHeartbeat');
           const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
           requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
 
-          _observable = this.http.get(enqRequestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
-
+          _observable = this.http.post(enqRequestUrl, {}).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
           /* subscribe to the ENQ request */ 
           /* the HTTP GET that consumes this message insists that the response body be JSON,
              otherwise you are sent down the 'error' path. */ 
           _observable.subscribe({
             next: (response: any) => {
-              this.log.warn(`openFile enqueue request OK`);              
+              if(!this.heartbeat || this.heartbeat == undefined){
+                this.heartbeat = setInterval(() => {
+                  const heartbeatSub = this.http.post(heartbeatUrl, {}).subscribe({
+                    next: (res: any) => {
+                      this.log.info('heartbeat OK');
+                      if(heartbeatSub) heartbeatSub.unsubscribe();
+                    },
+                    error: (err) => {
+                      this.log.warn(`unable to reach /datasetHeartbeat, err ${err}`)
+                    }
+                  });
+                }, this.heartbeatInterval);
+              }
+              this.log.warn(`openFile enqueue request OK`);      
             },
             error: (err) => {
               this.log.warn(`openFile enqueue request FAILED, error ${err}`);             
@@ -350,6 +367,14 @@ export class MonacoService {
     for (const model of models) {
       if (model.uri === fileUri) {
         model.dispose();
+        if(fileNode.model.isDataset){
+          this.openDatasets--;
+          if(this.openDatasets <= 0 && this.heartbeat) {
+            this.openDatasets = 0;
+            clearInterval(this.heartbeat);
+            this.heartbeat = undefined;
+          }
+        }
       }
     }
   }
@@ -365,6 +390,9 @@ export class MonacoService {
     for (const model of models) {
       model.dispose();
     }
+    if(this.heartbeat) clearInterval(this.heartbeat);
+    this.heartbeat = undefined;
+    this.openDatasets = 0;
   }
 
   preSaveCheck(fileContext?: ProjectContext): boolean {
