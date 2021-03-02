@@ -14,6 +14,7 @@ import {Observable} from 'rxjs';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import { DEFAULT_CONFIG, MonacoConfigItem, ConfigItemType } from '../monaco/monaco.config';
 import * as monaco from 'monaco-editor';
+import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 
 function getValueNameFromValue(value: string) {
   if (typeof value != 'string') {
@@ -92,7 +93,8 @@ export class MonacoSettingsComponent implements OnInit {
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
-    private http: HttpClient
+    private http: HttpClient,
+    private editorControl: EditorControlService,
   ) {
     this.resetUI();
   }
@@ -182,9 +184,9 @@ export class MonacoSettingsComponent implements OnInit {
   }
 
   private updateEditor() {
-    this.editor._themeService.setTheme(this.config.theme);
     this.editor.updateOptions(this.config);
     this.editor.setValue(this.jsonText);
+    this.editorControl.setTheme(this.config.theme);
   }
 
   updateFromPreview() {

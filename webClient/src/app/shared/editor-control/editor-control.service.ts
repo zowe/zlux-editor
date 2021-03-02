@@ -67,6 +67,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  public changeTheme: EventEmitter<string> = new EventEmitter();
   
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
@@ -154,6 +155,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   public setProjectNode(value: ProjectStructure[]) {
     this._projectNode.next(value);
+  }
+
+  public setTheme(theme: string) {
+    try {
+      this.editor.getValue()._themeService.setTheme(theme);
+      this.changeTheme.next(theme); // TODO: Change Editor UI for different themes (i.e. Vs)
+    }
+    catch (e) {
+      this.log.warn("EditorControl setTheme failed with error", e);
+    }
   }
 
   public initProjectContext(name: string, project: ProjectStructure[]): ProjectContext {
