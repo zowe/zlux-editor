@@ -29,6 +29,8 @@ import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
+import * as _ from 'lodash';
+import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -67,7 +69,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   @ViewChild('menubar') menuBarRef: ElementRef<any>;
 
-  private menuList: any = MENU.slice(0);//clone to prevent language from persisting
+  private menuList: any = _.cloneDeep(MENU);
+  //  MENU.slice(0);//clone to prevent language from persisting
   private currentLang: string | undefined;
   private fileCount: number = 0;
   private monaco: any;
@@ -76,7 +79,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     children: []
   };
 
-  private subscription:Subscription = new Subscription();
+  private keyBindingSub:Subscription = new Subscription();
   public languagesMenu: any = (Object as any).assign({}, LANGUAGE_MENUS);//clone for sanitization
 
   /* TODO: This can be extended to persist in future server storage mechanisms. 
@@ -110,14 +113,23 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       
     });
     */
+    this.addFileTreeMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
       this.resetLanguageSelectionMenu();
     });
+
+    this.editorControl.openSettings.subscribe(() => {
+      this.hideFileMenus();
+    });
+    
+    this.editorControl.selectMenu.subscribe((fileContext)=> {
+      this.setMenus(fileContext);
+    });
     
     this.editorControl.selectFile.subscribe((fileContext)=> {
-      if (this.fileCount != 0){this.showLanguageMenu(fileContext.model.language);}
+      if (this.fileCount != 0){this.showFileMenus(fileContext);}
          // get focus of editor
       setTimeout(()=> {
         this.editorControl.getFocus();
@@ -125,19 +137,35 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
 
     this.editorControl.initializedFile.subscribe((fileContext)=> {
-      this.showLanguageMenu(fileContext.model.language);
+      this.showFileMenus(fileContext);
       this.fileCount++;
       this.log.debug(`fileCount now=`,this.fileCount);
     });
 
     this.editorControl.closeFile.subscribe(()=> {
+      this.previousSessionData.fileCount = this.fileCount;
       if (this.fileCount != 0) {
         this.fileCount--;
         this.log.debug(`fileCount now=`,this.fileCount);
       } else {
         this.log.warn(`Open file count cannot be made negative`);
       }
-      this.removeLanguageMenu();
+      this.hideFileMenus();
+    });
+
+    this.editorControl.undoCloseFile.subscribe(() => {
+      if (this.previousSessionData.fileCount) {
+        if (this.fileCount == 0) {
+          // Reactivate languages menu. Select file selects correct language down stream
+          let menus = [];
+          menus.push(this.languageSelectionMenu);
+          this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+        }
+        this.fileCount = this.previousSessionData.fileCount;
+      }
+      this.snackBar.dismiss(); // Removes a bug where you can use an undo hotkey, then undo again via snackbar still showing
+
+      this.log.debug('Attempted to restore session with data: ' + this.previousSessionData + " " + this.currentLang)
     });
 
     this.editorControl.closeAllFiles.subscribe(() => {
@@ -145,16 +173,18 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
       this.fileCount = 0;
       this.log.debug('fileCount emptied');
-      this.removeLanguageMenu();
+      this.hideFileMenus();
     })
 
     this.editorControl.undoCloseAllFiles.subscribe(() => {
       if (this.previousSessionData.fileCount) {
         this.fileCount = this.previousSessionData.fileCount;
       }
-      if (this.currentLang) {
-        this.showLanguageMenu(this.currentLang);
-      }
+      // Reactivate languages menu. Select file selects correct language down stream
+      let menus = [];
+      menus.push(this.languageSelectionMenu);
+      this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
+
       this.log.debug('Attempted to restore session with data: ' + this.previousSessionData + " " + this.currentLang)
     });
 
@@ -180,6 +210,61 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   }
 
+  private hideFileMenus() {
+    this.removeLanguageMenu();
+    this.hideEditOptions();
+  }
+
+  private setMenus(fileContext: ProjectContext) {
+    if (fileContext.type == ProjectContextType.menu) {
+      this.hideFileMenus(); 
+    } else {
+      this.showFileMenus(fileContext);
+    }
+  }
+
+  private showFileMenus(fileContext: ProjectContext) {
+    this.showLanguageMenu(fileContext.model.language);
+    this.showEditOptions();
+  }
+
+  private showEditOptions() {
+    for (let i = 0; i < this.menuList.length; i++) {
+      let menu = this.menuList[i];
+      if (menu.name == 'Edit' && menu.children.length == 1) {
+        menu.children.unshift({
+          name: 'Undo',
+          action: {
+            internalName: 'undo'
+          }
+        });
+        menu.children.unshift({
+          name: 'Redo',
+          action: {
+            internalName: 'redo'
+          }
+        });
+        return;
+      }
+    }
+  }
+
+  private hideEditOptions() {
+    for (let i = 0; i < this.menuList.length; i++) {
+      let menu = this.menuList[i];
+      if (menu.name == 'Edit' && menu.children.length > 1) {
+        menu.children.shift();//redo
+        menu.children.shift();//undo
+        return;
+      }
+    }
+  }
+  
+  private showSettings() {
+    this.editorControl.openSettings.next();
+  }
+
+  
   getMenuSectionElements() {
     return this.menuBarRef.nativeElement.getElementsByClassName("gz-menu-section");
   }
@@ -280,30 +365,45 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       this.menuList.splice(this.fileCount===0 ? 1 : 2 ,0,...menus);
     }
   }
+
+  addFileTreeMenus(list) {
+    list[0].children.push({
+      name: 'Show/Hide Tree Search',
+      action: {
+          internalName: 'toggleFileTreeSearch'
+      },
+      keyMap: 'Alt+P'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
-    }
+    }       
 
-    this.subscription.add(this.appKeyboard.keyupEvent
-      .filter(value => value.altKey).subscribe((event) => {
-        if (event.altKey && event.which === KeyCode.KEY_N) {
+    this.keyBindingSub.add(this.appKeyboard.keydownEvent
+      .subscribe((event) => {
+        if (event.which === KeyCode.KEY_N) {
           this.createFile();
-        } else if (event.altKey && event.which === KeyCode.KEY_M) {
+        } else if (event.which === KeyCode.KEY_M) {
           this.getMenuSectionElements()[0].focus();
-        } else if (event.altKey && event.which === KeyCode.KEY_O) {
+        } else if (event.which === KeyCode.KEY_O) {
           this.openDirectory();
-        } else if (event.altKey && event.which === KeyCode.KEY_K) {
+        } else if (event.which === KeyCode.KEY_K) {
           this.openDatasets();
-        } else if (event.altKey && event.which === KeyCode.KEY_S) {
+        } else if (event.which === KeyCode.KEY_P && event.ctrlKey) {
           this.getSearchFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_1) {
+        } else if (event.which === KeyCode.KEY_1) {
           this.getEditorFocus();
-        } else if (event.altKey && event.which === KeyCode.KEY_W && event.shiftKey) {
+        } else if (event.which === KeyCode.KEY_W && event.shiftKey) {
           this.closeAll();
+        } else if (event.which === KeyCode.KEY_R && event.shiftKey) {
+          this.refreshFile();
         }
+        // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
+        //   this.saveAll();
+        // }
     }));
   }
 
@@ -433,6 +533,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleFileTreeSearch() {
+    this.editorControl.toggleFileTreeSearch.next();
+  }
+
   closeAll() {
     let closeAllRef;
     if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
@@ -445,6 +549,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     closeAllRef.onAction().subscribe(() => {
       this.editorControl.undoCloseAllFiles.next();
     });
+    this.editorControl.fetchActiveFile()
+  }
+
+  refreshFile() {
+    if (this.fileCount == 0) {
+      this.snackBar.open('No files are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+    } else { // TODO: This needs a confirmation modal
+      let activeFile = this.editorControl.fetchActiveFile();
+      this.monacoService.refreshFile(activeFile, true);
+    }
   }
 
   // saveAll() {
@@ -473,7 +587,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   // }
 
   saveFile() {
-    this.snackBar.open('You requested SAVE', 'Dismiss', {duration: MessageDuration.ExtraLong, panelClass: 'center'});
     let fileContext = this.editorControl.fetchActiveFile();
     if (!fileContext) {
       this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
@@ -577,6 +690,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  undo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).undo();
+  }
+
+  redo() {
+    this.editorControl.editor.getValue().getModel(this.editorControl.fetchActiveFile().model).redo();
+  }
+
   languageServerSetting() {
     let newFileRef = this.dialog.open(LanguageServerComponent, {
       width: '500px'
@@ -595,7 +716,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy():void {
-    this.subscription.unsubscribe();
+    this.keyBindingSub.unsubscribe();
     this.dialog.closeAll();
   }
 }

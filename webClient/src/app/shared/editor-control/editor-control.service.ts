@@ -48,6 +48,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
   public openDataset: EventEmitter<string> = new EventEmitter();
+  public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
@@ -55,6 +56,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public undoCloseFile: EventEmitter<string> = new EventEmitter();
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
   public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -62,13 +64,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
-
+  public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
+  public closeSettings: EventEmitter<void> = new EventEmitter(); 
+  public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  private _defaultTheme: string;
 
   private _projectName = '';
   public _isTestLangMode = false;
@@ -210,7 +216,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
-    console.log(`openFileHandler File ${fileContext.name}\n`);
+    this.log.debug(`openFileHandler File ${fileContext.name}\n`);
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -220,7 +226,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileContext.active ? this.log.warn(`File ${fileContext.name} already active.`) : fileContext.active = true;
     }
     let currentOpenFileList = this._openFileList.getValue();
-    if (!(currentOpenFileList.filter(function(e) { return e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
+    if (!(currentOpenFileList.filter(function(e) { return e.model.path === fileContext.model.path && e.name === fileContext.name && e.id === fileContext.id; }).length > 0)) {
       /* We only want to add this file into the list if it doesn't already belong there */
       currentOpenFileList.push(fileContext);
     }
@@ -228,41 +234,53 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
-    console.log(`closeFileHandler start\n`);
+    this.log.debug(`closeFileHandler start\n`);
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
+    this.previousSessionData.stateCache = stateCache;
+    this.previousSessionData._openFileList = this._openFileList.getValue();
     if (cacheFileName) {
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
     }
 
-    /* dequeue dataset */
-    console.log(`closeFileHandler model File name is ${fileContext.model.fileName}`);
-    
-          /* Send DEQ dataset  */
-          let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
-          const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
-          let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
+    if (fileContext.model.isDataset) {
+      /* dequeue dataset */
+      this.log.debug(`closeFileHandler model File name is ${fileContext.model.fileName}`);
+      
+      /* Send DEQ dataset  */
+      let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
+      const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+      let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
 
-          console.log(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
+      this.log.debug(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
 
-          /* subscribe to the DELETE request */  
-          _observable.subscribe({
-            next: (response: any) => {
-              console.log(`closeFileHandler delete request OK`);              
-            },
-            error: (err) => {
-              // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
-              console.log(`closeFileHandler delete request FAILED.  Error is: `, err);             
-            }
-          });
-          /* end of subscribe */
-          
-    /* end of dequeue dataset */
+      /* subscribe to the DELETE request */  
+      _observable.subscribe({
+        next: (response: any) => {
+          this.log.debug(`closeFileHandler delete request OK`);              
+        },
+        error: (err) => {
+          // console.log(`closeFileHandler delete request FAILED, error status ${err.status}`); 
+          this.log.warn(`closeFileHandler delete request FAILED.  Error is: `, err);             
+        }
+      });
+    }
+
     !fileContext.opened ? this.log.warn(`File ${fileContext.model.fileName} already closed.`) : fileContext.opened = false;
     !fileContext.active ? this.log.warn(`File ${fileContext.model.fileName} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
     /* TBD is the line below correct? */
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
+  }
+
+  public undoCloseFileHandler() {
+    this.log.debug("Attempting to restore session with data: ", this.previousSessionData);
+    if (this.previousSessionData.stateCache) {
+      stateCache = this.previousSessionData.stateCache;
+    }
+    if (this.previousSessionData._openFileList) {
+      this._openFileList.next(this.previousSessionData._openFileList);
+    }
   }
 
   public closeAllHandler() {
@@ -368,9 +386,18 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return activeFile;
   }
 
-  public fetchAdjToActiveFile(): ProjectContext {
+  public fetchRightOfActiveFile(): ProjectContext {
     let openFileListVal = this._openFileList.getValue();
     let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())+1)%openFileListVal.length;
+    return openFileListVal[adjIdx];
+  }
+
+  public fetchLeftOfActiveFile(): ProjectContext {
+    let openFileListVal = this._openFileList.getValue();
+    let adjIdx = (openFileListVal.indexOf(this.fetchActiveFile())-1)%openFileListVal.length;
+    if (adjIdx < 0) {
+      adjIdx = openFileListVal.length-1;
+    }
     return openFileListVal[adjIdx];
   }
 
@@ -540,11 +567,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
       this.snackBar.open(`Attempting to save Dataset ${results}`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
 
+    const records = _activeFile.model.contents.split('\n', -1);
+    const body = { records };
+    const jsonBody = JSON.stringify(body, null, 2); /* DEBUG only */
+    this.log.warn('736 json body =', jsonBody);     /* DEBUG only */
       /* Send the HTTP PUT request to the server
     * to save the file.
     */
     /*  POST ... */
-    this.ngHttp.post(requestUrl, _activeFile.model.contents).subscribe(r => {
+    this.ngHttp.post(requestUrl, jsonBody).subscribe(r => {
 
         /* It was a new file, we
         * can set the new fileName. */
@@ -560,7 +591,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         * for the sake of accessibility.
         */
         this.snackBar.open(`Dataset ${results} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
-
         /* Send buffer saved event */
         this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
         let fileList = this.openFileList.getValue()
@@ -729,15 +759,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     });
     
     this.log.warn('731 file contents =', _activeFile.model.contents);
-    // Convert a string of joined records to JSON
-    const records = _activeFile.model.contents.split('\n', -1);
-    this.log.warn('734 records =', records);
-    const body = { records };
-    // let _updatedFile = _activeFile; /* create new copy of file */
-    const jsonBody = JSON.stringify(body, null, 2); /* DEBUG only */
-    this.log.warn('736 json body =', jsonBody);     /* DEBUG only */
-    _activeFile.model.contents =  JSON.stringify(body, null, 2); /* update contents of new file */
-    this.log.warn('740 new file contents =', _activeFile.model.contents);
     requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
 
     /* save new file with updated contents */
@@ -1043,6 +1064,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.changeLanguage.next({ context: buffer, language: language });
   }
 
+  _setDefaultTheme(theme: string) {
+    this._defaultTheme = theme;
+  }
+
   /**
    * Sets the theme for a unique language, if necessary.
    *
@@ -1060,9 +1085,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('jcl-dark');
         break; 
       }
-      default: { 
-        // TODO: Once we expand editor themes, this will be set by for ex. getDefaultTheme() instead
-        monaco.editor.setTheme('vs-dark');
+      case 'rexx': {
+        monaco.editor.setTheme('rexx-dark');
+        break; 
+      }
+      default: {
+        if (this._defaultTheme) {
+          monaco.editor.setTheme(this._defaultTheme);
+        }
         break; 
       } 
     } 
