@@ -28,7 +28,25 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
   styleUrls: ['./monaco.component.scss']
 })
 export class MonacoComponent implements OnInit, OnChanges {
-  @Input() options;
+  private _options: any;
+  
+  @Input()
+  get options(): any { return this._options; }
+  set options(options: any) {
+    if (!options) {return;}
+    this._options = options;
+    if (this.editor) {
+      if (options.theme) {
+        this.editorControl._setDefaultTheme(options.theme);
+        this.editorControl.setTheme(options.theme);
+      }
+      
+      this.editor.updateOptions(options);
+    } else {
+      this.log.debug("Editor options passed prior to editor init. Cached.");
+    }
+  };
+  
   @Input() editorFile;
   @ViewChild('monacoEditor')
   monacoEditorRef: ElementRef;
@@ -45,7 +63,7 @@ export class MonacoComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.monacoConfig = new MonacoConfig();
-    let options = Object.assign({}, this.monacoConfig.defaultOptions, this.options);
+    let options = this._options ? Object.assign({}, this._options) : {};
     const hasModel = !!options.model;
     
     if (hasModel) {
@@ -57,7 +75,11 @@ export class MonacoComponent implements OnInit, OnChanges {
         options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
       }
     }
+    this.log.debug("New editor with options=",options);
     let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
+    if (options.theme) {
+      this.editorControl._setDefaultTheme(options.theme);
+    }
     if (!hasModel) {
       editor.setValue('');
     }
@@ -72,6 +94,10 @@ export class MonacoComponent implements OnInit, OnChanges {
   focus(e: any) {
     this.editor.focus();
   }
+  layout(e: any) {
+    this.editor.layout();
+  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {

@@ -1,0 +1,110 @@
+
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+*/
+mat-dialog-actions {
+    justify-content: flex-end;
+}
+
+.outer {
+    height: 100%;
+    background-color: #464646;
+    color: white;
+    display: flex;
+}
+
+.title-card {
+    padding-top: .25em;
+    padding-left: .5em;
+    padding-bottom: .25em;
+    background-color: #303030;
+}
+
+.title-card-first {
+    text-align: left;
+    margin-left: -15px;
+    margin-right: -15px;
+}
+
+.defaults-button {
+    margin-left: -5px !important;
+    margin-right: 0px !important;
+    width: 50%;
+}
+
+.save-button {
+    width: 50%;
+    margin-right: -8px !important;
+}
+
+.container {
+    height: 100%;
+    width: 50%;
+    min-width: 16em;
+    max-width: 24em;
+    text-align: right;
+    flex-direction: column;
+    display: flex;
+    background-color: #464646;
+    color: white;
+}
+
+.preview {
+    flex: auto;
+    display: flex;
+    /* border-left: black; */
+    /* border-style: solid; */
+    border-left-style: solid;
+    border-left-color: #222222;
+    flex-direction: column;
+    width: 50%;
+}
+
+.preview-button {
+    min-width: 130px;
+}
+
+.list-view-label {
+    color: white;
+}
+
+.button-row {
+    display: flex;
+}
+
+.menu-button {
+    margin: 0.5em;
+    flex: auto;
+}
+
+.monaco-editor-preview {
+    width: calc(100%);
+    height: calc(100% - 6.25em);
+}
+
+.scrolling-list {
+    overflow-y: scroll;
+    overflow-x: hidden;
+    font-size: 12px;
+    width: calc(100% + 15px);
+    padding-right: 5px;
+}
+
+.form-field {
+    width: 100%;
+}
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+*/

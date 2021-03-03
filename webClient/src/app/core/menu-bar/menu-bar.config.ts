@@ -145,7 +145,7 @@ export const MENU = [
               keyMap: 'Alt+N'
             },
             {
-              name: 'Refresh File',
+              name: 'Refresh File Content',
               action: {
                 internalName: 'refreshFile'
               },
@@ -203,6 +203,17 @@ export const MENU = [
             //},
         ],
     },
+    {
+        name: 'Edit',
+        children: [
+            {
+                name: 'Preferences',
+                action: {
+                    internalName: 'showSettings'
+                }
+            }
+        ]
+    }
     // {
     //     name: 'Language Server',
     //     children: [

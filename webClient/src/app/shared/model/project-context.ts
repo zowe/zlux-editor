@@ -10,6 +10,11 @@
 */
 import { ProjectStructure } from './editor-project';
 
+export enum ProjectContextType {
+  file = 0,
+  menu = 1
+}
+
 export interface ProjectContext {
     id: string;
     name: string;
@@ -22,6 +27,7 @@ export interface ProjectContext {
     children?: ProjectContext[];
     temp?: boolean;
     tempChildren?: ProjectContext[];
+    type?: ProjectContextType;
 }
 
 /*

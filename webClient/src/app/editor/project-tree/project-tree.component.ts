@@ -187,6 +187,10 @@ export class ProjectTreeComponent {
     this.editorControl.createDirectory.subscribe(pathAndName => {
       this.fileExplorer.createDirectory(pathAndName);
     });
+
+    this.editorControl.toggleFileTreeSearch.subscribe(() => {
+      this.fileExplorer.toggleSearch();
+    })
   }
 
   onNodeClick($event: any){
