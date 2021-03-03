@@ -78,7 +78,7 @@ export class FrameComponent implements OnInit, OnDestroy {
     this.editorControl.openProject.subscribe(() => {
       this.cantSearch = false;
     });
-    this.editorControl.hideTree.subscribe(() =>{
+    this.editorControl.toggleTree.subscribe(() =>{
       this.showExplorer = !this.showExplorer;
     });
     

@@ -44,7 +44,7 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
 })
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
-  public hideTree: EventEmitter<string> = new EventEmitter();
+  public toggleTree: EventEmitter<string> = new EventEmitter();
   public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
