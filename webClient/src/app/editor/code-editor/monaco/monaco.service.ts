@@ -187,44 +187,6 @@ export class MonacoService {
 
           _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
 
-          _observable.subscribe({
-            next: (response: any) => {
-              //network load or switched to currently open file
-              const resJson = response;
-              this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson).subscribe({
-                next: () => {
-                  this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
-                  if (line) {
-                    this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
-                    this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
-                      { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
-                    ])[0]);
-                    // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
-                  }
-                  if (reload) {
-                    this.editorControl.initializedFile.next(fileNode);
-                  }
-                },
-                error: (err) => {
-                  this.log.warn(err);
-                }
-              });
-            },
-            error: (err) => {
-              this.log.warn(`${fileNode.name} could not be accessed, status: `, err.status);
-              
-              if (err.status === 403) {
-                this.snackBar.open(`${fileNode.name} could not be accessed due to permissions.`,
-                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
-              } else if (err.status === 404) {
-                this.snackBar.open(`${fileNode.name} lock is not available.`,
-                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
-              } else {
-                this.snackBar.open(`${fileNode.name} other error 152.`,
-                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
-              }
-            }
-          });
           /* end new code for ENQ */
           // Investigate: Causes Dataset content to not appear in Monaco since Monaco model wasn't set. So why should we be quitting here?
           // return; /* we have dealt with reloading datasets, so we can quit */
@@ -240,8 +202,7 @@ export class MonacoService {
         _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
       }
       
-      /* this is always executed, reloading or not,
-          but not when reloading a dataset. */
+      /* this is always executed, reloading or not */
       _observable.subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
@@ -341,7 +302,7 @@ export class MonacoService {
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
@@ -357,7 +318,7 @@ export class MonacoService {
   closeAllFiles() {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
