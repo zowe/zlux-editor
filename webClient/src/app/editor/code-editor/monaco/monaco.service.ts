@@ -36,7 +36,7 @@ export class MonacoService {
   private decorations: string[] = [];
   private openDatasets = 0;
   private heartbeat: any;
-  private heartbeatInterval = 5000;
+  private heartbeatInterval = 15000;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -370,9 +370,8 @@ export class MonacoService {
         if(fileNode.model.isDataset){
           this.openDatasets--;
           if(this.openDatasets <= 0 && this.heartbeat) {
+            this.clearHeartbeatInterval();
             this.openDatasets = 0;
-            clearInterval(this.heartbeat);
-            this.heartbeat = undefined;
           }
         }
       }
@@ -390,9 +389,13 @@ export class MonacoService {
     for (const model of models) {
       model.dispose();
     }
+    this.clearHeartbeatInterval();
+    this.openDatasets = 0;
+  }
+
+  clearHeartbeatInterval(){
     if(this.heartbeat) clearInterval(this.heartbeat);
     this.heartbeat = undefined;
-    this.openDatasets = 0;
   }
 
   preSaveCheck(fileContext?: ProjectContext): boolean {

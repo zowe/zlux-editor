@@ -332,6 +332,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   ngOnDestroy():void {
     this.keyBindingSub.unsubscribe();
+    this.monacoService.clearHeartbeatInterval();
   }
 }
 
