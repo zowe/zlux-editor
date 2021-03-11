@@ -98,10 +98,7 @@ export class AppComponent {
         this.log.info(`Opening dataset=${data.name}`);
         this.editorControl.openDataset.next(data.name);
       }
-      if(data.toggleTree)
-      {
-        this.editorControl.toggleTree.next();
-      }
+      this.ToggleTree(data);
       break;
     case 'openDataset':
       if (data.name) {
@@ -110,6 +107,7 @@ export class AppComponent {
       } else {
         this.log.warn(`Dataset name missing. Skipping operation`);
       }
+      this.ToggleTree(data);
       break;
     case 'openDir':
       this.editorControl.loadDirectory(data.name);
@@ -122,6 +120,12 @@ export class AppComponent {
     }
   }
   
+
+  private ToggleTree(data: any) {
+    if (data.toggleTree) {
+      this.editorControl.toggleTree.next();
+    }
+  }
 
     /* I expect a JSON here*/
   zluxOnMessage(eventContext: any): Promise<any> {
