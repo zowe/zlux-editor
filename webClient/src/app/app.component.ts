@@ -98,7 +98,6 @@ export class AppComponent {
         this.log.info(`Opening dataset=${data.name}`);
         this.editorControl.openDataset.next(data.name);
       }
-      this.ToggleTree(data);
       break;
     case 'openDataset':
       if (data.name) {
@@ -107,7 +106,7 @@ export class AppComponent {
       } else {
         this.log.warn(`Dataset name missing. Skipping operation`);
       }
-      this.ToggleTree(data);
+      
       break;
     case 'openDir':
       this.editorControl.loadDirectory(data.name);
@@ -118,6 +117,7 @@ export class AppComponent {
     default:
       this.log.warn(`Unknown command (${data.type}) given in launch metadata.`);
     }
+    this.ToggleTree(data);
   }
   
 
