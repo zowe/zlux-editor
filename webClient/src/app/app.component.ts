@@ -106,6 +106,7 @@ export class AppComponent {
       } else {
         this.log.warn(`Dataset name missing. Skipping operation`);
       }
+      
       break;
     case 'openDir':
       this.editorControl.loadDirectory(data.name);
@@ -116,8 +117,15 @@ export class AppComponent {
     default:
       this.log.warn(`Unknown command (${data.type}) given in launch metadata.`);
     }
+    this.ToggleTree(data);
   }
   
+
+  private ToggleTree(data: any) {
+    if (data.toggleTree) {
+      this.editorControl.toggleTree.next();
+    }
+  }
 
     /* I expect a JSON here*/
   zluxOnMessage(eventContext: any): Promise<any> {

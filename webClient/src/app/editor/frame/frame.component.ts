@@ -78,6 +78,10 @@ export class FrameComponent implements OnInit, OnDestroy {
     this.editorControl.openProject.subscribe(() => {
       this.cantSearch = false;
     });
+    this.editorControl.toggleTree.subscribe(() =>{
+      this.showExplorer = !this.showExplorer;
+    });
+    
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
