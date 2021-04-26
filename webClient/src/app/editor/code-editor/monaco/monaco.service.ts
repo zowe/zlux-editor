@@ -151,6 +151,7 @@ export class MonacoService {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
+          console.log(this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 }));
           this.decorations.push(this.editorControl.editor.getValue().deltaDecorations([], [
             { range: new monaco.Range(line, 100, line, 100), options: { isWholeLine: true, inlineClassName: 'highlight-line' } },
           ])[0]);
