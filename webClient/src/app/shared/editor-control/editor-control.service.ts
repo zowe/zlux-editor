@@ -228,6 +228,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   //almost like selectfilehandler, except altering the list of opened files
   public openFileHandler(fileContext: ProjectContext) {
+    this.log.debug(`openFileHandler File ${fileContext.name}\n`);
     for (const file of this._openFileList.getValue()) {
       file.opened = false;
       file.active = false;
@@ -245,6 +246,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public closeFileHandler(fileContext: ProjectContext) {
+    this.log.debug(`closeFileHandler start\n`);
     let cacheFileName = `${fileContext.model.fileName}:${fileContext.model.path}`;
     this.previousSessionData.stateCache = stateCache;
     this.previousSessionData._openFileList = this._openFileList.getValue();
@@ -252,9 +254,33 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Clearing cache for`,cacheFileName);
       delete stateCache[cacheFileName];
     }
-    !fileContext.opened ? this.log.warn(`File ${fileContext.name} already closed.`) : fileContext.opened = false;
-    !fileContext.active ? this.log.warn(`File ${fileContext.name} already inactive.`) : fileContext.active = false;
+
+    if (fileContext.model.isDataset) {
+      /* dequeue dataset */
+      this.log.debug(`closeFileHandler model File name is ${fileContext.model.fileName}`);
+      
+      /* Send DEQ dataset  */
+      let filePath = ['/', '\\'].indexOf(fileContext.model.path.substring(0, 1)) > -1 ? fileContext.model.path.substring(1) : fileContext.model.path;
+      const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+      let _observable = this.http.delete(enqRequestUrl);                        /* prepare to delete the ENQ */
+
+      this.log.debug(`closeFileHandler delete request is for ${fileContext.model.fileName}`);
+
+      /* subscribe to the DELETE request */  
+      _observable.subscribe({
+        next: (response: any) => {
+          this.log.debug(`closeFileHandler delete request OK`);              
+        },
+        error: (err) => {
+          this.log.warn(`closeFileHandler delete request FAILED.  Error is: `, err);             
+        }
+      });
+    }
+
+    !fileContext.opened ? this.log.warn(`File ${fileContext.model.fileName} already closed.`) : fileContext.opened = false;
+    !fileContext.active ? this.log.warn(`File ${fileContext.model.fileName} already inactive.`) : fileContext.active = false;
     fileContext.changed = false;
+    /* TBD is the line below correct? */
     this._openFileList.next(this._openFileList.getValue().filter((file) => (file.model.fileName !== fileContext.model.fileName || file.model.path !== fileContext.model.path)));
   }
 
@@ -506,7 +532,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     /* Send the HTTP PUT request to the server
      * to save the file.
      */
-    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {
+    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {  
       
       /* It was a new file, we
        * can set the new fileName. */
@@ -545,6 +571,59 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.openDirectory.next(results.directory);
     });
   }
+
+
+  doSavingDataset(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
+    _observer: Observer<void>, _observable: Observable<void>) {
+
+      this.snackBar.open(`Attempting to save Dataset ${results}`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+
+    const records = _activeFile.model.contents.split('\n', -1);
+    const body = { records };
+    const jsonBody = JSON.stringify(body, null, 2); /* DEBUG only */
+    this.log.warn('736 json body =', jsonBody);     /* DEBUG only */
+      /* Send the HTTP PUT request to the server
+    * to save the file.
+    */
+    /*  POST ... */
+    this.ngHttp.post(requestUrl, jsonBody).subscribe(r => {
+
+        /* It was a new file, we
+        * can set the new fileName. */
+        // if (results && !isUntagged) {
+        //   _activeFile.name = results.fileName;
+        //   _activeFile.model.name = results.fileName;
+        //   _activeFile.model.fileName = results.fileName;
+        //   _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+        //   _activeFile.model.path = results.directory;
+        //   _activeFile.temp = false;
+        // }
+        /* This will probably need to be changed
+        * for the sake of accessibility.
+        */
+        this.snackBar.open(`Dataset ${results} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+        /* Send buffer saved event */
+        this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
+        let fileList = this.openFileList.getValue()
+          .map(file => {
+            if (file.id === context.id) {
+              file.changed = false;
+            }
+            return file;
+          });
+        this.openFileList.next(fileList);
+        this.openDirectory.next(results.directory);
+        if (_observer != null) { _observer.next(null); }
+    }, e => {
+        let error = e.json().error;
+
+        /* This will probably need to be changed
+        * for the sake of accessibility.
+        */
+        this.snackBar.open(`Dataset ${results} could not be saved.  ${error}`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        this.openDirectory.next(results.directory);
+        });
+}
   
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
@@ -663,6 +742,45 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }); 
     }
+
+    return _observable;
+  }
+
+  
+  saveDatasetHandler(context?: ProjectContext, results?: any): Observable<void> {
+    const _openFile = this.openFileList.getValue();
+    let _activeFile: ProjectContext;
+    let _observer: Observer<void>;
+    let _observable: Observable<void>;
+    let sessionID: number;
+    
+    if (context != null) {
+      this.log.warn('context is not null');
+      _activeFile = context;
+    } else {
+      this.log.warn('context is null');
+      _activeFile = _openFile.filter(file => file.active === true)[0];
+    }
+    
+    let requestUrl: string;
+    let isUntagged: boolean;
+    
+    _observable = new Observable((observer) => {
+      _observer = observer;
+    });
+    
+    this.log.warn('731 file contents =', _activeFile.model.contents);
+    requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(_activeFile.model.path);
+
+    /* save new file with updated contents */
+    this.doSavingDataset(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+
+    /* to pad, do this ... */
+    // const padRight = (record: string, recordLen: number) => {
+    //   return record + ' '.repeat(recordLen - record.length);
+    // }
+    // const records = contents.split('\n').map(record => padRight(record, 80));
+    // const body = { records };
 
     return _observable;
   }
@@ -869,6 +987,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.saveFile.emit(<ProjectContext>buffer);
     return this.saveFileHandler(buffer, path);
   }
+    /**
+     * Save a buffer into a dataset.
+     *
+     * @param   buffer          The buffer that should be saved
+     * @param   datasetName     The name of the dataset into which the buffer should be saved
+     * @returns                 An observable that pushes when the file has been saved
+     */
+    saveBufferToDataset(buffer: ZLUX.EditorBufferHandle, datasetName: string | null): Observable<void> {
+      this.saveFile.emit(<ProjectContext>buffer);
+      return this.saveDatasetHandler(buffer, datasetName);
+    }
   /**
     * Get the contents of a buffer.
     *

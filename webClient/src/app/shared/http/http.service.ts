@@ -11,7 +11,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import { catchError, retry, map } from 'rxjs/operators';
+import { catchError, retry, map, tap } from 'rxjs/operators';
 
 @Injectable()
 export class HttpService {
@@ -46,6 +46,18 @@ export class HttpService {
         retry(3)
       )
       .pipe(map(res => res.json()));
+  }
+
+  delete(url: string, options?: any): Observable<any> {
+    return this.http.delete(url, this.HttpOptions).
+      pipe(
+        retry(3)
+      )  /* this last pipe is probably redundant as it's just debugging. 
+            It used to handle JSON but the response to http.delete is not JSON. */
+      .pipe(
+        tap(res => console.log(res)),
+        tap(x => console.log('DELETE at line 57 of http.service.ts', x))
+        );
   }
 }
 

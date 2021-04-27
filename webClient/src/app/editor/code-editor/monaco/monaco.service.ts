@@ -17,6 +17,7 @@ import { EditorControlService } from '../../../shared/editor-control/editor-cont
 import 'rxjs/add/operator/map';
 import { UtilsService } from '../../../shared/utils.service';
 import { DataAdapterService } from '../../../shared/http/http.data.adapter.service';
+// import { Http, Headers, RequestOptionsArgs } from '@angular/http';
 import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
@@ -157,8 +158,52 @@ export class MonacoService {
           // this.editor.getValue().colorizeModelLine(newModel, fileNode.model.line);
         }
       });
-    } else {
-      this.getFileRequestObservable(fileNode, reload, line).subscribe({
+    } else 
+    {
+      let requestUrl: string;
+      let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
+      let _observable;
+      
+      if (reload) { 
+        if (fileNode.model.isDataset) {
+          /* begin new code for ENQ */
+          /* Send ENQ and dataset contents requests separately */
+          const enqRequestUrl = ZoweZLUX.uriBroker.datasetEnqueueUri(filePath);   /* the ENQ URL */
+          requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);           /* the contents URL */
+
+          _observable = this.http.get(enqRequestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+
+          /* subscribe to the ENQ request */ 
+          /* the HTTP GET that consumes this message insists that the response body be JSON,
+             otherwise you are sent down the 'error' path. */ 
+          _observable.subscribe({
+            next: (response: any) => {
+              this.log.warn(`openFile enqueue request OK`);              
+            },
+            error: (err) => {
+              this.log.warn(`openFile enqueue request FAILED, error ${err}`);             
+            }
+          });
+
+          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertDatasetContent(res._body));
+
+          /* end new code for ENQ */
+          // Investigate: Causes Dataset content to not appear in Monaco since Monaco model wasn't set. So why should we be quitting here?
+          // return; /* we have dealt with reloading datasets, so we can quit */
+
+        } else /* it's not a dataset */ {
+          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                      filePath+'/'+fileNode.model.fileName,
+                                                      { responseType: 'b64' });
+          _observable = this.http.get(requestUrl).map((res: any) => this.dataAdapter.convertFileContent(res._body));
+        }
+
+      } else { /* not reloading */
+        _observable = new Observable((obs) => obs.next({ contents: fileNode.model.contents }));
+      }
+      
+      /* this is always executed, reloading or not */
+      _observable.subscribe({
         next: (response: any) => {
           //network load or switched to currently open file
           const resJson = response;
@@ -257,7 +302,7 @@ export class MonacoService {
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
@@ -273,7 +318,7 @@ export class MonacoService {
   closeAllFiles() {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
-      console.warn(`Editor core null on closeFile()`);
+      this.log.warn(`Editor core null on closeFile()`);
       return;
     }
     const _editor = editorCore.editor;
@@ -299,6 +344,7 @@ export class MonacoService {
   
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
+      this.log.warn(`saveFile context `, fileContext, ` directory `, fileDirectory);
       
       /* If the file is not new, and the encoding 
        * has already been set inside of USS via
@@ -363,6 +409,84 @@ export class MonacoService {
           saveRef.afterClosed().subscribe(result => {
           if (result) {
             this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+          }
+          });
+        }
+      }
+    });
+  }
+
+  /* save a dataset, not a file */
+  saveDataset(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
+    return new Observable((obs) => {
+      this.log.warn(`saveDataset name `, fileContext.model.fileName, ` directory `, fileDirectory );
+      
+      /* always save it, for now.  Fix it properly later */
+      this.editorControl.saveBufferToDataset(fileContext, fileContext.model.fileName).subscribe(() => obs.next());
+      return;      
+      /* If the file is not new, and the encoding 
+       * has already been set inside of USS via
+       * chtag.
+       */
+      if (!fileContext.temp && 
+          fileContext.model.encoding != undefined &&
+          fileContext.model.encoding != null && 
+          fileContext.model.encoding != 0
+          ){
+        this.editorControl.saveBufferToDataset(fileContext, null).subscribe(() => obs.next());
+      }
+      /* The file is new or is untagged,
+       * so we must prompt a dialog.
+       */
+      else {
+        /* Issue a presave check to see if the
+         * file can be saved as ISO-8859-1,
+         * perhaps this should be done in real
+         * time as an enhancement.
+         */
+        let x = this.preSaveCheck(fileContext);
+        
+        /* The file is temporary, which means that
+         * it was never tagged.
+         */
+        if (fileContext.temp) {
+          /* Open up a dialog with the standard,
+           * "save as" format.
+           */
+          let activeDirectory = '';
+          if (fileDirectory) {
+            activeDirectory = fileDirectory;
+          }
+          let saveRef = this.dialog.open(SaveToComponent, {
+            width: '500px',
+            data: { canBeISO: x, 
+              fileName: fileContext.model.fileName,
+              fileDirectory: activeDirectory }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBufferToDataset(fileContext, result).subscribe(() => obs.next());
+          }
+          });
+        }
+        /* The file was never tagged, so we should
+         * ask the user if they would like to tag
+         * it.
+         */
+        else {
+          /* Open up a dialog asking if the user
+           * wants to tag their file. Again,
+           * we are checking if ISO-8859-1 is
+           * an option.
+           */
+          let saveRef = this.dialog.open(TagComponent, {
+            width: '500px',
+            data: { canBeISO: x,
+                    fileName: fileContext.model.fileName }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBufferToDataset(fileContext, result).subscribe(() => obs.next());
           }
           });
         }
