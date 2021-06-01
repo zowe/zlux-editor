@@ -8,6 +8,23 @@
   
   Copyright Contributors to the Zowe Project.
 -->
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+    integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous">
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+    integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous">
+  </script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
+  </script>
+  
+
+</head>
+
 <div class="editor-instruction" *ngIf="noOpenFile && !showSettings">
   <div class="instruction">
     <span class="welcome" style="color: #6ba4ff">Zowe Editor</span>
@@ -23,6 +40,13 @@
     (remove)="closeFile($event)"></app-file-tabs>
   <app-monaco-settings (options)="setOptions($event)" *ngIf="showSettings"></app-monaco-settings>
   <app-monaco [editorFile]="editorFile" [options]="options" #monaco></app-monaco>
+  <div class="d-flex flex-row justify-content-between position-absolute p-2 bg-dark text-light w-100" id="bar" style="bottom: 0px; z-index: 100; height: 40px; color: darkslategray;">
+    <button type="button" class="btn btn-default fa fa-arrows-h" (click)="ToggleTree()" style="cursor: pointer; color: white;"></button>
+    <div>
+      <a href="#" class="badge badge-dark" id="encoding"></a>
+      <a href="#" class="badge badge-dark" id="ext"></a>
+      <a href="#" class="badge badge-dark" id="lang"></a>
+    </div>
 </div>
 
 <!-- 

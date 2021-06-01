@@ -23,6 +23,7 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
+import { NodeData } from '@angular/core/src/view';
 
 function getDatasetName(dirName) {
   let lParenIndex = dirName.indexOf('(');
@@ -219,6 +220,7 @@ export class ProjectTreeComponent {
         });
       }
     }
+    
   }
 
   onPathChanged($event: any) {

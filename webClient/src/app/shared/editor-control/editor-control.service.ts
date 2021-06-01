@@ -29,6 +29,7 @@ import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;
+let langName, extName;
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
 
@@ -61,6 +62,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public selectFile: EventEmitter<ProjectContext> = new EventEmitter();
   public saveFile: EventEmitter<ProjectContext> = new EventEmitter();
   public initializedFile: EventEmitter<ProjectContext> = new EventEmitter();
+  public updateBottomBar: EventEmitter<ProjectStructure> = new EventEmitter();
   //public saveAllFile: EventEmitter<any> = new EventEmitter();
   public changeLanguage: EventEmitter<{ context: ProjectContext, language: string }> = new EventEmitter();
   public connToLS: EventEmitter<string> = new EventEmitter();
@@ -317,6 +319,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         file.active = false;
       }
     }
+    // langName = fileContext.model.language;
+    // extName = fileContext.model.ext;
+    this.updateBottomBar.next(fileContext.model); 
   }
 
   public checkForAndSetReadOnlyMode(model: any): void {
@@ -363,6 +368,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         }
       }
     }
+    
     return fileContext;
   }
 
@@ -773,6 +779,22 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     // });
   }
 
+  GetExtInfo()
+  {
+    if (extName != "undefined")
+    {
+      return extName;
+    }
+  }
+
+  GetLangInfo()
+  {
+    if (langName != "undefined")
+    {
+      return langName;
+    }
+  }
+
   getNewFileName() {
     let name:string='new';
     let num:number= 1;
@@ -1000,6 +1022,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   getRecommendedHighlightingModesForBuffer(buffer: ZLUX.EditorBufferHandle): Observable<string[]> {
     return new Observable<string[]>((obs) => {
       let bufferExt = this.utils.fileExtension(buffer.name).toLowerCase();
+      extName = this.utils.fileExtension(buffer.name);
       const fullName = buffer.model.isDataset ? buffer.model.fileName : buffer.name
       const parenIndex = fullName.indexOf('(');
       const isPds = buffer.model.isDataset && ( parenIndex != -1);
@@ -1021,6 +1044,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                       || portion === extension+'lib') {
                     results.push(lang.id);
                     i = languages.length;
+                    langName = lang.id;
                     break;
                   }
                 }
@@ -1030,6 +1054,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             for (let lang of languages) {
               if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
                 results.push(lang.id);
+                langName = lang.id;
                 break;
               }
             }
@@ -1040,6 +1065,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                 let regex = new RegExp(pattern);
                 if (regex.test(name)) {
                   results.push(lang.id);
+                  langName = lang.id;
                   break;
                 }
               }

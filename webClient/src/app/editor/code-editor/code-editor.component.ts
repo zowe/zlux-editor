@@ -23,6 +23,7 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs/Rx';
 import {HttpClient} from '@angular/common/http';
+import { connect } from 'net';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -72,10 +73,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private monacoService: MonacoService,
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
+    private editorControlService: EditorControlService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     private codeEditorService: CodeEditorService) {
+      
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(()=> {
         this.focus();
@@ -97,7 +100,17 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         }
       }
       this.openFile(fileNode);
-      this.editorControl.editor.getValue().layout();
+      this.editorControlService.updateBottomBar.next(fileNode);
+      this.editorControl.editor.getValue().layout();      
+    });
+
+    this.editorControlService.updateBottomBar.subscribe((fileNode: ProjectStructure) => {
+     
+      
+      
+      document.getElementById('encoding').innerHTML = editorControlService.getStringEncoding(fileNode.encoding);
+      document.getElementById('ext').innerHTML = editorControlService.GetExtInfo();
+      document.getElementById('lang').innerHTML = editorControlService.GetLangInfo();
     });
 
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
@@ -267,7 +280,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
       this.editorControl.openFileHandler(fileContext);
     }
-    
+
   }
 
   private handleCloseFile(fileContext: ProjectContext) {
@@ -280,6 +293,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  ToggleTree() 
+    {
+      this.editorControl.toggleTree.next();
+    }
+
   closeFile(fileContext: ProjectContext) {
     if (fileContext.type == ProjectContextType.menu) {
       this.editorControl.closeSettings.next();
@@ -290,6 +308,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.codeEditorService.closeFile(fileContext);
     }
   }
+
 
   /* 
      this.editorFile instructs monaco to change, 
@@ -306,11 +325,13 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     }
     this.editorFile = { context: fileContext, reload: false, line: line };
     this.updateEditorTitle();
+    this.editorControlService.updateBottomBar.next(fileContext.model);
   }
 
   refreshFile(fileContext: ProjectContext, broadcast: boolean, line?: number) {
     if (fileContext.type != ProjectContextType.menu) { //TODO revisit for other types
       this.monacoService.refreshFile(fileContext, broadcast, line)
+      this.editorControlService.updateBottomBar.next(fileContext.model);
       // We don't want to kick off openfile from the editor controller, so talk to monaco directly
     }
   }
