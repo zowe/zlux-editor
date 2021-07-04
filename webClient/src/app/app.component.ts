@@ -16,6 +16,7 @@ import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
 import * as monaco from 'monaco-editor';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -37,8 +38,37 @@ export class AppComponent {
               private httpService: HttpService,
               private utils: UtilsService,
               private editorControl: EditorControlService,
-              private appKeyboard: EditorKeybindingService) {
+              private appKeyboard: EditorKeybindingService,
+              @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+              private HTTP: HttpClient) {
     this.log.debug(`Monaco object=`,monaco);
+    let openWindowsStorageString : string = window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows")
+    let activeZluxEditorsCount : number
+    let dataToSave : string
+    if(openWindowsStorageString){
+      (+window.localStorage.getItem("ZoweZLUX.lastActive") - +openWindowsStorageString.split(":")[1]) < +window.localStorage.getItem("ZoweZLUX.expirationTime") ? activeZluxEditorsCount = +openWindowsStorageString.split(":")[0] + 1 : activeZluxEditorsCount = 1
+    }else{
+      activeZluxEditorsCount = 1
+    }
+    dataToSave = activeZluxEditorsCount.toString() + ":" + Date.now() 
+    window.localStorage.setItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows",dataToSave)
+    window.addEventListener("beforeunload",this.resetActiveEditorsCount);
+    if(activeZluxEditorsCount < 2){
+      let plugin : ZLUX.Plugin = this.pluginDefinition.getBasePlugin()
+      let filePath : string = 'ui/openTabs'
+      let fileName : string = 'fileList'
+      this.HTTP.get<any>(ZoweZLUX.uriBroker.pluginConfigUri(plugin,filePath,fileName)).subscribe(res => {
+        if(res){
+          res.contents.files.length - 1 > -1 ? this.editorControl.numberOfTabsToRestore = res.contents.files.length - 1 : this.editorControl.numberOfTabsToRestore = 0
+          res.contents.files.forEach(file => {
+            if(file[0] == '/' && file.startsWith("//'") == false){
+              file = file.slice(1);
+            }
+            this.handleLaunchOrMessageObject({'type':'openFile','name':file});
+          });
+        }
+      });
+    }
   }
 
   ngOnInit() {
@@ -87,7 +117,8 @@ export class AppComponent {
               if (nodes[i].fileName == fileName) {
                 this.editorControl.openFile('', nodes[i]).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
-                });                
+                  this.editorControl.numberOfTabsToRestore - 1 > -1 ? this.editorControl.numberOfTabsToRestore-- : this.editorControl.numberOfTabsToRestore = 0
+                });
               }
             }
           }, e => {
@@ -147,6 +178,18 @@ export class AppComponent {
         return this.zluxOnMessage(eventContext);
       }      
     }
+  }
+
+  resetActiveEditorsCount = function(){
+    let activeZluxEditors : number  = +window.localStorage.getItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows").split(":")[0]
+    activeZluxEditors - 1 > -1 ? activeZluxEditors-- : activeZluxEditors = 0;
+    let dataToSave = activeZluxEditors.toString() + ":" + Date.now() 
+    window.localStorage.setItem(this.pluginDefinition.getBasePlugin().getIdentifier()+"-openWindows",dataToSave)
+  }
+
+  ngOnDestroy(){
+    this.resetActiveEditorsCount();
+    window.removeEventListener("beforeunload",this.resetActiveEditorsCount);
   }
 
 }
