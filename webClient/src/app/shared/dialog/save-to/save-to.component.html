@@ -32,7 +32,7 @@
 <mat-dialog-actions>
   <button mat-button mat-dialog-close class="right">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results">Save</button>
 </mat-dialog-actions>
 
 <!-- 
