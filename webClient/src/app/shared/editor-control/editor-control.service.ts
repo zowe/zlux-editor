@@ -663,6 +663,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }); 
     }
+    /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+    if(isUntagged) {
+      let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+      this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+    }
 
     return _observable;
   }
