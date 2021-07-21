@@ -83,7 +83,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
-  public isFileClosed = false; 
+  public saveCursorPosition = true; 
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -300,10 +300,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
-    if(!this.isFileClosed) {  
+    if(this.saveCursorPosition) {  
       this.saveCursorState();
     }
-    // this.saveCursorState();
     //fileopen to be called soon after
     let fileOpenSub: Subscription = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
       let model = e.buffer.model;
@@ -842,9 +841,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      */
   openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null): Observable<ZLUX.EditorBufferHandle> {
     // targetBuffer is a context of project in GCE.
-    this.openFileList.subscribe((list: ProjectContext[]) => {
-      list.length === 1 ? this.isFileClosed = true : this.isFileClosed = false;
-    });
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;
     let resultObserver: Observer<ZLUX.EditorBufferHandle>;
