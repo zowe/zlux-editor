@@ -144,8 +144,10 @@ export class MonacoService {
     reload - Tells Editor to reload file language settings & other file init actions
    */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
-    this.editorControl.saveCursorState();
     if (fileNode.temp) {
+      if(!this.editorControl.isFileClosed) {  
+        this.editorControl.selectFileHandler(fileNode);
+      }
       //blank new file
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
@@ -195,6 +197,8 @@ export class MonacoService {
           }
         }
       });
+    // this.editorControl.saveCursorState();
+    this.editorControl.selectFileHandler(fileNode);
     }
   }
 
@@ -266,6 +270,7 @@ export class MonacoService {
     for (const model of models) {
       if (model.uri === fileUri) {
         model.dispose();
+        this.editorControl.isFileClosed = true;
       }
     }
   }
