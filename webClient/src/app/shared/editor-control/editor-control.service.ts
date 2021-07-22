@@ -622,6 +622,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       forceOverwrite,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+        if(isUntagged) {
+          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -658,12 +663,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+        if(isUntagged) {
+          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }); 
     }
-
+    
     return _observable;
   }
 
