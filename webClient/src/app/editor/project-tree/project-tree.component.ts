@@ -191,6 +191,11 @@ export class ProjectTreeComponent {
     this.editorControl.toggleFileTreeSearch.subscribe(() => {
       this.fileExplorer.toggleSearch();
     })
+
+    this.editorControl.refreshFileMetadatdaByPath.subscribe(path => {
+      this.fileExplorer.refreshFileMetadatdaByPath(path);
+    });
+    
   }
 
   onNodeClick($event: any){
