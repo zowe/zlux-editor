@@ -83,7 +83,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
-
+  public saveCursorPosition = true; 
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -118,6 +118,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   public saveCursorState() {
     let editor = this.editor.getValue();
+    this.editor.subscribe((value)=> {
+      if (value) {
+        if(!value._modelData) {
+          return;
+        }
+        editor.cursor = value._modelData.cursor;
+        editor.viewModel = value._modelData.viewModel;
+      } 
+    });  
     //when quickly switching, cursor or viewmodel may not exist
     if (editor && editor.cursor && editor.viewModel && lastFile) {
       let lastCursor = editor.cursor.saveState();
@@ -291,7 +300,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
-    this.saveCursorState();
+    if(this.saveCursorPosition) {  
+      this.saveCursorState();
+    }
     //fileopen to be called soon after
     let fileOpenSub: Subscription = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
       let model = e.buffer.model;
@@ -300,9 +311,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`restoring cache`,cache,`file`,lastFile);
       if (cache){
         let editor = this.editor.getValue();
-        editor.cursor.restoreState(cache.cursor);
-        const smallView = editor.viewModel.reduceRestoreState(cache.view);
-			  editor._view.restoreState(smallView);
+        this.editor.subscribe((value)=> {
+          if(value._modelData) {
+            editor.cursor = value._modelData.cursor;
+            editor.viewModel = value._modelData.viewModel;
+            editor._view = value._modelData.view
+            editor.cursor.restoreState(cache.cursor);
+            const smallView = editor.viewModel.reduceRestoreState(cache.view);
+            editor._view.restoreState(smallView);
+          }
+        })  
       }
       this.checkForAndSetReadOnlyMode(model);
       fileOpenSub.unsubscribe();
@@ -622,6 +640,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       forceOverwrite,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+        if(isUntagged) {
+          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -658,12 +681,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+        if(isUntagged) {
+          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }); 
     }
-
+    
     return _observable;
   }
 
@@ -733,7 +761,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   createFile(name?: string): ProjectContext {
-
     if(name===undefined) {
       name = this.getNewFileName();
     }
@@ -827,7 +854,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;
     let resultObserver: Observer<ZLUX.EditorBufferHandle>;
-    this.saveCursorState();
+    // this.saveCursorState();
     
     resultOpenObs = new Observable((observer) => {
       resultObserver = observer;

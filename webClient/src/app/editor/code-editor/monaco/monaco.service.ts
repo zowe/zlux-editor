@@ -144,7 +144,12 @@ export class MonacoService {
     reload - Tells Editor to reload file language settings & other file init actions
    */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
-    this.editorControl.saveCursorState();
+    this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
+      if(list.length === 1) {
+        this.editorControl.saveCursorPosition = false;
+      }
+    });
+    this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
       this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
@@ -196,6 +201,7 @@ export class MonacoService {
         }
       });
     }
+    this.editorControl.saveCursorPosition = true;
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
@@ -266,6 +272,7 @@ export class MonacoService {
     for (const model of models) {
       if (model.uri === fileUri) {
         model.dispose();
+        this.editorControl.saveCursorPosition = false;
       }
     }
   }
