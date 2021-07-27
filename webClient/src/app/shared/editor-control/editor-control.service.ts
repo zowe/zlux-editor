@@ -54,6 +54,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public deleteFile: EventEmitter<string> = new EventEmitter();
+  public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
@@ -626,6 +627,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         if(isUntagged) {
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+          this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
         }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
@@ -667,6 +669,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         if(isUntagged) {
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+          this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
         }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 

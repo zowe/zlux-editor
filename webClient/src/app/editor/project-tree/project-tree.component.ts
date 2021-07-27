@@ -184,6 +184,10 @@ export class ProjectTreeComponent {
       this.fileExplorer.deleteFileOrFolder(pathAndName);
     });
 
+    this.editorControl.refreshFileMetadatdaByPath.subscribe(path => {
+      this.fileExplorer.refreshFileMetadatdaByPath(path);
+    });
+
     this.editorControl.createDirectory.subscribe(pathAndName => {
       this.fileExplorer.createDirectory(pathAndName);
     });
