@@ -55,7 +55,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public activeDirectory = '';
   public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
-  public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
   public closeFile: EventEmitter<ProjectContext> = new EventEmitter();
