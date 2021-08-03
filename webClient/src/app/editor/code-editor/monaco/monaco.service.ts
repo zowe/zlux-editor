@@ -312,11 +312,28 @@ export class MonacoService {
        * chtag.
        */
       if (!fileContext.temp && 
-          fileContext.model.encoding != undefined &&
-          fileContext.model.encoding != null && 
-          fileContext.model.encoding != 0
+          fileContext.model.encoding != null
           ){
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+        this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(result => {
+          if (result.ccsid !== 0) {
+            this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+          }
+          else {
+            fileContext.model.encoding = result.ccsid;
+            let x = this.preSaveCheck(fileContext);
+            let saveRef = this.dialog.open(TagComponent, {
+              width: '500px',
+              data: { canBeISO: x,
+                      fileName: fileContext.model.fileName }
+            });
+            saveRef.afterClosed().subscribe(result => {
+            if (result) {
+              this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+            }
+            });
+          }
+        })
+        //this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
       }
       /* The file is new or is untagged,
        * so we must prompt a dialog.
