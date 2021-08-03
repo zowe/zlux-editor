@@ -1,5 +1,8 @@
 # Zlux Editor Changelog
 
+## `2.8.0`
+- Added calls to a function in FileExplorer, to refresh the file properties, when an untagged file is saved with an encoding type.
+
 ## `2.7.0`
 - Added function to toggle the file explorer
 - Added calls to the function in openfile and open dataset so that when the user inputs the string with a true in the url it will hide the file explorer 
