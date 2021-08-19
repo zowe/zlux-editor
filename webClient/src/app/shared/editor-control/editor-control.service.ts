@@ -336,13 +336,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       lastFile = `${model.fileName}:${model.path}`;
       let cache = stateCache[lastFile];
       this.log.debug(`restoring cache`,cache,`file`,lastFile);
-      let editor = this.editor.getValue();
       if (cache){
-<<<<<<< HEAD
-        editor.cursor.restoreState(cache.cursor);
-        const smallView = editor.viewModel.reduceRestoreState(cache.view);
-			  editor._view.restoreState(smallView);
-=======
         let editor = this.editor.getValue();
         this.editor.subscribe((value)=> {
           if(value._modelData) {
@@ -354,7 +348,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             editor._view.restoreState(smallView);
           }
         })  
->>>>>>> 253ae770e2341d8dfe961e87f9426428efe79670
       }
       this.checkForAndSetReadOnlyMode(model);
       fileOpenSub.unsubscribe();
