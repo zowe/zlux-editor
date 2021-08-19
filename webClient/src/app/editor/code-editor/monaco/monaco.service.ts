@@ -299,6 +299,11 @@ export class MonacoService {
   
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
+
+      if (fileContext.model.isDataset) {
+        //TODO validation
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+      }
       
       /* If the file is not new, and the encoding 
        * has already been set inside of USS via

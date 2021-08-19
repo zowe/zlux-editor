@@ -26,18 +26,16 @@ export interface ProjectStructure {
 }
 
 export interface DatasetAttributes {
-  csiEntryType: string,
-  name: string,
-  dsorg?: DatasetOrganization,
-  members?: Array<any>,
-  recfm?: RecordFormat,
-  volser?: string
+  volser: string;
+  recfm: RecordFormat;
+  dsorg: DatasetOrganization;
 }
 
 export interface RecordFormat {
   carriageControl: string;
   isBlocked: boolean;
   recordLength: string;
+  isPDSDir?: boolean;
 }
 
 export interface DatasetOrganization {
