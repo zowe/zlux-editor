@@ -8,7 +8,7 @@
 
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable, ViewChild, Inject } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
 import { ProjectStructure } from '../model/editor-project';
@@ -26,8 +26,6 @@ import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 import * as monaco from 'monaco-editor'
-import { result } from 'lodash';
-
 
 let stateCache = {};
 let lastFile;
@@ -632,38 +630,30 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
-      /**
-       * Always try to fetch the latest encoding from the USS and use it for saving the file
-       */
-        this.getFileMetadata(_activeFile.model.path + '/' + _activeFile.model.name).subscribe(result =>{
-        if(result.ccsid !== 0) {
-          targetEncoding = this.getStringEncoding(result.ccsid);
-        }
         fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
         const forceOverwrite = true;
         /* Request to get sessionID */
+      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                  fileDir+'/'+fileName,
+                                                  { sourceEncoding,
+                                                    targetEncoding,
+                                                    forceOverwrite });
+      sessionID = 0;
+      this.ngHttp.put(requestUrl, null).subscribe(r => {
+        sessionID = r.json().sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     fileDir+'/'+fileName,
-                                                    { sourceEncoding,
-                                                      targetEncoding,
-                                                      forceOverwrite });
-        sessionID = 0;
-        this.ngHttp.put(requestUrl, null).subscribe(r => {
-          sessionID = r.json().sessionID;
-          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                      fileDir+'/'+fileName,
-                                                      { sessionID,
-                                                        forceOverwrite,
-                                                        lastChunk: true });
-          this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-          /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
-            let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-            this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-            this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
-        }, e => {
-          this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-        });
+                                                    { sessionID,
+                                                      forceOverwrite,
+                                                      lastChunk: true });
+        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        /** Update the new encoding value, in opeFileList Models */
+        let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+        this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
+      }, e => {
+        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       });
     }
     
@@ -697,7 +687,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
+        /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
           this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
