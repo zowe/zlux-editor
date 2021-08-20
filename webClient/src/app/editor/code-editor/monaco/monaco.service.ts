@@ -308,7 +308,6 @@ export class MonacoService {
     return new Observable((obs) => {
 
       if (fileContext.model.isDataset) {
-        //TODO validation
         this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
       }
       

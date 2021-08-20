@@ -33,9 +33,10 @@ let lastFile;
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
 
-function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes) {
+function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
   //TODO: validation of record length that is aware of how DBCS will effect actual length
   //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
+  const MAX_CONTENT_LENGTH = 5242880;
   if (!content) {
     return 'No Content';
   }
@@ -53,8 +54,8 @@ function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttrib
       content[i] = record+whitespace.substring(record.length,maxRecordLen);
     }
   }
-  if (JSON.stringify({records:content}).length > 5242880) {
-    return 'Content over max size currently supported (5MB)';
+  if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
+    return 'Content over max size currently supported ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
   }
   return true;
 }
@@ -618,7 +619,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     if (!destinationOverride && fullName) {
 
-      const contents = editor.getValue().split('\n');
+      contents = editor.getValue().split('\n');
       const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = isContentValidForDataset(contents, model.datasetAttrs);
