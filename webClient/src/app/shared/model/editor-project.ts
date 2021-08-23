@@ -38,6 +38,7 @@ export interface RecordFormat {
   carriageControl: string;
   isBlocked: boolean;
   recordLength: string;
+  isPDSDir?: boolean;
 }
 
 export interface DatasetOrganization {
