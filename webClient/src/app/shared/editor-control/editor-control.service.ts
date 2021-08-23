@@ -11,7 +11,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
-import { ProjectStructure } from '../model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -29,8 +29,36 @@ import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;
+const WHITESPACE_256 = String.fromCharCode.apply(null, new Array(256).fill(0x20));
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
+
+function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
+  //TODO: validation of record length that is aware of how DBCS will effect actual length
+  //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
+  const MAX_CONTENT_LENGTH = 5242880;
+  if (!content) {
+    return 'No Content';
+  }
+  let isFixedRecordLength = datasetAttrs.recfm.recordLength === 'F';
+  let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
+  for (let i = 0; i < content.length; i++) {
+    let record = content[i];
+    if (record.length > maxRecordLen) {
+      return `Line ${i} exceeds record length limit of ${maxRecordLen}`;
+    } else if (isFixedRecordLength && record.length < maxRecordLen) {
+      let whitespace = WHITESPACE_256;
+      while (whitespace.length < maxRecordLen) {
+        whitespace += WHITESPACE_256;
+      }
+      content[i] = record+whitespace.substring(record.length,maxRecordLen);
+    }
+  }
+  if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
+    return 'Content over max size currently supported ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
+  }
+  return true;
+}
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -563,6 +591,63 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.openDirectory.next(results.directory);
     });
   }
+
+  saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
+    const _openDataset = this.openFileList.getValue();
+    const editor = this._editor.getValue();
+    let contents;
+    if (editor) {
+      contents = editor.getValue();
+    }
+    let _activeDataset: ProjectContext;
+    if (context != null) {
+      _activeDataset = context;
+    } else {
+      _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
+    }
+    const model = _activeDataset.model;
+    const isDataset = model.isDataset;
+    const fullName = isDataset ? model.fileName : model.name;
+    if (!isDataset) {
+      this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
+      return;
+    }
+    if (!editor || contents === undefined) {
+      this.snackBar.open(`Cannot get editor or no contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+      return;
+    }
+
+    if (!destinationOverride && fullName) {
+
+      contents = editor.getValue().split('\n');
+      const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+      this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
+      let result = isContentValidForDataset(contents, model.datasetAttrs);
+      if (result === true) {
+        this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
+          this.snackBar.open(`Saving complete`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+          /* Send buffer saved event */
+          this.bufferSaved.next({ buffer: _activeDataset.model.contents, file: _activeDataset.model.name });
+          this.openFileList.getValue()
+            .map(file => {
+              if (file.id === context.id) {
+                file.changed = false;
+              }
+              return file;
+            });
+        }, e => {
+          this.snackBar.open(`${_activeDataset.name} could not be saved! Error code=${e.status}`, 
+                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        });  
+      } else {
+        this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+      }
+    } else {
+      //dataset is new or needs some alteration we can't do yet
+      this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
+                         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
+    }
+  }
   
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
@@ -894,7 +979,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      */
   saveBuffer(buffer: ZLUX.EditorBufferHandle, path: string | null): Observable<void> {
     this.saveFile.emit(<ProjectContext>buffer);
-    return this.saveFileHandler(buffer, path);
+    if (buffer.model.isDataset) {
+      return this.saveDatasetHandler(buffer, path);
+    } else {
+      return this.saveFileHandler(buffer, path);
+    }
   }
   /**
     * Get the contents of a buffer.
