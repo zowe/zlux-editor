@@ -313,24 +313,14 @@ export class MonacoService {
          * time as an enhancement.
          */
       if (fileContext.temp) {
-        /* Issue a presave check to see if the
-         * file can be saved as ISO-8859-1,
-         * perhaps this should be done in real
-         * time as an enhancement.
-         */
         let x = this.preSaveCheck(fileContext);
         /* Open up a dialog with the standard,
            * "save as" format.
            */
-        let activeDirectory = '';
-        if (fileDirectory) {
-          activeDirectory = fileDirectory;
-        }
         let saveRef = this.dialog.open(SaveToComponent, {
           width: '500px',
           data: { canBeISO: x, 
-            fileName: fileContext.model.fileName,
-            fileDirectory: activeDirectory }
+            fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
         });
         saveRef.afterClosed().subscribe(result => {
         if (result) {
@@ -347,29 +337,14 @@ export class MonacoService {
       {
         this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
           fileContext.model.encoding = r.ccsid;
-          if (!fileContext.temp && 
-            fileContext.model.encoding != undefined &&
-            fileContext.model.encoding != null && 
-            fileContext.model.encoding != 0
-            ) {
+          if (r.ccsid && r.ccsid != 0) {
             this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
           }
           /* The file was never tagged, so we should
-          * ask the user if they would like to tag
-          * it.
+          * ask the user if they would like to tag it.
           */
           else {
-            /* Issue a presave check to see if the
-            * file can be saved as ISO-8859-1,
-            * perhaps this should be done in real
-            * time as an enhancement.
-            */
             let x = this.preSaveCheck(fileContext);
-            /* Open up a dialog asking if the user
-            * wants to tag their file. Again,
-            * we are checking if ISO-8859-1 is
-            * an option.
-            */
             let saveRef = this.dialog.open(TagComponent, {
               width: '500px',
               data: { canBeISO: x,
