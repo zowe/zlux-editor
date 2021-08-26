@@ -559,7 +559,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           return file;
         });
       this.openFileList.next(fileList);
+      if (results) {
       this.openDirectory.next(results.directory);
+      }
       if (_observer != null) { _observer.next(null); }
     }, e => {
       let error = e.json().error;
@@ -690,7 +692,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-          this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });

@@ -138,12 +138,14 @@ export class ProjectTreeComponent {
     });
 
     this.editorControl.openDirectory.subscribe(dirName => {
-      if (dirName.startsWith('/')) {
-        this.editorControl.activeDirectory = dirName;
-        this.fileExplorer.updateDirectory(dirName);
-      } else {
-        let dsName = getDatasetName(dirName);
-        this.fileExplorer.updateDSList(dsName);
+      if(dirName) {
+        if (dirName.startsWith('/')) {
+          this.editorControl.activeDirectory = dirName;
+          this.fileExplorer.updateDirectory(dirName);
+        } else {
+          let dsName = getDatasetName(dirName);
+          this.fileExplorer.updateDSList(dsName);
+        } 
       }
     });
 
@@ -219,7 +221,9 @@ export class ProjectTreeComponent {
       if($event.type == 'file'){
         this.editorControl.openFile('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
-          this.editorControl.checkForAndSetReadOnlyMode(x.model);
+          if(x) {
+            this.editorControl.checkForAndSetReadOnlyMode(x.model);
+          }
         });
       }
     }
