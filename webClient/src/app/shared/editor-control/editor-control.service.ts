@@ -53,6 +53,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
+  public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
   public openFileEmitter: EventEmitter<ProjectStructure> = new EventEmitter();
   public languageRegistered: EventEmitter<ProjectStructure> = new EventEmitter();
@@ -513,6 +514,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return x;    
   }
   
+  getFileMetadata(path:string): Observable<any>{
+    let url:string = ZoweZLUX.uriBroker.unixFileUri('metadata', path);
+    //TODO: Fix ZSS bug where "%2F" is not properly processed as a "/" character
+    url = url.split("%2F").join("/");
+    return this.http.get(url);
+  }
+
   doSaving(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
           _observer: Observer<void>, _observable: Observable<void>) {
     /* We must BASE64 encode the contents
@@ -551,7 +559,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           return file;
         });
       this.openFileList.next(fileList);
+      if (results) {
       this.openDirectory.next(results.directory);
+      }
       if (_observer != null) { _observer.next(null); }
     }, e => {
       let error = e.json().error;
@@ -563,7 +573,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.openDirectory.next(results.directory);
     });
   }
-  
+
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();
     let _activeFile: ProjectContext;
@@ -622,16 +632,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
         _activeFile.model.path.substring(1) :
         _activeFile.model.path;
-      fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-      const forceOverwrite = true;
-      /* Request to get sessionID */
+        fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
+        const forceOverwrite = true;
+        /* Request to get sessionID */
       requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                   fileDir+'/'+fileName,
                                                   { sourceEncoding,
                                                     targetEncoding,
                                                     forceOverwrite });
       sessionID = 0;
-      
       this.ngHttp.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
@@ -640,15 +649,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       forceOverwrite,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
-        if(isUntagged) {
-          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-        }
+        /** Update the new encoding value, in opeFileList Models */
+        let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+        this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-      });  
+                          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+      });
     }
     
     /* The file is newly created, so
@@ -681,11 +689,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-        /** If the file that we are saving was untagged then, update the new encoding value, in opeFileList Models*/
-        if(isUntagged) {
+        /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-        }
       }, e => {
         this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });

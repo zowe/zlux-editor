@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.8.0`
+- Added the ability to refresh the file properties in File Tree, when an already exiting untagged file is saved with an encoding type.
+- Added the ability to use the latest USS encoding when saving an exiting file.
+
 ## `2.7.0`
 - Added function to toggle the file explorer
 - Added calls to the function in openfile and open dataset so that when the user inputs the string with a true in the url it will hide the file explorer 
