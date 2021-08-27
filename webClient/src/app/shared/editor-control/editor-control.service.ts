@@ -608,6 +608,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     const model = _activeDataset.model;
     const isDataset = model.isDataset;
     const fullName = isDataset ? model.fileName : model.name;
+    const etag = model.etag;
     if (!isDataset) {
       this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
       return;
@@ -624,8 +625,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
-        this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
-          this.snackBar.open(`Saving complete`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+        this.ngHttp.post(requestUrl, {records:contents, etag:etag}).subscribe(r => {
+          this.snackBar.open(`${_activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
           /* Send buffer saved event */
           this.bufferSaved.next({ buffer: _activeDataset.model.contents, file: _activeDataset.model.name });
           this.openFileList.getValue()
@@ -636,7 +637,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
               return file;
             });
         }, e => {
-          this.snackBar.open(`${_activeDataset.name} could not be saved! Error code=${e.status}`, 
+          this.snackBar.open(`${_activeDataset.name} could not be saved! ${JSON.parse(e._body).error}. Error code=${e.status}`, 
                              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         });  
       } else {

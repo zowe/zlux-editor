@@ -23,6 +23,7 @@ export interface ProjectStructure {
     isDataset: boolean;
     encoding?: number;
     datasetAttrs?: DatasetAttributes;
+    etag?: string;
 }
 
 export interface DatasetAttributes {
