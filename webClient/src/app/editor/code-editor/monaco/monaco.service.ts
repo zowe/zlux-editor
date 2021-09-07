@@ -29,10 +29,15 @@ import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
 
+const DIFF_VIEW_ELEM = "monaco-diff-viewer";
+
 @Injectable()
 export class MonacoService {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
+  private previousFileContents: string;
+  private currentFileContents: string;
+  private diffEditor;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -204,6 +209,15 @@ export class MonacoService {
     this.editorControl.saveCursorPosition = true;
   }
 
+  savePreviousFileContent(previousFileContent: string, currentFileContent: string) {
+    if (previousFileContent) {
+      this.previousFileContents = previousFileContent;
+    }
+    if (currentFileContent) {
+      this.currentFileContents = currentFileContent;
+    }
+  }
+
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
@@ -211,6 +225,7 @@ export class MonacoService {
           if (value && value.editor) {
             const editorCore = value.editor;
 
+            this.savePreviousFileContent(fileNode.model.contents, file['contents']);
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
@@ -258,6 +273,38 @@ export class MonacoService {
           }
         });
     });
+  }
+
+  spawnDiffViewer(): boolean {
+    if (!this.previousFileContents) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
+    // TODO: We can add some better functionality in-diff viewer by recycling the same models
+    var modifiedModel = monaco.editor.createModel(this.previousFileContents, "text/plain");
+    var newModel = monaco.editor.createModel(this.currentFileContents, "text/plain");
+    var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
+
+    if (!this.diffEditor) {
+      this.diffEditor = monaco.editor.createDiffEditor(diffViewElem, {
+        automaticLayout: true // the important part
+      });
+    }
+    // TODO: Need to figure out how to better re-render Diff viewer with resizing
+    diffViewElem.style.display = 'none';
+    diffViewElem.style.display = 'block';
+    this.diffEditor.setModel({
+      original: modifiedModel,
+      modified: newModel
+    });
+
+    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
+      followsCaret: true, // resets the navigator state when the user selects something in the editor
+      ignoreCharChanges: true // jump from line to line
+    });
+    return true;
   }
 
   closeFile(fileNode: ProjectContext) {

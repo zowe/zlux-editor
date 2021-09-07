@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef, Optional } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
@@ -18,8 +18,11 @@ import { MonacoService } from './monaco.service';
 import { MonacoConfig } from './monaco.config';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import * as monaco from 'monaco-editor';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
+import { KeyCode } from '../../../shared/keycode-enum';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -52,13 +55,23 @@ export class MonacoComponent implements OnInit, OnChanges {
   monacoEditorRef: ElementRef;
   private editor: any;
   private monacoConfig: MonacoConfig;
+  private showEditor: boolean;
+  private showDiffViewer: boolean;
+  private keyBindingSub: Subscription = new Subscription();
 
   constructor(
     private monacoService: MonacoService,
     private editorControl: EditorControlService,
     private languageService: LanguageServerService,
+    private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {
+      this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
+        if (event.which === KeyCode.KEY_V) {
+          this.editorControl.toggleDiffViewer.next();
+        }
+      }));
   }
 
   ngOnInit() {
@@ -89,6 +102,11 @@ export class MonacoComponent implements OnInit, OnChanges {
     
     this.onMonacoInit(editor);
     monaco.editor.remeasureFonts();
+    this.showEditor = true;
+
+    this.editorControl.toggleDiffViewer.subscribe(() =>{
+      this.toggleDiffViewer();
+    });
   }
 
   focus(e: any) {
@@ -106,13 +124,20 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
+        this.showEditor = true;
+        this.showDiffViewer = false;
+        if (changes[input].previousValue != null) {
+          this.monacoService.savePreviousFileContent(
+            changes[input].previousValue.context.model.contents,
+            changes[input].currentValue.context.model.contents);
+        }
       }
     }
   }
 
-  onMonacoInit(editor) {
+  onMonacoInit(editor, changes?: SimpleChanges) {
     this.editorControl.editor.next(editor);
-    this.keyBinds(editor);
+    this.keyBinds(editor, changes);
     this.viewportEvents.resized.subscribe(()=> {
       editor.layout()
     });
@@ -128,7 +153,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     */
   }
 
-  keyBinds(editor: any) {
+  keyBinds(editor: any, changes: SimpleChanges) {
     let self = this;
     //editor.addAction({
       // An unique identifier of the contributed action.
@@ -292,6 +317,17 @@ export class MonacoComponent implements OnInit, OnChanges {
       debug: false
     };
     return new ReconnectingWebSocket(wsUrl, undefined, socketOptions);
+  }
+
+  toggleDiffViewer(): void {
+    if (this.showDiffViewer) {
+      this.showDiffViewer = false;
+      this.showEditor = true;
+    }
+    else {
+      this.showEditor = !this.monacoService.spawnDiffViewer();
+      this.showDiffViewer = !this.showEditor;
+    }
   }
 }
 

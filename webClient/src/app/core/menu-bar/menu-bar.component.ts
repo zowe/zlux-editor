@@ -114,6 +114,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
     */
     this.addFileTreeMenus(this.menuList);
+    this.addDiffViewerMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
@@ -375,6 +376,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       keyMap: 'Alt+P'
     });
   }
+
+  addDiffViewerMenus(list) {
+    list[0].children.push({
+      name: 'Compare Previous (Diff)',
+      action: {
+          internalName: 'toggleDiffViewer'
+      },
+      keyMap: 'Alt+V'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
@@ -535,6 +546,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   toggleFileTreeSearch() {
     this.editorControl.toggleFileTreeSearch.next();
+  }
+
+  toggleDiffViewer() {
+    this.editorControl.toggleDiffViewer.next();
   }
 
   closeAll() {
