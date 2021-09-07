@@ -379,7 +379,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   addDiffViewerMenus(list) {
     list[0].children.push({
-      name: 'Compare Previous (Diff)',
+      name: 'Compare Contents (Diff)',
       action: {
           internalName: 'toggleDiffViewer'
       },
