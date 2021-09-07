@@ -22,6 +22,8 @@ import { SaveToComponent } from './save-to/save-to.component';
 import { LanguageServerComponent } from './language-server/language-server.component';
 import { TagComponent } from './tag/tag.component';
 import { ZluxTabbingModule } from '@zlux/widgets';
+import { OverwriteDatasetComponent } from './overwrite-dataset/overwrite-dataset.component';
+
 
 @NgModule({
     imports: [
@@ -44,6 +46,7 @@ import { ZluxTabbingModule } from '@zlux/widgets';
         SaveToComponent,
         LanguageServerComponent,
         TagComponent,
+        OverwriteDatasetComponent,
     ],
     providers: [HttpService],
     entryComponents: [
@@ -55,6 +58,7 @@ import { ZluxTabbingModule } from '@zlux/widgets';
         SaveToComponent,
         LanguageServerComponent,
         TagComponent,
+        OverwriteDatasetComponent,
     ]
 })
 export class DialogModule { }
