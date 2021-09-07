@@ -615,11 +615,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
     const _openDataset = this.openFileList.getValue();
     const editor = this._editor.getValue();
+    let _activeDataset: ProjectContext;
+    const forceWrite = false;
     let contents;
     if (editor) {
       contents = editor.getValue();
     }
-    let _activeDataset: ProjectContext;
     if (context != null) {
       _activeDataset = context;
     } else {
@@ -644,7 +645,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
-        this.saveDataset(context, _activeDataset, false);  
+        this.saveDataset(context, _activeDataset, forceWrite);  
       } else {
         this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
       }
@@ -655,7 +656,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean) {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean): void {
     const editor = this._editor.getValue();
     let contents;
     if(editor) {
