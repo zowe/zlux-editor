@@ -14,7 +14,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 @Component({
   selector: 'app-overwrite-dataset',
   templateUrl: './overwrite-dataset.component.html',
-  styleUrls: ['./overwrite-dataset.component.scss']
+  styleUrls: ['../../../../styles.scss']
 })
 export class OverwriteDatasetComponent{
 
