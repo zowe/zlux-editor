@@ -30,36 +30,8 @@ import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;
-const WHITESPACE_256 = String.fromCharCode.apply(null, new Array(256).fill(0x20));
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
-
-function isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
-  //TODO: validation of record length that is aware of how DBCS will effect actual length
-  //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
-  const MAX_CONTENT_LENGTH = 5242880;
-  if (!content) {
-    return 'No Content';
-  }
-  let isFixedRecordLength = datasetAttrs.recfm.recordLength === 'F';
-  let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
-  for (let i = 0; i < content.length; i++) {
-    let record = content[i];
-    if (record.length > maxRecordLen) {
-      return `Line ${i} exceeds record length limit of ${maxRecordLen}`;
-    } else if (isFixedRecordLength && record.length < maxRecordLen) {
-      let whitespace = WHITESPACE_256;
-      while (whitespace.length < maxRecordLen) {
-        whitespace += WHITESPACE_256;
-      }
-      content[i] = record+whitespace.substring(record.length,maxRecordLen);
-    }
-  }
-  if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
-    return 'Content over max size currently supported ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
-  }
-  return true;
-}
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -612,6 +584,26 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     });
   }
 
+  public isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
+    //TODO: validation of record length that is aware of how DBCS will effect actual length
+    //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
+    const MAX_CONTENT_LENGTH = 5242880;
+    if (!content) {
+      return 'No Content';
+    }
+    let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
+    for (let i = 0; i < content.length; i++) {
+      let record = content[i];
+      if (record.length > maxRecordLen) {
+        return `Line ${i} exceeds record length limit of ${maxRecordLen}`;
+      }
+    }
+    if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
+      return 'Content over max size currently supported ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
+    }
+    return true;
+  }
+  
   saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
     const _openDataset = this.openFileList.getValue();
     const editor = this._editor.getValue();
@@ -643,7 +635,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       contents = editor.getValue().split('\n');
       const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
-      let result = isContentValidForDataset(contents, model.datasetAttrs);
+      let result = this.isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
         this.saveDataset(context, _activeDataset, forceWrite);  
       } else {
@@ -666,10 +658,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     const isDataset = model.isDataset;
     const fullName = isDataset ? model.fileName : model.name;
     const etag = model.etag;
-    let headers = new Headers({'Etag': etag});
     contents = editor.getValue().split('\n');
+    let headers = new Headers({'Etag': etag})
+    let reqBody = {records:contents};
+    if(etag) {
+      reqBody['etag'] = etag;
+    }
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-    this.ngHttp.post(requestUrl, {records:contents, etag:etag}, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
+    this.ngHttp.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
       this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: activeDataset.model.contents, file: activeDataset.model.name });
@@ -683,6 +679,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }, e => {
       const err = e.json()
       if(err) {
+        // TODO: Below message will vary depending upon the response from the serer
         if(err.error.includes('etag mismatch')) {
           let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
             width: '500px',

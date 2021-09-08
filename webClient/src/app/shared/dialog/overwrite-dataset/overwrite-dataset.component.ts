@@ -18,8 +18,8 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 })
 export class OverwriteDatasetComponent{
 
-  private force: Boolean;
-  private datasetName: String;
+  private force: boolean;
+  private datasetName: string;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) { 
     this.force = true;
