@@ -28,6 +28,7 @@ import * as monaco from 'monaco-editor';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
+import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
@@ -35,8 +36,8 @@ const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 export class MonacoService {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
-  private previousFileContents: string;
-  private currentFileContents: string;
+  private previousFileContents: ProjectContext;
+  private currentFileContents: ProjectContext;
   private diffEditor;
   
   constructor(
@@ -69,6 +70,16 @@ export class MonacoService {
         _editor.setModelLanguage(_modal, e.language);
       }
     });
+
+    let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
+    document.addEventListener("keydown", function(e) { // Pure JS, Ctrl-S solution instead...
+      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+        e.preventDefault();
+        let fileContext = self.editorControl.fetchActiveFile();
+        let directory = fileContext.model.path || self.editorControl.activeDirectory;
+        let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
+      }
+    }, false);
 
     //this.editorControl.saveAllFile.subscribe(() => {
       //this.saveAllFile();
@@ -209,11 +220,11 @@ export class MonacoService {
     this.editorControl.saveCursorPosition = true;
   }
 
-  savePreviousFileContent(previousFileContent: string, currentFileContent: string) {
-    if (previousFileContent) {
-      this.previousFileContents = previousFileContent;
-    }
+  savePreviousFileContent(currentFileContent: ProjectContext) {
     if (currentFileContent) {
+      if (this.currentFileContents && (this.currentFileContents.model.contents !== currentFileContent.model.contents)) {
+        this.previousFileContents = _.cloneDeep(this.currentFileContents);
+      }
       this.currentFileContents = currentFileContent;
     }
   }
@@ -225,7 +236,7 @@ export class MonacoService {
           if (value && value.editor) {
             const editorCore = value.editor;
 
-            this.savePreviousFileContent(fileNode.model.contents, file['contents']);
+            this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
@@ -276,31 +287,32 @@ export class MonacoService {
   }
 
   spawnDiffViewer(): boolean {
-    if (!this.previousFileContents) {
+    if (!this.previousFileContents || !this.currentFileContents) {
       this.snackBar.open(`Open at least two files to compare selections.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       return false;
     }
 
-    // TODO: We can add some better functionality in-diff viewer by recycling the same models
-    var modifiedModel = monaco.editor.createModel(this.previousFileContents, "text/plain");
-    var newModel = monaco.editor.createModel(this.currentFileContents, "text/plain");
+    const _editor = this.editorControl.editorCore.getValue().editor;
+    const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
+    const currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
     var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
 
     if (!this.diffEditor) {
-      this.diffEditor = monaco.editor.createDiffEditor(diffViewElem, {
-        automaticLayout: true // the important part
+      this.diffEditor = _editor.createDiffEditor(diffViewElem, {
+        originalEditable: true
       });
     }
+    
     // TODO: Need to figure out how to better re-render Diff viewer with resizing
     diffViewElem.style.display = 'none';
     diffViewElem.style.display = 'block';
     this.diffEditor.setModel({
-      original: modifiedModel,
-      modified: newModel
+      original: previousModel,
+      modified: currentModel
     });
 
-    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
+    var navi = _editor.createDiffNavigator(this.diffEditor, {
       followsCaret: true, // resets the navigator state when the user selects something in the editor
       ignoreCharChanges: true // jump from line to line
     });
@@ -441,7 +453,9 @@ export class MonacoService {
   fileContentChangeHandler(e: any, fileNode: ProjectContext, model: any) {
     // update file context
     fileNode.model.contents = model.getValue();
+    this.editorControl.removeActiveFromAllFiles();
     fileNode.changed = true;
+    fileNode.active = true;
   }
 
   cleanDecoration() {

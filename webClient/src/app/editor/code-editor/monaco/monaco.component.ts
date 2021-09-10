@@ -107,6 +107,11 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.toggleDiffViewer.subscribe(() =>{
       this.toggleDiffViewer();
     });
+
+    this.editorControl.enableDiffViewer.subscribe(() =>{
+      this.showEditor = !this.monacoService.spawnDiffViewer();
+      this.showDiffViewer = !this.showEditor;
+    });
   }
 
   focus(e: any) {
@@ -126,11 +131,6 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['line']);
         this.showEditor = true;
         this.showDiffViewer = false;
-        if (changes[input].previousValue != null) {
-          this.monacoService.savePreviousFileContent(
-            changes[input].previousValue.context.model.contents,
-            changes[input].currentValue.context.model.contents);
-        }
       }
     }
   }
@@ -217,11 +217,16 @@ export class MonacoComponent implements OnInit, OnChanges {
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convenience
       run: function (ed) {
-        let fileContext = self.editorControl.fetchActiveFile();
-        let sub = self.monacoService.saveFile(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        self.saveFile();
         return null;
       }
     });
+  }
+
+  saveFile() {
+    let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
+    let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
   }
 
   connectToLanguageServer(lang?: string) {
