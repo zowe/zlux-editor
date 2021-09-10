@@ -1,9 +1,7 @@
 # Zlux Editor Changelog
 
-## `2.9.0`
-- Added previously selected content comparison (Diff viewer)
-
 ## `2.8.0`
+- Added previously selected content comparison (Diff viewer)
 - Added the ability to refresh the file properties in File Tree, when an already exiting untagged file is saved with an encoding type.
 - Added the ability to use the latest USS encoding when saving an exiting file.
 
