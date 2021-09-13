@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef, Optional } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
@@ -18,7 +18,7 @@ import { MonacoService } from './monaco.service';
 import { MonacoConfig } from './monaco.config';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import * as monaco from 'monaco-editor';
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
@@ -65,8 +65,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
-    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
       this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
         if (event.which === KeyCode.KEY_V) {
           this.editorControl.toggleDiffViewer.next();
@@ -135,9 +134,9 @@ export class MonacoComponent implements OnInit, OnChanges {
     }
   }
 
-  onMonacoInit(editor, changes?: SimpleChanges) {
+  onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
-    this.keyBinds(editor, changes);
+    this.keyBinds(editor);
     this.viewportEvents.resized.subscribe(()=> {
       editor.layout()
     });
@@ -153,7 +152,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     */
   }
 
-  keyBinds(editor: any, changes: SimpleChanges) {
+  keyBinds(editor: any) {
     let self = this;
     //editor.addAction({
       // An unique identifier of the contributed action.

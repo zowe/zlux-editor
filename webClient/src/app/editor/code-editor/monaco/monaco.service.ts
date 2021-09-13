@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
@@ -33,12 +33,13 @@ import * as _ from 'lodash';
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
 @Injectable()
-export class MonacoService {
+export class MonacoService implements OnDestroy {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
   private previousFileContents: ProjectContext;
   private currentFileContents: ProjectContext;
   private diffEditor;
+  private fileSaveListener;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -72,18 +73,24 @@ export class MonacoService {
     });
 
     let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
-    document.addEventListener("keydown", function(e) { // Pure JS, Ctrl-S solution instead...
+    this.fileSaveListener = function(e) { // Pure JS, Ctrl-S solution instead...
       if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
         let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
       }
-    }, false);
+    }
+    document.addEventListener("keydown", this.fileSaveListener);
+
 
     //this.editorControl.saveAllFile.subscribe(() => {
       //this.saveAllFile();
     //});
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener("keydown", this.fileSaveListener);
   }
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
@@ -295,6 +302,13 @@ export class MonacoService {
 
     const _editor = this.editorControl.editorCore.getValue().editor;
     const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
+
+    if (!previousModel) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
     const currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
     var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
 
@@ -312,7 +326,8 @@ export class MonacoService {
       modified: currentModel
     });
 
-    var navi = _editor.createDiffNavigator(this.diffEditor, {
+    // Going to use monaco.editor instead of our own, so we don't inherit half-working Ctrl+S
+    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
       followsCaret: true, // resets the navigator state when the user selects something in the editor
       ignoreCharChanges: true // jump from line to line
     });
