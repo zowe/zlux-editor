@@ -20,6 +20,9 @@ import { EditorControlService } from '../../../shared/editor-control/editor-cont
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import * as monaco from 'monaco-editor';
+import { Subscription } from 'rxjs/Rx';
+import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
+import { KeyCode } from '../../../shared/keycode-enum';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -52,13 +55,22 @@ export class MonacoComponent implements OnInit, OnChanges {
   monacoEditorRef: ElementRef;
   private editor: any;
   private monacoConfig: MonacoConfig;
+  private showEditor: boolean;
+  private showDiffViewer: boolean;
+  private keyBindingSub: Subscription = new Subscription();
 
   constructor(
     private monacoService: MonacoService,
     private editorControl: EditorControlService,
     private languageService: LanguageServerService,
+    private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
+      this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
+        if (event.which === KeyCode.KEY_V) {
+          this.editorControl.toggleDiffViewer.next();
+        }
+      }));
   }
 
   ngOnInit() {
@@ -89,6 +101,16 @@ export class MonacoComponent implements OnInit, OnChanges {
     
     this.onMonacoInit(editor);
     monaco.editor.remeasureFonts();
+    this.showEditor = true;
+
+    this.editorControl.toggleDiffViewer.subscribe(() =>{
+      this.toggleDiffViewer();
+    });
+
+    this.editorControl.enableDiffViewer.subscribe(() =>{
+      this.showEditor = !this.monacoService.spawnDiffViewer();
+      this.showDiffViewer = !this.showEditor;
+    });
   }
 
   focus(e: any) {
@@ -106,6 +128,8 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
+        this.showEditor = true;
+        this.showDiffViewer = false;
       }
     }
   }
@@ -192,11 +216,16 @@ export class MonacoComponent implements OnInit, OnChanges {
       // Method that will be executed when the action is triggered.
       // @param editor The editor instance is passed in as a convenience
       run: function (ed) {
-        let fileContext = self.editorControl.fetchActiveFile();
-        let sub = self.monacoService.saveFile(fileContext, self.editorControl.activeDirectory).subscribe(() => sub.unsubscribe());
+        self.saveFile();
         return null;
       }
     });
+  }
+
+  saveFile() {
+    let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
+    let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
   }
 
   connectToLanguageServer(lang?: string) {
@@ -292,6 +321,17 @@ export class MonacoComponent implements OnInit, OnChanges {
       debug: false
     };
     return new ReconnectingWebSocket(wsUrl, undefined, socketOptions);
+  }
+
+  toggleDiffViewer(): void {
+    if (this.showDiffViewer) {
+      this.showDiffViewer = false;
+      this.showEditor = true;
+    }
+    else {
+      this.showEditor = !this.monacoService.spawnDiffViewer();
+      this.showDiffViewer = !this.showEditor;
+    }
   }
 }
 

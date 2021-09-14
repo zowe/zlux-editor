@@ -114,6 +114,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
     */
     this.addFileTreeMenus(this.menuList);
+    this.addDiffViewerMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
@@ -375,6 +376,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       keyMap: 'Alt+P'
     });
   }
+
+  addDiffViewerMenus(list) {
+    list[0].children.push({
+      name: 'Show/Hide Compare (Diff)',
+      action: {
+          internalName: 'toggleDiffViewer'
+      },
+      keyMap: 'Alt+V'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
@@ -537,6 +548,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleFileTreeSearch.next();
   }
 
+  toggleDiffViewer() {
+    this.editorControl.toggleDiffViewer.next();
+  }
+
   closeAll() {
     let closeAllRef;
     if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
@@ -588,12 +603,13 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   saveFile() {
     let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
     if (!fileContext) {
       this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
     } else if (fileContext.model.isDataset) {
       this.snackBar.open('Dataset saving not yet supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
     } else {
-      let sub = this.monacoService.saveFile(fileContext, this.editorControl.activeDirectory).subscribe(() => { sub.unsubscribe(); });
+      let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
     }   
   }
 
@@ -606,7 +622,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   graphicDiagram() {
-    let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
+    let file = this.editorControl.fetchActiveFile();
     if (!file) {
       this.snackBar.open(`Please open a file before you generate a diagram.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
     }
@@ -617,7 +633,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   submitJob() {
-    let file = this.editorControl.openFileList.getValue().filter(x => x.active === true)[0];
+    let file = this.editorControl.fetchActiveFile();
     if (!file || (file.model.language !== 'jcl')) {
       this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
     } this.http.post(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {

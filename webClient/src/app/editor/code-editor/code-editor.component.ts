@@ -315,6 +315,13 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  compareContents(fileContext: ProjectContext) {
+    this.editorControl.removeActiveFromAllFiles();
+    fileContext.active = true;
+    this.monacoService.savePreviousFileContent(fileContext);
+    this.editorControl.enableDiffViewer.next();
+  }
+
   setTitle(title?:String):void {
     let newTitle = DEFAULT_TITLE; 
     if(title) {
