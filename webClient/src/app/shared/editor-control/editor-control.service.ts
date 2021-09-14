@@ -677,23 +677,30 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           return file;
         });
     }, e => {
-      const err = e.json()
-      if(err) {
-        // TODO: Below message will vary depending upon the response from the serer
-        if(err.error.includes('etag mismatch')) {
-          let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
-            width: '500px',
-            data: { fileName: fullName}
-          });
-          overwriteRef.afterClosed().subscribe(forceWrite => {
-            if (forceWrite) {
-              this.saveDataset(context, activeDataset, forceWrite)
-            }
-          });
+      const contentType = e.headers._headers.get('content-type');
+      if (contentType && contentType.indexOf('application/json; charset=utf-8') !== -1) {
+        const err = e.json();
+        if(err.error) {
+          // TODO: Below message will vary depending upon the response from the server.
+          if(err.error.includes('etag mismatch')) {
+            let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+              width: '500px',
+              data: { fileName: fullName}
+            });
+            overwriteRef.afterClosed().subscribe(forceWrite => {
+              if (forceWrite) {
+                this.saveDataset(context, activeDataset, forceWrite)
+              }
+            });
+          } else {
+            this.snackBar.open(`${activeDataset.name} could not be saved! ${err.error}. Error code=${e.status}`,
+            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+          }
         }
+      } else {
+        this.snackBar.open(`${activeDataset.name} could not be saved! ${e._body}. Error code=${e.status}`,
+        'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }
-      this.snackBar.open(`${activeDataset.name} could not be saved! ${err.error}. Error code=${e.status}`, 
-                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
     }); 
   }
 
