@@ -78,7 +78,7 @@ export class MonacoService implements OnDestroy {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
-        let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
+        let sub = self.saveFile(fileContext, directory).subscribe(() => {}, e => {}, () => {}); // Error handling is done up-stream
       }
     }
     document.addEventListener("keydown", this.fileSaveListener);
@@ -210,6 +210,7 @@ export class MonacoService implements OnDestroy {
           });
         },
         error: (err) => {
+          this.editorControl.closeFileHandler(fileNode);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
@@ -218,8 +219,9 @@ export class MonacoService implements OnDestroy {
             this.snackBar.open(`${fileNode.name} could not be found.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else {
-            this.snackBar.open(`${fileNode.name} could not be opened.`,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+            let reason = err._body || "Not provided by agent";
+            this.snackBar.open(`${fileNode.name} could not be opened. Reason: ` + reason,
+              'Close', { duration: MessageDuration.Long, panelClass: 'center' });
           }
         }
       });
