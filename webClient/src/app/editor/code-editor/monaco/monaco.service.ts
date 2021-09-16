@@ -125,7 +125,7 @@ export class MonacoService implements OnDestroy {
       next: (response: any) => {
         //network load or switched to currently open file
         const resJson = response;
-        this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, false).subscribe({
+        this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, false).subscribe({
           next: () => {
             this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
             if (line) {
@@ -175,7 +175,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -190,7 +190,7 @@ export class MonacoService implements OnDestroy {
         next: (response: any) => {
           //network load or switched to currently open file
           const resJson = response;
-          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, true).subscribe({
+          this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, true).subscribe({
             next: () => {
               this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
               if (line) {
@@ -236,7 +236,7 @@ export class MonacoService implements OnDestroy {
     }
   }
 
-  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
+  setMonacoModel(fileNode: ProjectContext, file: { contents: string, etag: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
         .subscribe((value) => {
@@ -245,6 +245,7 @@ export class MonacoService implements OnDestroy {
 
             this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
+            fileNode.model.etag = file['etag'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
               if (file['language']) {

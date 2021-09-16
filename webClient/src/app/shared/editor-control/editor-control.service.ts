@@ -20,11 +20,12 @@ import { UtilsService } from '../utils.service';
 import { HttpService } from '../http/http.service';
 import { SnackBarService } from '../snack-bar.service';
 import { Observer } from 'rxjs/Observer';
-import { Http } from '@angular/http';
+import { Http, Headers } from '@angular/http';
 import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
+import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
 import * as monaco from 'monaco-editor'
 
 let stateCache = {};
@@ -625,8 +626,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
     }
     const model = _activeDataset.model;
-    const isDataset = model.isDataset;
-    const fullName = isDataset ? model.fileName : model.name;
+    const isDataset = _activeDataset.model.isDataset;
+    const fullName = isDataset ? _activeDataset.model.fileName : _activeDataset.model.name
     if (!isDataset) {
       this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
       return;
@@ -643,21 +644,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = isContentValidForDataset(contents, model.datasetAttrs);
       if (result === true) {
-        this.ngHttp.post(requestUrl, {records:contents}).subscribe(r => {
-          this.snackBar.open(`Saving complete`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
-          /* Send buffer saved event */
-          this.bufferSaved.next({ buffer: _activeDataset.model.contents, file: _activeDataset.model.name });
-          this.openFileList.getValue()
-            .map(file => {
-              if (file.id === context.id) {
-                file.changed = false;
-              }
-              return file;
-            });
-        }, e => {
-          this.snackBar.open(`${_activeDataset.name} could not be saved! Error code=${e.status}`, 
-                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-        });  
+        this.saveDataset(context, _activeDataset, false);  
       } else {
         this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
       }
@@ -666,6 +653,50 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
                          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
     }
+  }
+
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean) {
+    const editor = this._editor.getValue();
+    let contents;
+    if(editor) {
+      contents = editor.getValue();
+    }
+    const model = activeDataset.model;
+    const isDataset = model.isDataset;
+    const fullName = isDataset ? model.fileName : model.name;
+    const etag = model.etag;
+    let headers = new Headers({'Etag': etag});
+    contents = editor.getValue().split('\n');
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+    this.ngHttp.post(requestUrl, {records:contents, etag:etag}, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
+      this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+      /* Send buffer saved event */
+      this.bufferSaved.next({ buffer: activeDataset.model.contents, file: activeDataset.model.name });
+      this.openFileList.getValue()
+        .map(file => {
+          if (file.id === context.id) {
+            file.changed = false;
+          }
+          return file;
+        });
+    }, e => {
+      const err = e.json()
+      if(err) {
+        if(err.error.includes('etag mismatch')) {
+          let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+            width: '500px',
+            data: { fileName: fullName}
+          });
+          overwriteRef.afterClosed().subscribe(forceWrite => {
+            if (forceWrite) {
+              this.saveDataset(context, activeDataset, forceWrite)
+            }
+          });
+        }
+      }
+      this.snackBar.open(`${activeDataset.name} could not be saved! ${err.error}. Error code=${e.status}`, 
+                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+    }); 
   }
 
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
