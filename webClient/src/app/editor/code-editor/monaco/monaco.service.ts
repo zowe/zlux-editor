@@ -243,7 +243,6 @@ export class MonacoService implements OnDestroy {
           if (value && value.editor) {
             const editorCore = value.editor;
 
-            this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
             fileNode.model.etag = file['etag'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
