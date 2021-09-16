@@ -235,7 +235,7 @@ export class MonacoService implements OnDestroy {
       this.currentFileContents = currentFileContent;
     }
   }
-
+  
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, etag: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
@@ -243,6 +243,7 @@ export class MonacoService implements OnDestroy {
           if (value && value.editor) {
             const editorCore = value.editor;
 
+            this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
             fileNode.model.etag = file['etag'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
