@@ -14,7 +14,7 @@
   <p> <b>{{data.fileName}}</b> is currently untagged. Please select a tag for it in USS. </p>
   Encoding:
   <mat-form-field>
-    <mat-select placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+    <mat-select class="select-encoding" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
       <mat-option *ngFor="let option of options" [value]="option">
       {{option}}</mat-option>
     </mat-select>
@@ -23,7 +23,7 @@
 <mat-dialog-actions>
   <button mat-button mat-dialog-close class="right">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results">Save</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" [disabled]=!results.encoding>Save</button>
 </mat-dialog-actions>
 
 <!-- 
