@@ -745,6 +745,13 @@ input.mat-input-element {
   overflow-y: scroll
 }
 
+.close-dialog-btn {
+  float: right;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
 .mat-ripple-element {
   background-color: rgba(0, 0, 0, .1)
 }

@@ -16,7 +16,8 @@ import { ENDPOINTS } from '../../../../environments/environment';
 @Component({
   selector: 'app-open-dataset',
   templateUrl: './open-dataset.component.html',
-  styleUrls: ['./open-dataset.component.scss']
+  styleUrls: ['./open-dataset.component.scss',  '../../../../styles.scss']
+
 })
 export class OpenDatasetComponent implements OnInit {
 
