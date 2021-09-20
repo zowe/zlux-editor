@@ -78,7 +78,7 @@ export class MonacoService implements OnDestroy {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
-        let sub = self.saveFile(fileContext, directory).subscribe(() => {}, e => {}, () => {}); // Error handling is done up-stream
+        let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
       }
     }
     document.addEventListener("keydown", this.fileSaveListener);
