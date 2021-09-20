@@ -9,6 +9,7 @@
   Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
+<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
   File Name:
@@ -30,8 +31,6 @@
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close class="right">Cancel</button>
-  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
 </mat-dialog-actions>
 
