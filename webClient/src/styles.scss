@@ -1314,6 +1314,12 @@ input.mat-input-element {
   color: rgba(0, 0, 0, .87)
 }
 
+.mat-dialog-content label {
+  float: left;
+  width: 120px;
+  padding-top: 20px;
+}
+
 .mat-divider {
   border-top-color: rgba(0, 0, 0, .12)
 }
