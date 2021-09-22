@@ -584,18 +584,21 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     });
   }
 
-  public isContentValidForDataset(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
+  public isContentValidForDatasetWrite(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
+    const MAX_CONTENT_LENGTH = 5242880;
     //TODO: validation of record length that is aware of how DBCS will effect actual length
     //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
-    const MAX_CONTENT_LENGTH = 5242880;
     if (!content) {
       return 'No Content';
+    }
+    if(datasetAttrs.recfm.recordLength === 'U') {
+      return 'Cannot save a dataset with Undefined record format';
     }
     let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
     for (let i = 0; i < content.length; i++) {
       let record = content[i];
       if (record.length > maxRecordLen) {
-        return `Line ${i} exceeds record length limit of ${maxRecordLen}`;
+        return `Line ${i+1} exceeds record length limit of ${maxRecordLen}`;
       }
     }
     if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
@@ -635,7 +638,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       contents = editor.getValue().split('\n');
       const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
-      let result = this.isContentValidForDataset(contents, model.datasetAttrs);
+      let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
       if (result === true) {
         this.saveDataset(context, _activeDataset, forceWrite);  
       } else {
