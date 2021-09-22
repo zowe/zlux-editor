@@ -14,6 +14,8 @@ import { Response } from '@angular/http';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
+import { SnackBarService } from '../../shared/snack-bar.service';
+import { MessageDuration } from "../../shared/message-duration";
 import { MonacoService } from './monaco/monaco.service';
 import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorService } from '../editor.service';
@@ -34,6 +36,7 @@ const DEFAULT_TITLE = 'Editor';
 export class CodeEditorComponent implements OnInit, OnDestroy {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
+  private snackBar: SnackBarService;
   private keyBindingSub:Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
@@ -287,10 +290,24 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       let nextFileContext = this.editorControl.fetchActiveFile();
       this.selectFile(nextFileContext, true);
     } else {
-      this.codeEditorService.closeFile(fileContext);
+      if(fileContext.changed) {
+        this.promptToSave();
+      } else {
+        this.codeEditorService.closeFile(fileContext);
+      }
     }
   }
-
+  promptToSave() {
+    let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
+    if (!fileContext) {
+      this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+    } else if (fileContext.model.isDataset) {
+      this.snackBar.open('Dataset saving not yet supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
+    } else {
+      let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
+    }   
+  }
   /* 
      this.editorFile instructs monaco to change, 
      which in turn invokes monacoservice.openfile, 
