@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.9.0`
+- Added the feature to update the dataset in the editor
+- Added the check for e-tag while updating the dataset
+
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
 - Added previously selected content comparison (Diff viewer)
@@ -52,7 +56,4 @@
 - Updated to monaco 0.20
 - Removed ngx-monaco, which was causing an issue where you could not open the editor more than twice
 
-## `2.7.2`
-
-- Added the check for e-tag for updating the dataset in the editor. 
 

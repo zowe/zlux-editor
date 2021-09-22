@@ -634,7 +634,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
 
     if (!destinationOverride && fullName) {
-
       contents = editor.getValue().split('\n');
       const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
