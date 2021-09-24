@@ -11,12 +11,12 @@
 <button mat-dialog-close class="close-dialog-btn" (click)="onCancel()"><i class=" fa fa-close "></i></button>
 <h2 mat-dialog-title>{{data.title}}</h2>
 <mat-dialog-content>
-    <p>{{data.message}}</p>
+    <p><b>Warning: </b>{{data.warningMessage}}</p>
 </mat-dialog-content>
 
 <div mat-dialog-actions>
-    <button mat-raised-button class="right " color="primary" (click)="onConfirm() ">Save</button>
-    <button mat-button class="right " (click)="onDismiss() ">Don't Save</button>
+    <button mat-raised-button class="right " color="primary" (click)="onConfirm() ">Yes</button>
+    <button mat-button class="right " (click)="onDismiss() ">No</button>
 </div>
 
 

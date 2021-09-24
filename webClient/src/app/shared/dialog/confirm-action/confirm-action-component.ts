@@ -14,7 +14,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 
 export interface DialogData {
   title: string;
-  message: string;
+  warningMessage: string;
 }
 
 @Component({
@@ -23,12 +23,8 @@ export interface DialogData {
   styleUrls: ['./confirm-action-component.scss',  '../../../../styles.scss']
 })
 
-
-
 export class ConfirmAction {
-  private options: string[];
   constructor(
-  
     public dialogRef: MatDialogRef<ConfirmAction>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
   ) {}
@@ -47,7 +43,7 @@ export class ConfirmAction {
   }
 
   onCancel(): void {
-    // Close the dialog, return false
+    // Close the dialog, return nothing
     this.dialogRef.close();
   }
 }

@@ -355,7 +355,7 @@ export class MonacoService implements OnDestroy {
   }
 
   closeAllFiles() {
-    const editorCore = this.editorControl.editorCore.getValue();
+   const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
       console.warn(`Editor core null on closeFile()`);
       return;
@@ -367,27 +367,16 @@ export class MonacoService implements OnDestroy {
     }
   }
 
-  confirmAction(title: any, message: any): Observable<boolean>  {
+  confirmAction(title: any, warningMessage: any): Observable<boolean>  {
     var response = new Subject<String>();
     const dialogRef = this.dialog.open(ConfirmAction, {
       maxWidth: '400px',
       data: {
           title: title,
-          message: message,
+          warningMessage: warningMessage,
         }
     });
     return dialogRef.afterClosed();
-    // listen to response
-  //   dialogRef.afterClosed().subscribe(dialogResult => {
-  //     if (dialogResult != '') {
-  //       response.next(dialogResult ? 'ture' : 'false');
-  //       return response.asObservable();
-  //     } else {
-  //       response.next('Cancelled');
-  //     }
-  //  });
-  //   response.next('Cancelled');
-  //   return response.asObservable();
   }
   
   preSaveCheck(fileContext?: ProjectContext): boolean {
