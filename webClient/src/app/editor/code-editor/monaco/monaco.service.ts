@@ -21,6 +21,7 @@ import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
+import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-action-component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
@@ -366,6 +367,29 @@ export class MonacoService implements OnDestroy {
     }
   }
 
+  confirmAction(title: any, message: any): Observable<boolean>  {
+    var response = new Subject<String>();
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      maxWidth: '400px',
+      data: {
+          title: title,
+          message: message,
+        }
+    });
+    return dialogRef.afterClosed();
+    // listen to response
+  //   dialogRef.afterClosed().subscribe(dialogResult => {
+  //     if (dialogResult != '') {
+  //       response.next(dialogResult ? 'ture' : 'false');
+  //       return response.asObservable();
+  //     } else {
+  //       response.next('Cancelled');
+  //     }
+  //  });
+  //   response.next('Cancelled');
+  //   return response.asObservable();
+  }
+  
   preSaveCheck(fileContext?: ProjectContext): boolean {
     let _activeFile: ProjectContext = fileContext;
     let canBeISO = true;

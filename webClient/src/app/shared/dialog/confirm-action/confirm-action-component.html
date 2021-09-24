@@ -7,14 +7,18 @@
   
   Copyright Contributors to the Zowe Project.
 -->
-<div id="monaco-editor-container">
-    <app-loading-indicator class="loading-indicator"></app-loading-indicator>
-    <div class="monaco-code-editor" style="height:100%; width:100%" #monacoEditor [hidden]="showDiffViewer"></div>
-    <!-- For some reason, there is a bug where [hidden] style attrib does not work for diff viewer element-->
-    <div id="monaco-diff-viewer" style="height:100%; width:100%" [style.visibility]="!showDiffViewer ? 'hidden': 'visible'"></div>
+<zlux-tab-trap></zlux-tab-trap>
+<button mat-dialog-close class="close-dialog-btn" (click)="onCancel()"><i class=" fa fa-close "></i></button>
+<h2 mat-dialog-title>{{data.title}}</h2>
+<mat-dialog-content>
+    <p>{{data.message}}</p>
+</mat-dialog-content>
 
-    <!--  <ngx-monaco-editor class="monaco-code-editor" [options]="options" (onInit)="onMonacoInit($event)" #ngxMonaco></ngx-monaco-editor> -->
+<div mat-dialog-actions>
+    <button mat-raised-button class="right " color="primary" (click)="onConfirm() ">Save</button>
+    <button mat-button class="right " (click)="onDismiss() ">Don't Save</button>
 </div>
+
 
 <!-- 
   This program and the accompanying materials are

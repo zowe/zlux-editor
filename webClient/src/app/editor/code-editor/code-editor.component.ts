@@ -16,6 +16,8 @@ import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MessageDuration } from "../../shared/message-duration";
+//import { MatDialog } from '@angular/material';
+//import { PromptToConfirm } from '../../shared/dialog/prompt-to-confirm/prompt-to-confirm-component';
 import { MonacoService } from './monaco/monaco.service';
 import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorService } from '../editor.service';
@@ -75,6 +77,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private monacoService: MonacoService,
     private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
+    //private dialog: MatDialog,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
@@ -291,23 +294,45 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.selectFile(nextFileContext, true);
     } else {
       if(fileContext.changed) {
-        this.promptToSave();
+        let directory = fileContext.model.path || this.editorControl.activeDirectory;
+        const title = 'Do you want to save the changes you made to \'' + fileContext.name + '\'?';
+        const message = 'Your changes will be lost if you don\'t save them.';
+        let response = this.monacoService.confirmAction(title, message).subscribe(response => {
+          if(response == true) {
+            let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
+          }
+          else if(response == false) {
+            this.codeEditorService.closeFile(fileContext);
+          }
+        });
       } else {
         this.codeEditorService.closeFile(fileContext);
       }
     }
   }
-  promptToSave() {
-    let fileContext = this.editorControl.fetchActiveFile();
-    let directory = fileContext.model.path || this.editorControl.activeDirectory;
-    if (!fileContext) {
-      this.snackBar.open('Unable to save, no file found.', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
-    } else if (fileContext.model.isDataset) {
-      this.snackBar.open('Dataset saving not yet supported.', 'Dismiss', {duration: MessageDuration.Short, panelClass: 'center'});
-    } else {
-      let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
-    }   
-  }
+
+  // promptToSave() {
+  //   let fileContext = this.editorControl.fetchActiveFile();
+  //   let directory = fileContext.model.path || this.editorControl.activeDirectory;
+  //   const dialogRef = this.dialog.open(PromptToConfirm, {
+  //     maxWidth: '400px',
+  //     data: {
+  //         title: 'Do you want to save the changes you made to \'' + fileContext.name + '\'?',
+  //         message: 'Your changes will be lost if you don\'t save them.'}
+  //   });
+  //   // listen to response
+  //   dialogRef.afterClosed().subscribe(dialogResult => {
+  //     if(dialogResult) {
+  //       let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
+  //     }
+  //     else {
+  //       this.codeEditorService.closeFile(fileContext);
+  //     }
+  //  });
+    
+  //   //let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
+       
+  // }
   /* 
      this.editorFile instructs monaco to change, 
      which in turn invokes monacoservice.openfile, 
