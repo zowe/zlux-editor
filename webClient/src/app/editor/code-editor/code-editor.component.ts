@@ -14,8 +14,6 @@ import { Response } from '@angular/http';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
-import { SnackBarService } from '../../shared/snack-bar.service';
-import { MessageDuration } from "../../shared/message-duration";
 import { MonacoService } from './monaco/monaco.service';
 import { ProjectStructure } from '../../shared/model/editor-project';
 import { EditorService } from '../editor.service';
@@ -36,7 +34,6 @@ const DEFAULT_TITLE = 'Editor';
 export class CodeEditorComponent implements OnInit, OnDestroy {
   private openFileList: ProjectContext[];
   private noOpenFile: boolean;
-  private snackBar: SnackBarService;
   private keyBindingSub:Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
