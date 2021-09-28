@@ -8,7 +8,8 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef, Optional } from '@angular/core';
+
 import { listen, MessageConnection } from 'vscode-ws-jsonrpc/lib';
 import {
   BaseLanguageClient, CloseAction, ErrorAction,
@@ -18,7 +19,7 @@ import { MonacoService } from './monaco.service';
 import { MonacoConfig } from './monaco.config';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents, Angular2PluginWindowActions, Angular2PluginWindowEvents } from 'pluginlib/inject-resources';
 import * as monaco from 'monaco-editor';
 import { Subscription } from 'rxjs/Rx';
 import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
@@ -65,6 +66,8 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
       this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
         if (event.which === KeyCode.KEY_V) {
@@ -128,6 +131,10 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
+        if(this.showDiffViewer) {
+          this.windowActions.minimize();
+          this.windowActions.restore();
+        }
         this.showEditor = true;
         this.showDiffViewer = false;
       }
@@ -137,6 +144,9 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
+    this.windowEvents.restored.subscribe(()=> {
+      editor.layout();
+    });
     this.viewportEvents.resized.subscribe(()=> {
       editor.layout()
     });
