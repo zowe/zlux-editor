@@ -97,7 +97,7 @@ export class DataAdapterService {
     };
   }
 
-  convertDatasetContent(responseData: any): { contents: string, etag?: string } {
+  convertDatasetContent(responseData: any): { contents: string, etag: string } {
     return {
       contents: JSON.parse(responseData).records.filter(function(record){return record.length > 0}).map(function(record){return record.trim()}).join("\n"),
       etag: JSON.parse(responseData).etag

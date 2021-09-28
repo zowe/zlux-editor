@@ -32,6 +32,7 @@ let stateCache = {};
 let lastFile;
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
+const MAX_CONTENT_LENGTH = 5242880;
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -585,7 +586,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public isContentValidForDatasetWrite(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
-    const MAX_CONTENT_LENGTH = 5242880;
     //TODO: validation of record length that is aware of how DBCS will effect actual length
     //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
     if (!content) {
@@ -610,8 +610,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
     const _openDataset = this.openFileList.getValue();
     const editor = this._editor.getValue();
-    let _activeDataset: ProjectContext;
     const forceWrite = false;
+    let _activeDataset: ProjectContext;
+    let _observer: Observer<void>;
+    let _observable: Observable<void>;
     let contents;
     if (editor) {
       contents = editor.getValue();
@@ -622,14 +624,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
     }
     const model = _activeDataset.model;
-    const isDataset = _activeDataset.model.isDataset;
-    const fullName = isDataset ? _activeDataset.model.fileName : _activeDataset.model.name
-    if (!isDataset) {
-      this.snackBar.open(`${fullName} is not a dataset, invalid save route`, "Close", { duration: MessageDuration.Medium, panelClass: 'center' });
-      return;
-    }
-    if (!editor || contents === undefined) {
-      this.snackBar.open(`Cannot get editor or no contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+    const fullName =  _activeDataset.model.fileName;
+
+    _observable = new Observable((observer) => {
+      _observer = observer;
+    });
+
+    if (contents === undefined) {
+      this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
       return;
     }
 
@@ -639,7 +641,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
       let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
       if (result === true) {
-        this.saveDataset(context, _activeDataset, forceWrite);  
+        this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
       } else {
         this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
       }
@@ -648,17 +650,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
                          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
     }
+    return _observable;
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean): void {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean, _observer: Observer<void>, _observable: Observable<void>) {
     const editor = this._editor.getValue();
     let contents;
     if(editor) {
       contents = editor.getValue();
     }
     const model = activeDataset.model;
-    const isDataset = model.isDataset;
-    const fullName = isDataset ? model.fileName : model.name;
+    const fullName = model.fileName;
     const etag = model.etag;
     contents = editor.getValue().split('\n');
     let headers = new Headers({'Etag': etag})
@@ -678,6 +680,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           }
           return file;
         });
+      if (_observer != null) { _observer.next(null); }
     }, e => {
       const contentType = e.headers._headers.get('content-type');
       if (contentType && contentType.indexOf('application/json; charset=utf-8') !== -1) {
@@ -691,7 +694,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             });
             overwriteRef.afterClosed().subscribe(forceWrite => {
               if (forceWrite) {
-                this.saveDataset(context, activeDataset, forceWrite)
+                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
               }
             });
           } else {
