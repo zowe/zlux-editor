@@ -384,7 +384,7 @@ export class MonacoService implements OnDestroy {
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null);
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,

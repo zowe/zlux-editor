@@ -624,7 +624,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
     }
     const model = _activeDataset.model;
-    const fullName =  _activeDataset.model.fileName;
+    const fullName = _activeDataset.model.fileName;
 
     _observable = new Observable((observer) => {
       _observer = observer;
