@@ -55,5 +55,3 @@
 - Updated to typescript 3.7
 - Updated to monaco 0.20
 - Removed ngx-monaco, which was causing an issue where you could not open the editor more than twice
-
-
