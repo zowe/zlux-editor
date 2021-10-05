@@ -2,7 +2,6 @@
 
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
-- Bugfix: Unable to recalculate the size of monaco-code-container when switching from diff-viewer to code-editor.
 - Added previously selected content comparison (Diff viewer)
 - Added the ability to refresh the file properties in File Tree, when an already exiting untagged file is saved with an encoding type.
 - Added the ability to use the latest USS encoding when saving an exiting file.
