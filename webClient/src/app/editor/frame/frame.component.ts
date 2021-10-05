@@ -85,11 +85,7 @@ export class FrameComponent implements OnInit, OnDestroy {
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
-        this.showExplorer = !this.showExplorer;
-        if (this.windowActions) { // Window manager lack of re-rendering bug
-          this.windowActions.maximize();
-          this.windowActions.restore();
-        }
+        this.toggleTree();
         event.stopImmediatePropagation();
         event.preventDefault();
       }
@@ -208,6 +204,15 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.monacoService.cleanDecoration();
     }
   }
+  
+  toggleTree(){
+    this.showExplorer=!this.showExplorer;
+    if (this.windowActions) { // Window manager lack of re-rendering bug
+      this.windowActions.maximize();
+      this.windowActions.restore();
+    }
+  }
+  
 }
 
 /*
