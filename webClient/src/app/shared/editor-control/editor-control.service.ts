@@ -602,7 +602,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
     }
     if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
-      return 'Content over max size currently supported ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
+      return 'Content over currently supported max size ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
     }
     return true;
   }
@@ -653,7 +653,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return _observable;
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: Boolean, _observer: Observer<void>, _observable: Observable<void>) {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>) {
     const editor = this._editor.getValue();
     let contents;
     if(editor) {
@@ -680,9 +680,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           }
           return file;
         });
-      if (_observer != null) { _observer.next(null); }
+      if (_observer != null) {
+        _observer.next(null);
+      }
     }, e => {
-      const contentType = e.headers._headers.get('content-type');
+      let contentType;
+      if(e.headers && e.headers._headers) {
+        contentType = e.headers._headers.get('content-type');
+      }
       if (contentType && contentType.indexOf('application/json; charset=utf-8') !== -1) {
         const err = e.json();
         if(err.error) {
@@ -701,6 +706,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             this.snackBar.open(`${activeDataset.name} could not be saved! ${err.error}. Error code=${e.status}`,
             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
           }
+        } else {
+          this.snackBar.open(`${activeDataset.name} could not be saved!`,
+          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         }
       } else {
         this.snackBar.open(`${activeDataset.name} could not be saved! ${e._body}. Error code=${e.status}`,
