@@ -670,6 +670,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
     this.ngHttp.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
+      model.etag = r.json().etag;
       this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: activeDataset.model.contents, file: activeDataset.model.name });
