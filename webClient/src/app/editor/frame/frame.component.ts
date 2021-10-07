@@ -79,13 +79,13 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.cantSearch = false;
     });
     this.editorControl.toggleTree.subscribe(() =>{
-      this.showExplorer = !this.showExplorer;
+      this.toggleTree();
     });
     
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
-        this.toggleTree();
+        this.editorControl.toggleTree.next();;
         event.stopImmediatePropagation();
         event.preventDefault();
       }
