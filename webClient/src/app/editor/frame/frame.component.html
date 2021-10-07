@@ -13,9 +13,9 @@
       <app-project-tree></app-project-tree>
     </div>
   </aside>
-  <div class="toggle-tree-bar">
-    <label class="toggle-tree" type="button" (click)="toggleTree()" [hidden]="!showExplorer"><</label>
-    <label class="toggle-tree" type="button" (click)="toggleTree()" [hidden]="showExplorer">></label>
+  <div class="toggle-tree-bar" (click)="toggleTree()">
+    <label class="toggle-tree" [hidden]="!showExplorer"><</label>
+    <label class="toggle-tree" [hidden]="showExplorer">></label>
   </div>
   <div class="gz-editor">
     <app-code-editor></app-code-editor>
