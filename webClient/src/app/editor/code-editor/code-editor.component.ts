@@ -293,8 +293,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         const warningMessage = 'Changes will be lost if not saved.';
         let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
           if(response == true) {
-            let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
-            this.codeEditorService.closeFile(fileContext);
+            let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => {
+              sub.unsubscribe();
+              this.codeEditorService.closeFile(fileContext);
+             });
           }
           else if(response == false) {
             this.codeEditorService.closeFile(fileContext);
