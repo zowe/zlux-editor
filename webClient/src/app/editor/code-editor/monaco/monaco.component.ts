@@ -128,6 +128,10 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['context'],
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
+        //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
+        if(this.showDiffViewer) {
+          setTimeout(() => this.editor.layout(), 1);
+          }
         this.showEditor = true;
         this.showDiffViewer = false;
       }

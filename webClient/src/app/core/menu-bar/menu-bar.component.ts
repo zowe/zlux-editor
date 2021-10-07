@@ -572,14 +572,19 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
-      this.editorControl.closeAllFiles.next();
-      closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
-    }
-
-    closeAllRef.onAction().subscribe(() => {
-      this.editorControl.undoCloseAllFiles.next();
+      const title = 'Are you sure you want to close all files?';
+      const warningMessage = 'Changes to unsaved files will be lost if closed.';
+      let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
+      if(response == true) {
+        this.editorControl.closeAllFiles.next();
+        closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+        closeAllRef.onAction().subscribe(() => {
+          this.editorControl.undoCloseAllFiles.next();
+        });
+        this.editorControl.fetchActiveFile()
+      }
     });
-    this.editorControl.fetchActiveFile()
+   }
   }
 
   refreshFile() {
