@@ -71,6 +71,9 @@ export class MonacoComponent implements OnInit, OnChanges {
           this.editorControl.toggleDiffViewer.next();
         }
       }));
+    this.editorControl.refreshLayout.subscribe(() =>{
+      this.refreshLayout();
+    });
   }
 
   ngOnInit() {
@@ -130,8 +133,8 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['line']);
         //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
         if(this.showDiffViewer) {
-          setTimeout(() => this.editor.layout(), 1);
-          }
+          setTimeout(() => this.editorControl.refreshLayout.next(), 1);
+        }
         this.showEditor = true;
         this.showDiffViewer = false;
       }
@@ -224,6 +227,10 @@ export class MonacoComponent implements OnInit, OnChanges {
         return null;
       }
     });
+  }
+
+  refreshLayout() {
+      this.editor.layout();
   }
 
   saveFile() {
