@@ -9,8 +9,6 @@
 - Removed the Cancel button and replaced it with X button on all dialogue pop-ups
 - Added toggle bar to show and hide File Explorer.
 
-
-
 ## `2.7.0`
 - Added function to toggle the file explorer
 - Added calls to the function in openfile and open dataset so that when the user inputs the string with a true in the url it will hide the file explorer 
