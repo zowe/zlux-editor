@@ -7,7 +7,6 @@
 - Added the ability to refresh the file properties in File Tree, when an already exiting untagged file is saved with an encoding type.
 - Added the ability to use the latest USS encoding when saving an exiting file.
 - Removed the Cancel button and replaced it with X button on all dialogue pop-ups
-- Added a prompt to confirm actions such as closing modified file and closing all opened files 
 
 ## `2.7.0`
 - Added function to toggle the file explorer
