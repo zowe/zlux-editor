@@ -207,9 +207,7 @@ export class FrameComponent implements OnInit, OnDestroy {
   
   toggleTree(){
     this.showExplorer=!this.showExplorer;
-    if (this.windowActions) { // Window manager lack of re-rendering bug
-      this.editorControl.refreshLayout.next();
-    }
+    this.editorControl.refreshLayout.next();
   }
 }
 
