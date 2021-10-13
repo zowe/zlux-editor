@@ -34,6 +34,12 @@ function getDatasetName(dirName) {
   }
 }
 
+function getDatasetMemberName(dirName) {
+  let lParenIndex = dirName.indexOf('(');
+  let rParenIndex = dirName.lastIndexOf(')');
+  return dirName.substring(lParenIndex + 1,rParenIndex);
+}
+
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
@@ -155,6 +161,7 @@ export class ProjectTreeComponent {
           dirName = dirName.toUpperCase();
           let isMember = false;
           let dsName = getDatasetName(dirName);
+          let dsMemberName;
           if (dirName == dsName) {
             let periodPos = dirName.lastIndexOf('.');
             if (periodPos) {
@@ -164,6 +171,7 @@ export class ProjectTreeComponent {
             }
           } else {
             isMember = true;
+            dsMemberName = getDatasetMemberName(dirName);
             this.fileExplorer.updateDSList(dsName);
           }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(dsName.toUpperCase()), 'true', undefined, true);
@@ -171,7 +179,11 @@ export class ProjectTreeComponent {
             .subscribe((response: any) => {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
-              this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
+              if(isMember){
+                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName)).subscribe(x=> {this.log.debug('Dataset Member opened')});
+              } else{
+                this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
+              }
             }, e => {
               // TODO
             });
