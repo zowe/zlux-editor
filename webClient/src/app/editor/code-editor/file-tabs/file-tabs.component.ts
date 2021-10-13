@@ -26,6 +26,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   @Output() remove = new EventEmitter<ProjectContext>();
   @Output() select = new EventEmitter<ProjectContext>();
   @Output() refresh = new EventEmitter<ProjectContext>();
+  @Output() compareContents = new EventEmitter<ProjectContext>();
   @ViewChild(PerfectScrollbarComponent) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
@@ -82,6 +83,10 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
       {
         text: "Refresh Contents", // TODO: This needs a confirmation modal
         action: () => this.refresh.next(item)
+      },
+      {
+        text: "Compare Contents (Diff)",
+        action: () => this.compareContents.next(item)
       }
     ], true)
     event.stopImmediatePropagation();

@@ -9,29 +9,28 @@
   Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
+<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
 <h2 mat-dialog-title>Save As</h2>
 <mat-dialog-content>
-  File Name:
+  <label>File Name:</label>
   <mat-form-field>
-    <input matInput type="text" placeholder="Enter a file name" [(ngModel)]="results.fileName">
+    <input matInput type="text" [(ngModel)]="results.fileName">
   </mat-form-field>
   <p></p>
-  Directory:
+  <label>Directory:</label>
   <mat-form-field>
-    <input matInput type="text" placeholder="Enter a directory" [(ngModel)]="results.directory">
+    <input matInput type="text" [(ngModel)]="results.directory">
   </mat-form-field>
   <p></p>
-  Encoding:
+  <label>Encoding:</label>
   <mat-form-field>
-    <mat-select class="select-encoding" tabindex="0" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+    <mat-select class="select-encoding" tabindex="0" placeholder="Select" [(ngModel)]="results.encoding">
       <mat-option *ngFor="let option of options" [value]="option">
       {{option}}</mat-option>
     </mat-select>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-dialog-close class="right">Cancel</button>
-  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
 </mat-dialog-actions>
 

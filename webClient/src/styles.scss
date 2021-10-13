@@ -745,6 +745,13 @@ input.mat-input-element {
   overflow-y: scroll
 }
 
+.close-dialog-btn {
+  float: right;
+  border: none;
+  background: transparent;
+  outline: none;
+}
+
 .mat-ripple-element {
   background-color: rgba(0, 0, 0, .1)
 }
@@ -1305,6 +1312,12 @@ input.mat-input-element {
 .mat-dialog-container {
   background: #fff;
   color: rgba(0, 0, 0, .87)
+}
+
+.mat-dialog-content label {
+  float: left;
+  width: 120px;
+  padding-top: 20px;
 }
 
 .mat-divider {

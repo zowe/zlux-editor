@@ -79,17 +79,13 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.cantSearch = false;
     });
     this.editorControl.toggleTree.subscribe(() =>{
-      this.showExplorer = !this.showExplorer;
+      this.toggleTree();
     });
     
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
-        this.showExplorer = !this.showExplorer;
-        if (this.windowActions) { // Window manager lack of re-rendering bug
-          this.windowActions.maximize();
-          this.windowActions.restore();
-        }
+        this.editorControl.toggleTree.next();;
         event.stopImmediatePropagation();
         event.preventDefault();
       }
@@ -207,6 +203,11 @@ export class FrameComponent implements OnInit, OnDestroy {
     if (cleanDecorator) {
       this.monacoService.cleanDecoration();
     }
+  }
+  
+  toggleTree(){
+    this.showExplorer=!this.showExplorer;
+    this.editorControl.refreshLayout.next();
   }
 }
 

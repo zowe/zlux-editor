@@ -45,6 +45,8 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
   public toggleTree: EventEmitter<string> = new EventEmitter();
+  public toggleDiffViewer: EventEmitter<string> = new EventEmitter();
+  public enableDiffViewer: EventEmitter<string> = new EventEmitter();
   public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
@@ -52,6 +54,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
+  public refreshLayout: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
@@ -297,6 +300,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
     if (this.previousSessionData._openFileList) {
       this._openFileList.next(this.previousSessionData._openFileList);
+    }
+  }
+
+  public removeActiveFromAllFiles() {
+    for (const file of this.openFileList.getValue()) {
+      file.opened = false;
+      file.active = false;
     }
   }
 

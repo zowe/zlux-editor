@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
@@ -28,11 +28,18 @@ import * as monaco from 'monaco-editor';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
+import * as _ from 'lodash';
+
+const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
 @Injectable()
-export class MonacoService {
+export class MonacoService implements OnDestroy {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
+  private previousFileContents: ProjectContext;
+  private currentFileContents: ProjectContext;
+  private diffEditor;
+  private fileSaveListener;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -65,9 +72,25 @@ export class MonacoService {
       }
     });
 
+    let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
+    this.fileSaveListener = function(e) { // Pure JS, Ctrl-S solution instead...
+      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+        e.preventDefault();
+        let fileContext = self.editorControl.fetchActiveFile();
+        let directory = fileContext.model.path || self.editorControl.activeDirectory;
+        let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
+      }
+    }
+    document.addEventListener("keydown", this.fileSaveListener);
+
+
     //this.editorControl.saveAllFile.subscribe(() => {
       //this.saveAllFile();
     //});
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener("keydown", this.fileSaveListener);
   }
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
@@ -187,6 +210,7 @@ export class MonacoService {
           });
         },
         error: (err) => {
+          this.editorControl.closeFileHandler(fileNode);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
@@ -195,13 +219,23 @@ export class MonacoService {
             this.snackBar.open(`${fileNode.name} could not be found.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else {
-            this.snackBar.open(`${fileNode.name} could not be opened.`,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+            let reason = err._body || "Not provided by agent";
+            this.snackBar.open(`${fileNode.name} could not be opened. Reason: ` + reason,
+              'Close', { duration: MessageDuration.Long, panelClass: 'center' });
           }
         }
       });
     }
     this.editorControl.saveCursorPosition = true;
+  }
+
+  savePreviousFileContent(currentFileContent: ProjectContext) {
+    if (currentFileContent) {
+      if (this.currentFileContents && (this.currentFileContents.model.contents !== currentFileContent.model.contents)) {
+        this.previousFileContents = _.cloneDeep(this.currentFileContents);
+      }
+      this.currentFileContents = currentFileContent;
+    }
   }
 
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
@@ -211,6 +245,7 @@ export class MonacoService {
           if (value && value.editor) {
             const editorCore = value.editor;
 
+            this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
@@ -258,6 +293,47 @@ export class MonacoService {
           }
         });
     });
+  }
+
+  spawnDiffViewer(): boolean {
+    if (!this.previousFileContents || !this.currentFileContents) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
+    const _editor = this.editorControl.editorCore.getValue().editor;
+    const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
+
+    if (!previousModel) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
+    const currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
+
+    if (!this.diffEditor) {
+      this.diffEditor = _editor.createDiffEditor(diffViewElem, {
+        originalEditable: true
+      });
+    }
+    
+    // TODO: Need to figure out how to better re-render Diff viewer with resizing
+    diffViewElem.style.display = 'none';
+    diffViewElem.style.display = 'block';
+    this.diffEditor.setModel({
+      original: previousModel,
+      modified: currentModel
+    });
+
+    // Going to use monaco.editor instead of our own, so we don't inherit half-working Ctrl+S
+    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
+      followsCaret: true, // resets the navigator state when the user selects something in the editor
+      ignoreCharChanges: true // jump from line to line
+    });
+    return true;
   }
 
   closeFile(fileNode: ProjectContext) {
@@ -394,7 +470,9 @@ export class MonacoService {
   fileContentChangeHandler(e: any, fileNode: ProjectContext, model: any) {
     // update file context
     fileNode.model.contents = model.getValue();
+    this.editorControl.removeActiveFromAllFiles();
     fileNode.changed = true;
+    fileNode.active = true;
   }
 
   cleanDecoration() {

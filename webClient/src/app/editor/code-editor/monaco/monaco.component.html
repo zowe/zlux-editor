@@ -10,7 +10,9 @@
 -->
 <div id="monaco-editor-container">
 <app-loading-indicator class="loading-indicator"></app-loading-indicator>
-<div class="monaco-code-editor" #monacoEditor></div>
+<div class="monaco-code-editor" #monacoEditor [hidden]="!showEditor"></div>
+<!-- For some reason, there is a bug where [hidden] style attrib does not work for diff viewer element-->
+<div id="monaco-diff-viewer" style="height:100%; width:100%" [style.visibility]="!showDiffViewer ? 'hidden': 'visible'" ></div>
   
 <!--  <ngx-monaco-editor class="monaco-code-editor" [options]="options" (onInit)="onMonacoInit($event)" #ngxMonaco></ngx-monaco-editor> -->
 </div>
