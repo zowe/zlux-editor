@@ -163,8 +163,10 @@
       background-color: #303030;
       position: relative;
       display: flex;
+      cursor: pointer;
       border-left: 1px solid #464646;
       .toggle-tree {
+        cursor: pointer;
         margin: auto;
         color: #d4d4d4;
       }
