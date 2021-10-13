@@ -111,6 +111,10 @@ export class MonacoComponent implements OnInit, OnChanges {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
     });
+    
+    this.editorControl.refreshLayout.subscribe(() =>{
+      setTimeout(() => this.editor.layout(), 1);
+    });
   }
 
   focus(e: any) {
@@ -131,7 +135,7 @@ export class MonacoComponent implements OnInit, OnChanges {
         //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
         if(this.showDiffViewer) {
           setTimeout(() => this.editor.layout(), 1);
-          }
+        }
         this.showEditor = true;
         this.showDiffViewer = false;
       }

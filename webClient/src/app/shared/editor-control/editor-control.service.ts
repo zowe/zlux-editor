@@ -54,6 +54,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
+  public refreshLayout: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
