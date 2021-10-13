@@ -166,7 +166,7 @@ export class ProjectTreeComponent {
             isMember = true;
             this.fileExplorer.updateDSList(dsName);
           }
-          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(dirName.toUpperCase(), 'true');
+          let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(dsName.toUpperCase()), 'true', undefined, true);
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
@@ -175,7 +175,6 @@ export class ProjectTreeComponent {
             }, e => {
               // TODO
             });
-          
         } else {
           this.fileExplorer.updateDirectory(dirName);
         }
