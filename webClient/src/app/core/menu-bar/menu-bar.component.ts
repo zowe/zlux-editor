@@ -115,6 +115,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     */
     this.addFileTreeMenus(this.menuList);
     this.addDiffViewerMenus(this.menuList);
+    this.addToggleTreeMenus(this.menuList);
     this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
@@ -386,6 +387,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       keyMap: 'Alt+V'
     });
   }
+
+  addToggleTreeMenus(list) {
+    list[0].children.push({
+      name: 'Show/Hide File Explorer',
+      action: {
+          internalName: 'toggleTree'
+      },
+      keyMap: 'Alt+B'
+    });
+  }
   
   ngOnInit() {
     if (this.editorControl._isTestLangMode) {
@@ -550,6 +561,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   toggleDiffViewer() {
     this.editorControl.toggleDiffViewer.next();
+  }
+
+  toggleTree() {
+    this.editorControl.toggleTree.next();
   }
 
   closeAll() {
