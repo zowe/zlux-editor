@@ -694,7 +694,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         const err = e.json();
         if(err.error) {
           // TODO: Below message will vary depending upon the response from the server.
-          if(err.error.includes('etag mismatch')) {
+          if(err.error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
             let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
               width: '500px',
               data: { fileName: fullName}
