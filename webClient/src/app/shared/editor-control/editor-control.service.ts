@@ -668,6 +668,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     let reqBody = {records:contents};
     if(etag) {
       reqBody['etag'] = etag;
+    } else {
+      forceWrite = true;
     }
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
     this.ngHttp.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
@@ -686,34 +688,25 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         _observer.next(null);
       }
     }, e => {
-      let contentType;
-      if(e.headers && e.headers._headers) {
-        contentType = e.headers._headers.get('content-type');
-      }
-      if (contentType && contentType.indexOf('application/json; charset=utf-8') !== -1) {
-        const err = e.json();
-        if(err.error) {
-          // TODO: Below message will vary depending upon the response from the server.
-          if(err.error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
-            let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
-              width: '500px',
-              data: { fileName: fullName}
-            });
-            overwriteRef.afterClosed().subscribe(forceWrite => {
-              if (forceWrite) {
-                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
-              }
-            });
-          } else {
-            this.snackBar.open(`${activeDataset.name} could not be saved! ${err.error}. Error code=${e.status}`,
-            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-          }
+      const error = e._body;
+      if(error) {
+        // TODO: Below message will vary depending upon the response from the server.
+        if(error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
+          let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+            width: '500px',
+            data: { fileName: fullName}
+          });
+          overwriteRef.afterClosed().subscribe(forceWrite => {
+            if (forceWrite) {
+              this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
+            }
+          });
         } else {
-          this.snackBar.open(`${activeDataset.name} could not be saved!`,
+          this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         }
       } else {
-        this.snackBar.open(`${activeDataset.name} could not be saved! ${e._body}. Error code=${e.status}`,
+        this.snackBar.open(`${activeDataset.name} could not be saved!`,
         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }
     }); 
