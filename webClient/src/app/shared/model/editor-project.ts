@@ -23,6 +23,7 @@ export interface ProjectStructure {
     isDataset: boolean;
     encoding?: number;
     datasetAttrs?: DatasetAttributes;
+    etag?: string;
 }
 
 export interface DatasetAttributes {
@@ -38,6 +39,7 @@ export interface RecordFormat {
   carriageControl: string;
   isBlocked: boolean;
   recordLength: string;
+  isPDSDir?: boolean;
 }
 
 export interface DatasetOrganization {
