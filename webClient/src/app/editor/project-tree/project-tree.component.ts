@@ -240,6 +240,18 @@ export class ProjectTreeComponent {
     }
   }
 
+  onOpenInNewTab($event: any){
+    if ($event.data === 'File'){
+      const baseURI = `${window.location.origin}${window.location.pathname}`;
+      const newWindow = window.open(`${baseURI}?pluginId=org.zowe.editor:data:{"type":"openFile","name":"${encodeURIComponent($event.path)}","toggleTree":true}`, '_blank');
+      newWindow.focus();
+    } else{
+      const baseURI = `${window.location.origin}${window.location.pathname}`;
+      const newWindow = window.open(`${baseURI}?pluginId=org.zowe.editor:data:{"type":"openDataset","name":"${encodeURIComponent($event.data.path)}","toggleTree":true}`, '_blank');
+      newWindow.focus();
+    }
+}
+
   onPathChanged($event: any) {
     this.editorControl.activeDirectory = $event;
   }
