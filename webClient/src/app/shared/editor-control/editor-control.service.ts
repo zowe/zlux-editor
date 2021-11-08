@@ -75,7 +75,9 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
-  
+  public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
+  public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
+
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
@@ -696,9 +698,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             width: '500px',
             data: { fileName: fullName}
           });
-          overwriteRef.afterClosed().subscribe(forceWrite => {
-            if (forceWrite) {
+          overwriteRef.afterClosed().subscribe(option => {
+            if (option === 'force') {
+              forceWrite = true;
               this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
+            }
+            if (option === 'compare') {
+              this.compareFiles(context, fullName);
             }
           });
         } else {
@@ -711,6 +717,31 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
     }); 
   }
+
+  compareFiles(fileContext: ProjectContext, datasetName: string) {
+    let updatedFileContext: ProjectContext;
+    let sub: Subscription;
+    const reqContent = ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
+    this.http.get(reqContent).subscribe((response:any) => {
+      updatedFileContext = _.cloneDeep(fileContext);
+      updatedFileContext.model.etag = response.etag;
+      updatedFileContext.model.contents = (response.records).join('\n');
+      this.compareDatasetEmitter.emit(updatedFileContext);
+      sub = this.acceptChangeEmitter.subscribe(() => {
+        this.removeActiveFromAllFiles();
+        this.closeFileHandler(fileContext);
+        this.closeFile.next(fileContext);
+        this.openFile('', updatedFileContext.model);
+        this.refreshLayout.next();
+        sub.unsubscribe();
+      })
+    }, e => {
+      this.snackBar.open(`${fileContext.name} could not be compared!`,
+      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+    })
+  }
+
+
 
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
     const _openFile = this.openFileList.getValue();

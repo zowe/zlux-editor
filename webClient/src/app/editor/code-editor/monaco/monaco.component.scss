@@ -37,6 +37,19 @@
     background-color: rgba(225,200,200,.05);
     color: white;
   }
+
+  button {
+    cursor: pointer;
+  }
+
+  .accept-change-button {
+    color: white;
+    font-size: 14px;
+    font-family: Robot, sans-serif;
+    border: none;
+    outline: none;
+    box-shadow: none;
+  }
 }
 
 /*

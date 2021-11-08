@@ -95,7 +95,7 @@ export class MonacoService implements OnDestroy {
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (!reload) {
-      return of({contents: fileNode.model.contents});
+      return of({contents: fileNode.model.contents, etag: fileNode.model.etag});
     }
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
@@ -304,7 +304,7 @@ export class MonacoService implements OnDestroy {
     }
 
     const _editor = this.editorControl.editorCore.getValue().editor;
-    const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
+    const previousModel = monaco.editor.createModel(this.previousFileContents.model.contents);
 
     if (!previousModel) {
       this.snackBar.open(`Open at least two files to compare selections.`,
@@ -312,7 +312,7 @@ export class MonacoService implements OnDestroy {
       return false;
     }
 
-    const currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    const currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
     var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
 
     if (!this.diffEditor) {

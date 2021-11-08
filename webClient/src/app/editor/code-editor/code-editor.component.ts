@@ -40,6 +40,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   public showSettings: boolean = false;
   public settingsOpen: boolean = false;
+  public compareDataset: boolean = false;
 
   public options;
   /*
@@ -89,6 +90,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
+      this.compareDataset = false;
       if (this.settingsOpen && this.showSettings) {
         this.showSettings = false;
         if (this.monacoRef) {
@@ -205,6 +207,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         });
       }
     }));
+
+    this.editorControl.compareDatasetEmitter.subscribe((fileContext: ProjectContext) => {
+      this.compareContents(fileContext);
+      this.compareDataset = true;
+    })
 
   }
 
