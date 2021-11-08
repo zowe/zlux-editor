@@ -39,14 +39,6 @@ export const LANGUAGE_MENUS = {
   'jcl': [
     {
       name: 'Submit',
-      isDisabledString: `
-      const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
-      const file = context.controller.fetchActiveFile();
-    if (!plugin || !file || (ZoweZLUX.uriBroker.serverRootUri('') == '/')) {
-        return true;
-      }
-      return false;
-      `,
       action: {
         /*
           TODO z/osmf has a jobs api, so this makes use of it for now. 
@@ -56,12 +48,12 @@ export const LANGUAGE_MENUS = {
         functionString:`
         const file = context.controller.fetchActiveFile();
         if (file) {
-          let content = context.editor.model.getValue();
+          let content = context.controller.fetchActiveFile().model.contents;
           if (content && content.length > 0) {
             content = content.replace(/\\n/g,'\\\\n');
-            const uri = '/api/v1/jobs/string';
-            const stringJsonBody = '{ "jcl": "'+content+'"}';  
-            fetch(uri, {method: 'POST', body: stringJsonBody,
+            const uri = '/jes';
+            const stringJsonBody = '{ "jcl": "'+content+'"}';
+            fetch(uri, {method: 'PUT', body: stringJsonBody,
                         credentials: 'include',
                         mode: 'cors',
                         headers:{ 'Content-Type': 'application/json'}})
@@ -102,15 +94,6 @@ export const LANGUAGE_MENUS = {
     },
     {
       name: 'View Job',
-      isDisabledString: `
-      const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
-      const file = context.controller.fetchActiveFile();
-      if (plugin && file) {
-        return !file.model.jobId;
-      } else {
-        return true;
-      }
-      `,
       action: {
         functionString:`
         const file = context.controller.fetchActiveFile();

@@ -505,7 +505,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       const context = { editor: editor,
                         controller: this.editorControl,
                         log: this.log };
-
       if (menuItem.internalName != null) {
         return this[menuItem.internalName].apply(this, menuItem.params ? menuItem.params : []);
       } else if (menuItem.func) {
@@ -649,8 +648,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     let file = this.editorControl.fetchActiveFile();
     if (!file || (file.model.language !== 'jcl')) {
       this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-    } this.http.post(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {
-      let jobId = r.jobid;
+    } this.http.put(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {
+      let jobId = r.jobId;
       const input = document.createElement('input');
       input.type = 'text';
       input.name = 'copy';
