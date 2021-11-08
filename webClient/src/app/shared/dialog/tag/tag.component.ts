@@ -15,7 +15,7 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 @Component({
   selector: 'app-tag',
   templateUrl: './tag.component.html',
-  styleUrls: ['./tag.component.scss',  '../../../../styles.scss']
+  styleUrls: ['../../../../styles.scss']
 })
 export class TagComponent {
   private results = {

@@ -8,20 +8,24 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
+import { MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
-  selector: 'app-new-file',
-  templateUrl: './new-file.component.html',
+  selector: 'app-overwrite-dataset',
+  templateUrl: './overwrite-dataset.component.html',
   styleUrls: ['../../../../styles.scss']
 })
-export class NewFileComponent implements OnInit {
+export class OverwriteDatasetComponent{
 
-  private value = '';
-  private FileName_Pattern = /^([^\x00-\x1F!"$'\(\)*,\/:;<>\?\[\\\]\{\|\}\x7F\s]+)\.([a-zA-Z0-9]*)$/;
+  private force: boolean;
+  private datasetName: string;
 
-  constructor() { }
-
+  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { 
+    this.force = true;
+    this.datasetName = data.fileName;
+  }
+  
   ngOnInit() {
   }
 
