@@ -159,14 +159,16 @@
     }
     .toggle-tree-bar {
       height: 100%;
-      width: 1%;
+      width: 10px;
       background-color: #303030;
       position: relative;
       display: flex;
+      cursor: pointer;
       border-left: 1px solid #464646;
       .toggle-tree {
         margin: auto;
         color: #d4d4d4;
+        cursor: pointer;
       }
     }
     .gz-editor {

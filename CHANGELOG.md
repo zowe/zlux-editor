@@ -1,7 +1,9 @@
 # Zlux Editor Changelog
 
 ## `2.9.0`
-- Added feature to open a file in new broswer tab
+- Added the feature to update the dataset in the editor
+- Added the check for e-tag while updating the dataset
+
 
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset

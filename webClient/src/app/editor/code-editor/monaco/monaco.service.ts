@@ -125,7 +125,7 @@ export class MonacoService implements OnDestroy {
       next: (response: any) => {
         //network load or switched to currently open file
         const resJson = response;
-        this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, false).subscribe({
+        this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, false).subscribe({
           next: () => {
             this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
             if (line) {
@@ -175,7 +175,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -190,7 +190,7 @@ export class MonacoService implements OnDestroy {
         next: (response: any) => {
           //network load or switched to currently open file
           const resJson = response;
-          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, true).subscribe({
+          this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, true).subscribe({
             next: () => {
               this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
               if (line) {
@@ -237,8 +237,8 @@ export class MonacoService implements OnDestroy {
       this.currentFileContents = currentFileContent;
     }
   }
-
-  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
+  
+  setMonacoModel(fileNode: ProjectContext, file: { contents: string, etag: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
         .subscribe((value) => {
@@ -247,6 +247,7 @@ export class MonacoService implements OnDestroy {
 
             this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
+            fileNode.model.etag = file['etag'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
               if (file['language']) {
@@ -382,57 +383,60 @@ export class MonacoService implements OnDestroy {
   
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
-      
-      /* Issue a presave check to see if the
-         * file can be saved as ISO-8859-1,
-         * perhaps this should be done in real
-         * time as an enhancement.
-         */
-      if (fileContext.temp) {
-        let x = this.preSaveCheck(fileContext);
-        /* Open up a dialog with the standard,
-           * "save as" format.
-           */
-        let saveRef = this.dialog.open(SaveToComponent, {
-          width: '500px',
-          data: { canBeISO: x, 
-            fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
-        });
-        saveRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
-        }
-        });
-      }
-
-      /* If the file is not new, and the encoding 
-       * has already been set inside of USS via
-       * chtag.
-       */
-      else
-      {
-        this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
-          fileContext.model.encoding = r.ccsid;
-          if (r.ccsid && r.ccsid != 0) {
-            this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
-          }
-          /* The file was never tagged, so we should
-          * ask the user if they would like to tag it.
+      if (fileContext.model.isDataset) {
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+      } else {
+        /* Issue a presave check to see if the
+          * file can be saved as ISO-8859-1,
+          * perhaps this should be done in real
+          * time as an enhancement.
           */
-          else {
-            let x = this.preSaveCheck(fileContext);
-            let saveRef = this.dialog.open(TagComponent, {
-              width: '500px',
-              data: { canBeISO: x,
-                      fileName: fileContext.model.fileName }
-            });
-            saveRef.afterClosed().subscribe(result => {
-              if (result) {
-                this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
-              }
-            });
+        if (fileContext.temp) {
+          let x = this.preSaveCheck(fileContext);
+          /* Open up a dialog with the standard,
+            * "save as" format.
+            */
+          let saveRef = this.dialog.open(SaveToComponent, {
+            width: '500px',
+            data: { canBeISO: x,
+              fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
           }
-        }) 
+          });
+        }
+
+        /* If the file is not new, and the encoding
+        * has already been set inside of USS via
+        * chtag.
+        */
+        else
+        {
+          this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
+            fileContext.model.encoding = r.ccsid;
+            if (r.ccsid && r.ccsid != 0) {
+              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+            }
+            /* The file was never tagged, so we should
+            * ask the user if they would like to tag it.
+            */
+            else {
+              let x = this.preSaveCheck(fileContext);
+              let saveRef = this.dialog.open(TagComponent, {
+                width: '500px',
+                data: { canBeISO: x,
+                        fileName: fileContext.model.fileName }
+              });
+              saveRef.afterClosed().subscribe(result => {
+                if (result) {
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+                }
+              });
+            }
+          })
+        }
       }
     });
   }
