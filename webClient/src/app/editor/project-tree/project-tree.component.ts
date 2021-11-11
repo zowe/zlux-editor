@@ -104,7 +104,8 @@ export class ProjectTreeComponent {
     private editorControl: EditorControlService,
     private snackBarService: SnackBarService,
     private codeEditorService: EditorService,
-    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) {
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition) {
 
     this.editorControl.projectNode.subscribe((nodes) => {
       this.nodes = nodes;
@@ -243,11 +244,11 @@ export class ProjectTreeComponent {
   onOpenInNewTab($event: any){
     if ($event.data === 'File'){
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=org.zowe.editor:data:{"type":"openFile","name":"${encodeURIComponent($event.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent($event.path)}","toggleTree":true}`, '_blank');
       newWindow.focus();
     } else{
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=org.zowe.editor:data:{"type":"openDataset","name":"${encodeURIComponent($event.data.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent($event.data.path)}","toggleTree":true}`, '_blank');
       newWindow.focus();
     }
 }
