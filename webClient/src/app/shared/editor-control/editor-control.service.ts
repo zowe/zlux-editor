@@ -92,6 +92,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
   public saveCursorPosition = true; 
+  public compareDataset = false;
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -315,6 +316,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
+    this.compareDataset = false;
     if(this.saveCursorPosition) {  
       this.saveCursorState();
     }
@@ -726,6 +728,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       updatedFileContext = _.cloneDeep(fileContext);
       updatedFileContext.model.etag = response.etag;
       updatedFileContext.model.contents = (response.records).join('\n');
+      this.compareDataset = true;
       this.compareDatasetEmitter.emit(updatedFileContext);
       sub = this.acceptChangeEmitter.subscribe(() => {
         this.removeActiveFromAllFiles();
