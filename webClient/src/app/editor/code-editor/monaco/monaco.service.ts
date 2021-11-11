@@ -304,7 +304,7 @@ export class MonacoService implements OnDestroy {
     }
 
     const _editor = this.editorControl.editorCore.getValue().editor;
-    const previousModel = monaco.editor.createModel(this.previousFileContents.model.contents);
+    const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
 
     if (!previousModel) {
       this.snackBar.open(`Open at least two files to compare selections.`,
@@ -312,7 +312,14 @@ export class MonacoService implements OnDestroy {
       return false;
     }
 
-    const currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
+    let currentModel;
+
+    if(this.editorControl.compareDataset) {
+      currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
+    } else {
+      currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    }
+
     var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
 
     if (!this.diffEditor) {

@@ -40,9 +40,6 @@
 
   button {
     cursor: pointer;
-  }
-
-  .accept-change-button {
     color: white;
     font-size: 14px;
     font-family: Robot, sans-serif;
@@ -50,6 +47,15 @@
     outline: none;
     box-shadow: none;
   }
+
+  .overwrite-button {
+    margin-left: 15%;
+  }
+
+  .accept-change-button {
+    margin-left: 30%;
+  }
+
 }
 
 /*

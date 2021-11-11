@@ -349,6 +349,12 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.acceptChangeEmitter.emit();
   }
 
+  overwriteDataset(): void {
+    this.showDiffViewer = false;
+    this.showEditor = true;
+    this.editorControl.overwriteDatasetEmitter.emit();
+  }
+
 
 }
 
