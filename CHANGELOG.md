@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.10.0`
+- Added the ability to view the dataset write conflicts in the diff-viewer
+- Added the ability to overwrite the dataset and accept incoming change inside the diff-viewer
+
 ## `2.9.0`
 - Added the feature to update the dataset in the editor
 - Added the check for e-tag while updating the dataset
