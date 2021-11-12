@@ -659,7 +659,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return _observable;
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>) {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>): void {
     const editor = this._editor.getValue();
     let contents;
     const model = activeDataset.model;
@@ -720,7 +720,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }); 
   }
 
-  compareFiles(fileContext: ProjectContext, activeDataset: ProjectContext, _observer: Observer<void>, _observable: Observable<void>) {
+  compareFiles(fileContext: ProjectContext, activeDataset: ProjectContext, _observer: Observer<void>, _observable: Observable<void>): void {
     let updatedFileContext: ProjectContext;
     let acceptChangeSub: Subscription;
     let overwriteSub: Subscription;
