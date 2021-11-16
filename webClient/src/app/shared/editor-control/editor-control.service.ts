@@ -702,7 +702,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             overwriteRef.afterClosed().subscribe(option => {
               if (option === 'force') {
                 forceWrite = true;
-                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
+                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable);
               }
               if (option === 'compare') {
                 this.compareFiles(context, activeDataset, _observer, _observable);
@@ -732,23 +732,29 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.compareDataset = true;
       this.compareDatasetEmitter.emit(updatedFileContext);
       fileContext.active = true;
+      acceptChangeSub = this.acceptChangeEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.removeActiveFromAllFiles();
+        this.closeFileHandler(fileContext);
+        this.closeFile.next(fileContext);
+        this.openFile('', updatedFileContext.model);
+        this.refreshLayout.next();
+        acceptChangeSub.unsubscribe();
+        if(overwriteSub) {
+          overwriteSub.unsubscribe();
+        }
+      })
+      overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
+        overwriteSub.unsubscribe();
+        if(acceptChangeSub) {
+          acceptChangeSub.unsubscribe();
+        }
+      })
     }, e => {
       this.snackBar.open(`${fileContext.name} could not be compared!`,
       'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-    })
-    acceptChangeSub = this.acceptChangeEmitter.subscribe(() => {
-      this.compareDataset = false;
-      this.removeActiveFromAllFiles();
-      this.closeFileHandler(fileContext);
-      this.closeFile.next(fileContext);
-      this.openFile('', updatedFileContext.model);
-      this.refreshLayout.next();
-      acceptChangeSub.unsubscribe();
-    })
-    overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
-      this.compareDataset = false;
-      this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
-      overwriteSub.unsubscribe();
     })
   }
 
