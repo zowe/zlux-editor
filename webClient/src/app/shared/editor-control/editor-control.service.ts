@@ -740,17 +740,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.openFile('', updatedFileContext.model);
         this.refreshLayout.next();
         acceptChangeSub.unsubscribe();
-        if(overwriteSub) {
-          overwriteSub.unsubscribe();
-        }
+        overwriteSub.unsubscribe();
       })
       overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
         this.compareDataset = false;
         this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
         overwriteSub.unsubscribe();
-        if(acceptChangeSub) {
-          acceptChangeSub.unsubscribe();
-        }
+        acceptChangeSub.unsubscribe();
       })
     }, e => {
       this.snackBar.open(`${fileContext.name} could not be compared!`,
