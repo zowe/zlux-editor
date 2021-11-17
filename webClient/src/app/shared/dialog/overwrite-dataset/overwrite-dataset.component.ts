@@ -18,11 +18,13 @@ import { MAT_DIALOG_DATA } from '@angular/material';
 })
 export class OverwriteDatasetComponent{
 
-  private force: boolean;
+  private force: string;
+  private compare: string;
   private datasetName: string;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) { 
-    this.force = true;
+    this.force = 'force';
+    this.compare = 'compare';
     this.datasetName = data.fileName;
   }
   

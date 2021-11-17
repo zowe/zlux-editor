@@ -75,7 +75,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
-  
+  public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
+  public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
+  public overwriteDatasetEmitter: EventEmitter<void> = new EventEmitter()
+
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
@@ -90,6 +93,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
   public saveCursorPosition = true; 
+  public compareDataset = false;
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -313,6 +317,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
+    this.compareDataset = false;
     if(this.saveCursorPosition) {  
       this.saveCursorState();
     }
@@ -654,16 +659,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     return _observable;
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>) {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>): void {
     const editor = this._editor.getValue();
     let contents;
-    if(editor) {
-      contents = editor.getValue();
-    }
     const model = activeDataset.model;
     const fullName = model.fileName;
     const etag = model.etag;
-    contents = editor.getValue().split('\n');
+    contents = model.contents.split('\n');
     let headers = new Headers({'Etag': etag})
     let reqBody = {records:contents};
     if(etag) {
@@ -692,15 +694,21 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if(error) {
         // TODO: Below message will vary depending upon the response from the server.
         if(error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
-          let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
-            width: '500px',
-            data: { fileName: fullName}
-          });
-          overwriteRef.afterClosed().subscribe(forceWrite => {
-            if (forceWrite) {
-              this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
-            }
-          });
+          if(!this.compareDataset) {
+            let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+              width: '500px',
+              data: { fileName: fullName}
+            });
+            overwriteRef.afterClosed().subscribe(option => {
+              if (option === 'force') {
+                forceWrite = true;
+                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable);
+              }
+              if (option === 'compare') {
+                this.compareFiles(context, activeDataset, _observer, _observable);
+              }
+            });
+          }
         } else {
           this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -710,6 +718,40 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }
     }); 
+  }
+
+  compareFiles(fileContext: ProjectContext, activeDataset: ProjectContext, _observer: Observer<void>, _observable: Observable<void>): void {
+    let updatedFileContext: ProjectContext;
+    let acceptChangeSub: Subscription;
+    let overwriteSub: Subscription;
+    const reqContent = ZoweZLUX.uriBroker.datasetContentsUri(activeDataset.model.fileName);
+    this.http.get(reqContent).subscribe((response:any) => {
+      updatedFileContext = _.cloneDeep(fileContext);
+      updatedFileContext.model.etag = response.etag;
+      updatedFileContext.model.contents = (response.records).join('\n');
+      this.compareDataset = true;
+      this.compareDatasetEmitter.emit(updatedFileContext);
+      fileContext.active = true;
+      acceptChangeSub = this.acceptChangeEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.removeActiveFromAllFiles();
+        this.closeFileHandler(fileContext);
+        this.closeFile.next(fileContext);
+        this.openFile('', updatedFileContext.model);
+        this.refreshLayout.next();
+        acceptChangeSub.unsubscribe();
+        overwriteSub.unsubscribe();
+      })
+      overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
+        overwriteSub.unsubscribe();
+        acceptChangeSub.unsubscribe();
+      })
+    }, e => {
+      this.snackBar.open(`${fileContext.name} could not be compared!`,
+      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+    })
   }
 
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {

@@ -95,7 +95,7 @@ export class MonacoService implements OnDestroy {
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (!reload) {
-      return of({contents: fileNode.model.contents});
+      return of({contents: fileNode.model.contents, etag: fileNode.model.etag});
     }
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
@@ -312,7 +312,14 @@ export class MonacoService implements OnDestroy {
       return false;
     }
 
-    const currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    let currentModel;
+
+    if(this.editorControl.compareDataset) {
+      currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
+    } else {
+      currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    }
+
     var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
 
     if (!this.diffEditor) {
