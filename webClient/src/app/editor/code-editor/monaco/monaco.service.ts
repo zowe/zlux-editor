@@ -17,9 +17,8 @@ import { EditorControlService } from '../../../shared/editor-control/editor-cont
 import 'rxjs/add/operator/map';
 import { UtilsService } from '../../../shared/utils.service';
 import { DataAdapterService } from '../../../shared/http/http.data.adapter.service';
-import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
@@ -43,12 +42,10 @@ export class MonacoService implements OnDestroy {
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    private httpService: HttpService,
-    private http: Http,
+    private http: HttpService,
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
-    private utils: UtilsService,
     private snackBar: SnackBarService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {

@@ -91,7 +91,7 @@ export class AppComponent {
               }
             }
           }, e => {
-            let error = e.json().error;
+            let error = e.error.error;
 //            this.snackBarService.open(`Directory ${dirName} does not exist!`, 'Close', { duration: 2000, panelClass: 'center' });
           });
       } else {

@@ -11,8 +11,12 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule, MatButtonModule, MatDialogModule, MatExpansionModule, MatInputModule } from '@angular/material';
-import { MatSnackBarModule } from '@angular/material';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { EditorComponent } from './editor.component';
 import { EditorService } from './editor.service';
 // import { EditorRoutingModule } from './editor-routing.module';

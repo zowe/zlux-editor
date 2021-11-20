@@ -9,8 +9,8 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, ViewChild, Inject } from '@angular/core';
-import { MatDialog } from '@angular/material';
-import { TreeNode, TreeComponent } from 'angular-tree-component';
+import { MatDialog } from '@angular/material/dialog';
+import { TreeNode } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';

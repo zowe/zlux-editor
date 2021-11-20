@@ -20,13 +20,13 @@ import { UtilsService } from '../utils.service';
 import { HttpService } from '../http/http.service';
 import { SnackBarService } from '../snack-bar.service';
 import { Observer } from 'rxjs/Observer';
-import { Http, Headers } from '@angular/http';
 import * as _ from 'lodash';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
 import * as monaco from 'monaco-editor'
+import { HttpHeaders } from '@angular/common/http';
 
 let stateCache = {};
 let lastFile;
@@ -118,7 +118,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   constructor(
     private utils: UtilsService,
     private http: HttpService,
-    private ngHttp: Http,
     public snackBar: SnackBarService,
     private dialog: MatDialog,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger
@@ -549,7 +548,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     /* Send the HTTP PUT request to the server
      * to save the file.
      */
-    this.ngHttp.put(requestUrl, encodedFileContents).subscribe(r => {
+    this.http.put(requestUrl, encodedFileContents).subscribe(r => {
       
       /* It was a new file, we
        * can set the new fileName. */
@@ -581,7 +580,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       }
       if (_observer != null) { _observer.next(null); }
     }, e => {
-      let error = e.json().error;
+      let error = e.error.error;
       
       /* This will probably need to be changed
        * for the sake of accessibility.
@@ -666,7 +665,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     const fullName = model.fileName;
     const etag = model.etag;
     contents = model.contents.split('\n');
-    let headers = new Headers({'Etag': etag})
+    let headers = new HttpHeaders({'Etag': etag})
     let reqBody = {records:contents};
     if(etag) {
       reqBody['etag'] = etag;
@@ -674,7 +673,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       forceWrite = true;
     }
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-    this.ngHttp.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
+    this.http.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
       model.etag = r.json().etag;
       this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
       /* Send buffer saved event */
@@ -821,7 +820,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     targetEncoding,
                                                     forceOverwrite });
       sessionID = 0;
-      this.ngHttp.put(requestUrl, null).subscribe(r => {
+      this.http.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     fileDir+'/'+fileName,
@@ -861,7 +860,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     forceOverwrite: true });
       sessionID = 0;
       
-      this.ngHttp.put(requestUrl, null).subscribe(r => {
+      this.http.put(requestUrl, null).subscribe(r => {
         sessionID = r.json().sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     results.directory+'/'+results.fileName,

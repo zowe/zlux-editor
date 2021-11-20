@@ -9,12 +9,12 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Inject, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
-import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import { DEFAULT_CONFIG, MonacoConfigItem, ConfigItemType } from '../monaco/monaco.config';
 import * as monaco from 'monaco-editor';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
+import { HttpService } from '../../../shared/http/http.service';
 
 function getValueNameFromValue(value: string) {
   if (typeof value != 'string') {
@@ -61,7 +61,8 @@ export class MonacoSettingsComponent implements OnInit {
   }
 
   private resetToDefault() {
-    this.http.delete<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
+    this.http.delete<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json'))
+    .subscribe((response: any) => {
       this.log.info('Restored editor defaults by removing old configuration');
       this.resetUI();
       this.initConfig();
@@ -93,7 +94,7 @@ export class MonacoSettingsComponent implements OnInit {
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
-    private http: HttpClient,
+    private http: HttpService,
     private editorControl: EditorControlService,
   ) {
     this.resetUI();
@@ -117,7 +118,7 @@ export class MonacoSettingsComponent implements OnInit {
   }
 
   private setConfigFromConfigService() {
-    this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
+    this.http.get(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
       if (response && response.contents && response.contents.config) {
         this.config = response.contents.config;
         this.jsonText = this.configToText();

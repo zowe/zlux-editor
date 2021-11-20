@@ -9,9 +9,9 @@
   Copyright Contributors to the Zowe Project.
 */
 import { CommonModule } from '@angular/common';
-import { HttpModule } from '@angular/http';
+import { HttpClientModule  } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { MatIconModule } from '@angular/material';
+import { MatIconModule } from '@angular/material/icon';
 // import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppComponent } from './app.component';
@@ -29,7 +29,7 @@ import { SharedModule } from './shared/shared.module';
     CommonModule,
     // NoopAnimationsModule,
     MatIconModule,
-    HttpModule,
+    HttpClientModule,
     CoreModule,
     // AppRoutingModule,
     DashboardModule,

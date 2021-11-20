@@ -9,27 +9,26 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
-import { catchError, retry, map } from 'rxjs/operators';
+import { retry } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable()
 export class HttpService {
 
   HttpOptions = {
-    headers: new Headers({
+    headers: new HttpHeaders({
       'Content-Type': 'application/json',
     })
   };
 
-  constructor(private http: Http) { }
+  constructor(private http: HttpClient) { }
 
   get(url: string, options?: any): Observable<any> {
     return this.http.get(url, this.HttpOptions)
       .pipe(
         retry(3)
     )
-      .pipe(map(res => res.json()));
   }
 
   put<T>(url: string, params: T, options?: any): Observable<any> {
@@ -37,7 +36,6 @@ export class HttpService {
       .pipe(
         retry(3)
       )
-      .pipe(map(res => res.json()));
   }
 
   post<T>(url: string, params: T, options?: any): Observable<any> {
@@ -45,7 +43,13 @@ export class HttpService {
       pipe(
         retry(3)
       )
-      .pipe(map(res => res.json()));
+  }
+
+  delete<T>(url: string, options?: any): Observable<any> {
+    return this.http.delete(url, this.HttpOptions).
+      pipe(
+        retry(3)
+      )
   }
 }
 

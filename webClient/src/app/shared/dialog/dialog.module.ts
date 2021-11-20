@@ -11,7 +11,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 import { OpenProjectComponent } from './open-project/open-project.component';
 import { OpenDatasetComponent } from './open-dataset/open-dataset.component';
 import { HttpService } from '../http/http.service';
@@ -23,6 +22,12 @@ import { LanguageServerComponent } from './language-server/language-server.compo
 import { TagComponent } from './tag/tag.component';
 import { ZluxTabbingModule } from '@zlux/widgets';
 import { OverwriteDatasetComponent } from './overwrite-dataset/overwrite-dataset.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
 
 @NgModule({
     imports: [

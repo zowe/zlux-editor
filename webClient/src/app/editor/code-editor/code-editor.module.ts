@@ -11,7 +11,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatSelectModule, MatButtonModule, MatInputModule, MatIconModule, MatCheckboxModule } from '@angular/material';
 
 import { MonacoComponent } from './monaco/monaco.component';
 import { MonacoSettingsComponent } from './monaco-settings/monaco-settings.component';
@@ -22,6 +21,12 @@ import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 
 import { CodeEditorService } from './code-editor.service';
 import { LoadingIndicatorComponent } from './loading-indicator/loading-indicator.component';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
   imports: [

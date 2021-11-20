@@ -10,7 +10,7 @@
 */
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatSnackBarModule } from '@angular/material';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { DialogModule } from './dialog/dialog.module';
 import { HttpService } from './http/http.service';
 import { DataAdapterService } from './http/http.data.adapter.service';

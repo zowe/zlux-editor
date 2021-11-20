@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { HttpService } from '../../http/http.service';
 import { ENDPOINTS } from '../../../../environments/environment';
 import { ProjectDef } from '../../model/project';

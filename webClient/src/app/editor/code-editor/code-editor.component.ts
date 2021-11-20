@@ -10,7 +10,6 @@
 */
 import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
-import { Response } from '@angular/http';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
 import { ENDPOINTS } from '../../../environments/environment';
@@ -22,7 +21,6 @@ import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs/Rx';
-import {HttpClient} from '@angular/common/http';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -67,8 +65,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
 
-  constructor(private httpService: HttpService,
-    private http: HttpClient,
+  constructor(private http: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private editorService: EditorService,
@@ -82,11 +79,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
         this.focus();
       });
     }
-    this.http.get<any>(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json')).subscribe((response: any) => {
-      if (response && response.contents && response.contents.config) {
-        this.options = response.contents.config;
-      }
-    });
+    this.http.get(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json'))
+      .subscribe((response: any) => {
+        if (response && response.contents && response.contents.config) {
+          this.options = response.contents.config;
+        }
+      });
     
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
