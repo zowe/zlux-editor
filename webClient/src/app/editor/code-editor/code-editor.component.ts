@@ -20,7 +20,7 @@ import { ProjectContext, ProjectContextType } from '../../shared/model/project-c
 import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
-import { Subscription } from 'rxjs/Rx';
+import { Subscription } from 'rxjs';
 
 const DEFAULT_TITLE = 'Editor';
 

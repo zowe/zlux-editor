@@ -17,7 +17,7 @@ import { ENDPOINTS } from '../../../environments/environment';
 import { HttpService } from '../../shared/http/http.service';
 import { MonacoService } from '../code-editor/monaco/monaco.service';
 import * as _ from 'lodash';
-import { Subscription } from 'rxjs/Rx';
+import { Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/inject-resources';

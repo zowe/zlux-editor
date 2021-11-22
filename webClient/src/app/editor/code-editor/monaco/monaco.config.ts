@@ -12,7 +12,7 @@ import { MonacoService } from './monaco.service';
 import { EditorServiceInstance } from '../../../shared/editor-control/editor-control.service';
 
 import { EditorService } from '../../editor.service';
-import { Subscription } from 'rxjs/Subscription';
+import { Subscription } from 'rxjs';
 import * as monaco from 'monaco-editor'
 
 import { BPXPRM_HILITE } from './hiliters/bpxprm';

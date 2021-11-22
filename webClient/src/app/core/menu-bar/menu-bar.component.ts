@@ -26,7 +26,7 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/inject-resources';
-import { Subscription } from 'rxjs/Rx';
+import { Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import * as _ from 'lodash';
