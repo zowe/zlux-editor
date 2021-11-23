@@ -12,10 +12,11 @@
 
 import { Injectable } from '@angular/core';
 
-import { Subject, Observable } from 'rxjs/Rx';
+import { Subject, fromEvent } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 @Injectable()
-export class EditorKeybindingService {
+export class EditorKeybindingService { // TODO: This service is duplicated in File Tree
   public keyupEvent: Subject<KeyboardEvent>;
   public keydownEvent: Subject<KeyboardEvent>;
 
@@ -26,17 +27,17 @@ export class EditorKeybindingService {
 
   registerKeyUpEvent(appChild:Element) {
     let elm = appChild.closest('app-root');
-    const observable = Observable.fromEvent(elm, 'keyup' ) as Observable<KeyboardEvent>;
-    observable
-      .filter(value => value.altKey)
+    const observable = fromEvent(elm, 'keyup' );
+    observable.pipe(
+      filter(value => (value as KeyboardEvent).altKey))
       .subscribe(this.keyupEvent);
   }
 
   registerKeyDownEvent(appChild:Element) {
     let elm = appChild.closest('app-root');
-    const observable = Observable.fromEvent(elm, 'keydown' ) as Observable<KeyboardEvent>;
-    observable
-      .filter(value => value.altKey)
+    const observable = fromEvent(elm, 'keydown' );
+    observable.pipe(
+      filter(value => (value as KeyboardEvent).altKey))
       .subscribe(this.keydownEvent);
   }
 }

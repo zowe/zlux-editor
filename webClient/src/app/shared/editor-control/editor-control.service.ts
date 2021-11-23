@@ -12,14 +12,14 @@ import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
 import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
+import { BehaviorSubject } from 'rxjs';
+import { Observable } from 'rxjs';
+import { Subject } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { UtilsService } from '../utils.service';
 import { HttpService } from '../http/http.service';
 import { SnackBarService } from '../snack-bar.service';
-import { Observer } from 'rxjs/Observer';
+import { Observer } from 'rxjs';
 import * as _ from 'lodash';
 import { MatDialog } from '@angular/material/dialog';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
@@ -27,6 +27,7 @@ import { MessageDuration } from "../message-duration";
 import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
 import * as monaco from 'monaco-editor'
 import { HttpHeaders } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
 let stateCache = {};
 let lastFile;
@@ -1146,10 +1147,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
    * @returns       An observable that pushes when buffer is destroyed
    */
   destroyBuffer(buffer: ZLUX.EditorBufferHandle, force: boolean): Observable<void> {
-    return this.deleteFileHandler(buffer, force).map(x => {
+    return this.deleteFileHandler(buffer, force).pipe(map(x => {
       this.bufferDestroyed.next({ buffer: buffer, file: buffer.name });
       return null;
-    });
+    }));
   }
   /* ============= Class IEditorMultiBuffer ============= */
   /**

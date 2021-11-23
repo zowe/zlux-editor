@@ -9,7 +9,7 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { retry } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
