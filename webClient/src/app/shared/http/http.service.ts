@@ -22,10 +22,12 @@ export class HttpService {
     })
   };
 
+
+
   constructor(private http: HttpClient) { }
 
   get(url: string, options?: any): Observable<any> {
-    return this.http.get(url, this.HttpOptions)
+    return this.http.get(url, options)
       .pipe(
         retry(3)
     )
@@ -38,8 +40,8 @@ export class HttpService {
       )
   }
 
-  post<T>(url: string, params: T, options?: any): Observable<any> {
-    return this.http.post(url, params, this.HttpOptions).
+  post<T>(url: string, body, options?: any): Observable<any> {
+    return this.http.post(url, body, options).
       pipe(
         retry(3)
       )

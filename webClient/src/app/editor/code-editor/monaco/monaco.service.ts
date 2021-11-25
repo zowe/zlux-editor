@@ -25,6 +25,7 @@ import * as monaco from 'monaco-editor';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject, Observable } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
+import { HttpHeaders } from '@angular/common/http';
 import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
@@ -101,14 +102,21 @@ export class MonacoService implements OnDestroy {
                                                   filePath+'/'+fileNode.model.fileName,
                                                   { responseType: 'b64' });
     }
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    })
+    const options = {
+      headers: headers,
+      responseType: 'text',
+    }
     return of({}).pipe(
       tap(() => this.loadingStatusChanged.next('loading')),
-      switchMap(() => this.http.get(requestUrl)),
+      switchMap(() => this.http.get(requestUrl, options)),
       map((res: any) => {
         if (fileNode.model.isDataset) {
-          return this.dataAdapter.convertDatasetContent(res._body);
+          return this.dataAdapter.convertDatasetContent(res);
         } else {
-          return this.dataAdapter.convertFileContent(res._body);
+          return this.dataAdapter.convertFileContent(res);
         }
       }),
       finalize(() => this.loadingStatusChanged.next('complete'))

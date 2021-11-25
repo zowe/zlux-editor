@@ -26,7 +26,7 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
 import * as monaco from 'monaco-editor'
-import { HttpHeaders } from '@angular/common/http';
+import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 let stateCache = {};
@@ -674,8 +674,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       forceWrite = true;
     }
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-    this.http.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
-      model.etag = r.json().etag;
+    let parameters = new HttpParams();
+    parameters = parameters.append('force', forceWrite);
+    const options = {
+      headers: headers,
+      params: parameters
+    }
+    this.http.post(requestUrl, reqBody, options).subscribe(r => {
+      model.etag = r.etag;
       this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
       /* Send buffer saved event */
       this.bufferSaved.next({ buffer: activeDataset.model.contents, file: activeDataset.model.name });
@@ -690,7 +696,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         _observer.next(null);
       }
     }, e => {
-      const error = e._body;
+      const error = e.error;
       if(error) {
         // TODO: Below message will vary depending upon the response from the server.
         if(error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
