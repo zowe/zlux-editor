@@ -28,7 +28,7 @@ import * as monaco from 'monaco-editor';
 export class AppComponent {
   title = 'app';
 
-  @ViewChild('editorheader')
+  @ViewChild('editorheader', { static: true })
   editorheaderElementRef: ElementRef<any>;
   
   constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
