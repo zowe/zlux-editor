@@ -1,5 +1,12 @@
 # Zlux Editor Changelog
 
+## `2.9.0`
+- Added the feature to update the dataset in the editor
+- Added the check for e-tag while updating the dataset
+- Added feature to open a file in new broswer tab
+- Added the ability to view the dataset write conflicts in the diff-viewer
+- Added the ability to overwrite the dataset and accept incoming change inside the diff-viewer
+
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
 - Bugfix: Unable to recalculate the size of monaco-code-container when switching from diff-viewer to code-editor.
