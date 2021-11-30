@@ -22,31 +22,33 @@ export class HttpService {
     })
   };
 
+
+
   constructor(private http: HttpClient) { }
 
   get(url: string, options?: any): Observable<any> {
-    return this.http.get(url, this.HttpOptions)
+    return this.http.get(url, options ? options : this.HttpOptions)
       .pipe(
         retry(3)
     )
   }
 
   put<T>(url: string, params: T, options?: any): Observable<any> {
-    return this.http.put(url, params, this.HttpOptions)
+    return this.http.put(url, params, options ? options : this.HttpOptions)
       .pipe(
         retry(3)
       )
   }
 
-  post<T>(url: string, params: T, options?: any): Observable<any> {
-    return this.http.post(url, params, this.HttpOptions).
+  post<T>(url: string, body, options?: any): Observable<any> {
+    return this.http.post(url, body, options ? options : this.HttpOptions).
       pipe(
         retry(3)
       )
   }
 
   delete<T>(url: string, options?: any): Observable<any> {
-    return this.http.delete(url, this.HttpOptions).
+    return this.http.delete(url, options ? options : this.HttpOptions).
       pipe(
         retry(3)
       )
