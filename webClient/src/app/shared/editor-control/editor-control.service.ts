@@ -828,7 +828,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     forceOverwrite });
       sessionID = 0;
       this.http.put(requestUrl, null).subscribe(r => {
-        sessionID = r.json().sessionID;
+        sessionID = r.sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     fileDir+'/'+fileName,
                                                     { sessionID,
@@ -868,7 +868,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       sessionID = 0;
       
       this.http.put(requestUrl, null).subscribe(r => {
-        sessionID = r.json().sessionID;
+        sessionID = r.sessionID;
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     results.directory+'/'+results.fileName,
                                                     { forceOverwrite: true,
