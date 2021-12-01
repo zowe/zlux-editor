@@ -27,7 +27,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   @Output() select = new EventEmitter<ProjectContext>();
   @Output() refresh = new EventEmitter<ProjectContext>();
   @Output() compareContents = new EventEmitter<ProjectContext>();
-  @ViewChild(PerfectScrollbarComponent) componentRef: PerfectScrollbarComponent;
+  @ViewChild(PerfectScrollbarComponent, {static: true}) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
     wheelPropagation: true,

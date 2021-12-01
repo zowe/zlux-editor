@@ -67,7 +67,7 @@ function isHidden(el) {
 })
 export class MenuBarComponent implements OnInit, OnDestroy {
 
-  @ViewChild('menubar') menuBarRef: ElementRef<any>;
+  @ViewChild('menubar', {static: true}) menuBarRef: ElementRef<any>;
 
   private menuList: any = _.cloneDeep(MENU);
   //  MENU.slice(0);//clone to prevent language from persisting

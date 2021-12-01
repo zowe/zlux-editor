@@ -85,7 +85,7 @@ export class MonacoSettingsComponent implements OnInit {
   private editorModel;
   private checkInterval;
 
-  @ViewChild('monacoPreview')
+  @ViewChild('monacoPreview', { static: true })
   monacoPreviewRef: ElementRef;
 
   @Output() options = new EventEmitter<any>();
