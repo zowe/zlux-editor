@@ -52,30 +52,30 @@ export const LANGUAGE_MENUS = {
                         credentials: 'include',
                         mode: 'cors',
                         headers:{ 'Content-Type': 'application/json'}})
-              .then((response)=> {
-                     if (!response.ok) {
-                       throw new Error('Status: '+response.status+', '+response.statusText);
-                     } else {
-                       return response.json();
-                     }
-                   })
-              .then((response)=> {
-                     if (response.jobId) {
-                       file.model.jobId = response.jobId;
-                       let ref = context.controller.snackBar.open('JCL Submitted. ID='+response.jobId,'View in Explorer', {duration: 5000, panelClass: 'center' })
-                         .onAction().subscribe(()=> {
-                           const dispatcher = ZoweZLUX.dispatcher;
-                           const argumentFormatter = {data: {op:'deref',source:'event',path:['data']}};
-                           let action = dispatcher.makeAction('org.zowe.editor.jcl.view', 'View JCL',
-                                                              dispatcher.constants.ActionTargetMode.PluginFindAnyOrCreate,
-                                                              dispatcher.constants.ActionType.Launch,'org.zowe.explorer-jes',argumentFormatter);
-                           dispatcher.invokeAction(action,{'data':{'owner':'*','prefix':'*','jobId':file.model.jobId}});
-                         });
-                     } else {
-                       context.controller.snackBar.open('Warning: JCL submitted but Job ID not found.', 'Dismiss', {duration: 5000, panelClass: 'center' });
-                     }
-                   })
-              .catch(error=> context.controller.snackBar.open('Error submitting JCL: '+error.message, 'Dismiss', {duration: 5000, panelClass: 'center' }));
+            .then((response)=> {
+              if (!response.ok) {
+                response.text().then(function (text){
+                  context.controller.snackBar.open('Error submitting JCL: ' + text + ', Status: ' + response.status, 'Dismiss', {duration: 5000, panelClass: 'center' })
+                });
+                } else {
+                response.json().then((response) => {
+                  if (response.jobId) {
+                    file.model.jobId = response.jobId;
+                    let ref = context.controller.snackBar.open('JCL Submitted. ID='+response.jobId,'View in Explorer', {duration: 5000, panelClass: 'center' })
+                      .onAction().subscribe(()=> {
+                        const dispatcher = ZoweZLUX.dispatcher;
+                        const argumentFormatter = {data: {op:'deref',source:'event',path:['data']}};
+                        let action = dispatcher.makeAction('org.zowe.editor.jcl.view', 'View JCL',
+                                                            dispatcher.constants.ActionTargetMode.PluginFindAnyOrCreate,
+                                                            dispatcher.constants.ActionType.Launch,'org.zowe.explorer-jes',argumentFormatter);
+                        dispatcher.invokeAction(action,{'data':{'owner':'*','prefix':'*','jobId':file.model.jobId}});
+                      });
+                  } else {
+                    context.controller.snackBar.open('Warning: JCL submitted but Job ID not found.', 'Dismiss', {duration: 5000, panelClass: 'center' });
+                  }
+                });
+              }
+            });
           }
         }
         `,
