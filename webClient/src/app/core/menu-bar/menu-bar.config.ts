@@ -109,8 +109,6 @@ export const LANGUAGE_MENUS = {
   ]
 }
 
-
-
 export const MENU = [
     {
         name: 'File',
