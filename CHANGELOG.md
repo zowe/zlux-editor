@@ -6,6 +6,7 @@
 - Added feature to open a file in new broswer tab
 - Added the ability to view the dataset write conflicts in the diff-viewer
 - Added the ability to overwrite the dataset and accept incoming change inside the diff-viewer
+- Added the feature to submit the JOB, from Menu Bar. for oped JCL in Editor
 
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
