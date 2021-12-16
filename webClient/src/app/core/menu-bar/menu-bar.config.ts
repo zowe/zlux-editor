@@ -43,7 +43,7 @@ export const LANGUAGE_MENUS = {
         functionString:`
         const file = context.controller.fetchActiveFile();
         if (file) {
-          let content = context.controller.fetchActiveFile().model.contents;
+          let content = context.controller.fetchActiveFile().model.contents + '\\n';
           if (content && content.length > 0) {
             content = content.replace(/\\n/g,'\\\\n');
             const uri = '/jes';
