@@ -9,20 +9,15 @@
   Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-<h2 mat-dialog-title>Delete File</h2>
+<h2 mat-dialog-title>E-tag Mismatch</h2>
 <mat-dialog-content>
-  Absolute File Path (ex. /u/000/doc1):
-  <mat-form-field>
-    <input id="name" name="name" required #name="ngModel" matInput type="text" placeholder="Absolute Path"
-      [(ngModel)]="value">
-    <button mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
-      <mat-icon>close</mat-icon>
-    </button>
-  </mat-form-field>
+    The dataset {{datasetName}} has been previously updated on the server. How would you like to proceed?
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="!value">Delete</button>
+  <button mat-button mat-dialog-close class="right">Cancel</button>
+  <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="compare">Compare Difference</button>
+  <button mat-button mat-stroked-button class="right" color="warn" [mat-dialog-close]="force">Overwrite</button>
 </mat-dialog-actions>
 
 <!-- 

@@ -12,6 +12,7 @@
 <div class="file-explorer-container">
   <zlux-file-tree #fileExplorer
     (nodeClick)="onNodeClick($event)"
+    (openInNewTab)="onOpenInNewTab($event)"
     (pathChanged)="onPathChanged($event)"
     [style]="{'height': '100%', 'padding-bottom': '100px'}"
   >

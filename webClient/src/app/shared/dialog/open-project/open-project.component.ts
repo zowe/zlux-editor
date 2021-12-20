@@ -16,7 +16,7 @@ import { ProjectDef } from '../../model/project';
 @Component({
   selector: 'app-open-project',
   templateUrl: './open-project.component.html',
-  styleUrls: ['./open-project.component.scss',  '../../../../styles.scss']
+  styleUrls: ['../../../../styles.scss']
 })
 export class OpenProjectComponent implements OnInit {
   private projectList: ProjectDef[] = [];

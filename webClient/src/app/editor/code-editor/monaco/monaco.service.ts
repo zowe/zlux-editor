@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, OnDestroy } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { HttpService } from '../../../shared/http/http.service';
 import { ProjectStructure } from '../../../shared/model/editor-project';
@@ -28,11 +28,18 @@ import * as monaco from 'monaco-editor';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
+import * as _ from 'lodash';
+
+const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
 @Injectable()
-export class MonacoService {
+export class MonacoService implements OnDestroy {
   loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
+  private previousFileContents: ProjectContext;
+  private currentFileContents: ProjectContext;
+  private diffEditor;
+  private fileSaveListener;
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
@@ -65,14 +72,30 @@ export class MonacoService {
       }
     });
 
+    let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
+    this.fileSaveListener = function(e) { // Pure JS, Ctrl-S solution instead...
+      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+        e.preventDefault();
+        let fileContext = self.editorControl.fetchActiveFile();
+        let directory = fileContext.model.path || self.editorControl.activeDirectory;
+        let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
+      }
+    }
+    document.addEventListener("keydown", this.fileSaveListener);
+
+
     //this.editorControl.saveAllFile.subscribe(() => {
       //this.saveAllFile();
     //});
   }
 
+  ngOnDestroy() {
+    document.removeEventListener("keydown", this.fileSaveListener);
+  }
+
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (!reload) {
-      return of({contents: fileNode.model.contents});
+      return of({contents: fileNode.model.contents, etag: fileNode.model.etag});
     }
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
@@ -102,7 +125,7 @@ export class MonacoService {
       next: (response: any) => {
         //network load or switched to currently open file
         const resJson = response;
-        this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, false).subscribe({
+        this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, false).subscribe({
           next: () => {
             this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
             if (line) {
@@ -152,7 +175,7 @@ export class MonacoService {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, language: string }>{ contents: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -167,7 +190,7 @@ export class MonacoService {
         next: (response: any) => {
           //network load or switched to currently open file
           const resJson = response;
-          this.setMonacoModel(fileNode, <{ contents: string, language: string }>resJson, true).subscribe({
+          this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, true).subscribe({
             next: () => {
               this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
               if (line) {
@@ -187,6 +210,7 @@ export class MonacoService {
           });
         },
         error: (err) => {
+          this.editorControl.closeFileHandler(fileNode);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
@@ -195,8 +219,9 @@ export class MonacoService {
             this.snackBar.open(`${fileNode.name} could not be found.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else {
-            this.snackBar.open(`${fileNode.name} could not be opened.`,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+            let reason = err._body || "Not provided by agent";
+            this.snackBar.open(`${fileNode.name} could not be opened. Reason: ` + reason,
+              'Close', { duration: MessageDuration.Long, panelClass: 'center' });
           }
         }
       });
@@ -204,14 +229,25 @@ export class MonacoService {
     this.editorControl.saveCursorPosition = true;
   }
 
-  setMonacoModel(fileNode: ProjectContext, file: { contents: string, language: string }, makeActiveModel?: boolean): Observable<void> {
+  savePreviousFileContent(currentFileContent: ProjectContext) {
+    if (currentFileContent) {
+      if (this.currentFileContents && (this.currentFileContents.model.contents !== currentFileContent.model.contents)) {
+        this.previousFileContents = _.cloneDeep(this.currentFileContents);
+      }
+      this.currentFileContents = currentFileContent;
+    }
+  }
+  
+  setMonacoModel(fileNode: ProjectContext, file: { contents: string, etag: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
         .subscribe((value) => {
           if (value && value.editor) {
             const editorCore = value.editor;
 
+            this.savePreviousFileContent(fileNode);
             fileNode.model.contents = file['contents'];
+            fileNode.model.etag = file['etag'];
             this.editorControl.getRecommendedHighlightingModesForBuffer(fileNode).subscribe((supportLanguages: string[]) => {
               let fileLang = 'plaintext';
               if (file['language']) {
@@ -260,6 +296,54 @@ export class MonacoService {
     });
   }
 
+  spawnDiffViewer(): boolean {
+    if (!this.previousFileContents || !this.currentFileContents) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
+    const _editor = this.editorControl.editorCore.getValue().editor;
+    const previousModel = _editor.getModel(this.generateUri(this.previousFileContents.model));
+
+    if (!previousModel) {
+      this.snackBar.open(`Open at least two files to compare selections.`,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return false;
+    }
+
+    let currentModel;
+
+    if(this.editorControl.compareDataset) {
+      currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
+    } else {
+      currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
+    }
+
+    var diffViewElem = document.getElementById(DIFF_VIEW_ELEM);
+
+    if (!this.diffEditor) {
+      this.diffEditor = _editor.createDiffEditor(diffViewElem, {
+        originalEditable: true
+      });
+    }
+    
+    // TODO: Need to figure out how to better re-render Diff viewer with resizing
+    diffViewElem.style.display = 'none';
+    diffViewElem.style.display = 'block';
+    this.diffEditor.setModel({
+      original: previousModel,
+      modified: currentModel
+    });
+
+    // Going to use monaco.editor instead of our own, so we don't inherit half-working Ctrl+S
+    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
+      followsCaret: true, // resets the navigator state when the user selects something in the editor
+      ignoreCharChanges: true // jump from line to line
+    });
+    return true;
+  }
+
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
@@ -306,57 +390,60 @@ export class MonacoService {
   
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
     return new Observable((obs) => {
-      
-      /* Issue a presave check to see if the
-         * file can be saved as ISO-8859-1,
-         * perhaps this should be done in real
-         * time as an enhancement.
-         */
-      if (fileContext.temp) {
-        let x = this.preSaveCheck(fileContext);
-        /* Open up a dialog with the standard,
-           * "save as" format.
-           */
-        let saveRef = this.dialog.open(SaveToComponent, {
-          width: '500px',
-          data: { canBeISO: x, 
-            fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
-        });
-        saveRef.afterClosed().subscribe(result => {
-        if (result) {
-          this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
-        }
-        });
-      }
-
-      /* If the file is not new, and the encoding 
-       * has already been set inside of USS via
-       * chtag.
-       */
-      else
-      {
-        this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
-          fileContext.model.encoding = r.ccsid;
-          if (r.ccsid && r.ccsid != 0) {
-            this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
-          }
-          /* The file was never tagged, so we should
-          * ask the user if they would like to tag it.
+      if (fileContext.model.isDataset) {
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+      } else {
+        /* Issue a presave check to see if the
+          * file can be saved as ISO-8859-1,
+          * perhaps this should be done in real
+          * time as an enhancement.
           */
-          else {
-            let x = this.preSaveCheck(fileContext);
-            let saveRef = this.dialog.open(TagComponent, {
-              width: '500px',
-              data: { canBeISO: x,
-                      fileName: fileContext.model.fileName }
-            });
-            saveRef.afterClosed().subscribe(result => {
-              if (result) {
-                this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
-              }
-            });
+        if (fileContext.temp) {
+          let x = this.preSaveCheck(fileContext);
+          /* Open up a dialog with the standard,
+            * "save as" format.
+            */
+          let saveRef = this.dialog.open(SaveToComponent, {
+            width: '500px',
+            data: { canBeISO: x,
+              fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
+          });
+          saveRef.afterClosed().subscribe(result => {
+          if (result) {
+            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
           }
-        }) 
+          });
+        }
+
+        /* If the file is not new, and the encoding
+        * has already been set inside of USS via
+        * chtag.
+        */
+        else
+        {
+          this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
+            fileContext.model.encoding = r.ccsid;
+            if (r.ccsid && r.ccsid != 0) {
+              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+            }
+            /* The file was never tagged, so we should
+            * ask the user if they would like to tag it.
+            */
+            else {
+              let x = this.preSaveCheck(fileContext);
+              let saveRef = this.dialog.open(TagComponent, {
+                width: '500px',
+                data: { canBeISO: x,
+                        fileName: fileContext.model.fileName }
+              });
+              saveRef.afterClosed().subscribe(result => {
+                if (result) {
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+                }
+              });
+            }
+          })
+        }
       }
     });
   }
@@ -394,7 +481,9 @@ export class MonacoService {
   fileContentChangeHandler(e: any, fileNode: ProjectContext, model: any) {
     // update file context
     fileNode.model.contents = model.getValue();
+    this.editorControl.removeActiveFromAllFiles();
     fileNode.changed = true;
+    fileNode.active = true;
   }
 
   cleanDecoration() {

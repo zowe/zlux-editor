@@ -10,7 +10,7 @@
 */
 import { Injectable, Inject } from '@angular/core';
 import { ProjectDef } from '../model/project';
-import { ProjectStructure } from '../model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import * as _ from 'lodash';
 import { B64Decoder } from '../b64-decoder';
@@ -97,9 +97,10 @@ export class DataAdapterService {
     };
   }
 
-  convertDatasetContent(responseData: any): { contents: string } {
+  convertDatasetContent(responseData: any): { contents: string, etag: string } {
     return {
-      contents: JSON.parse(responseData).records.join("\n")
+      contents: JSON.parse(responseData).records.filter(function(record){return record.length > 0}).map(function(record){return record.trim()}).join("\n"),
+      etag: JSON.parse(responseData).etag
     };
   }
 }

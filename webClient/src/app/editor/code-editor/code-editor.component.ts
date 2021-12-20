@@ -40,6 +40,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   public showSettings: boolean = false;
   public settingsOpen: boolean = false;
+  public compareDataset: boolean = false;
 
   public options;
   /*
@@ -89,6 +90,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
+      this.editorControl.compareDataset = false;
       if (this.settingsOpen && this.showSettings) {
         this.showSettings = false;
         if (this.monacoRef) {
@@ -206,6 +208,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       }
     }));
 
+    this.editorControl.compareDatasetEmitter.subscribe((fileContext: ProjectContext) => {
+      this.compareContents(fileContext);
+      this.editorControl.compareDataset = true;
+    })
+
   }
 
   setOptions(options: any) {
@@ -313,6 +320,14 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.monacoService.refreshFile(fileContext, broadcast, line)
       // We don't want to kick off openfile from the editor controller, so talk to monaco directly
     }
+  }
+
+  compareContents(fileContext: ProjectContext) {
+    this.compareDataset = this.editorControl.compareDataset;
+    this.editorControl.removeActiveFromAllFiles();
+    fileContext.active = true;
+    this.monacoService.savePreviousFileContent(fileContext);
+    this.editorControl.enableDiffViewer.next();
   }
 
   setTitle(title?:String):void {

@@ -11,7 +11,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
-import { ProjectStructure } from '../model/editor-project';
+import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import { Subject } from 'rxjs/Subject';
@@ -20,17 +20,19 @@ import { UtilsService } from '../utils.service';
 import { HttpService } from '../http/http.service';
 import { SnackBarService } from '../snack-bar.service';
 import { Observer } from 'rxjs/Observer';
-import { Http } from '@angular/http';
+import { Http, Headers } from '@angular/http';
 import * as _ from 'lodash';
 import { MatDialog } from '@angular/material';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
+import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
 import * as monaco from 'monaco-editor'
 
 let stateCache = {};
 let lastFile;
 //Unsupported DS types
 const unsupportedTypes: Array<string> = ['G', 'B', 'C', 'D', 'I', 'R'];
+const MAX_CONTENT_LENGTH = 5242880;
 
 export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(undefined);
 /**
@@ -45,6 +47,8 @@ export let EditorServiceInstance: BehaviorSubject<any> = new BehaviorSubject(und
 export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuffer, ZLUX.IEditorSyntaxHighlighting {
   public createFileEmitter: EventEmitter<string> = new EventEmitter();
   public toggleTree: EventEmitter<string> = new EventEmitter();
+  public toggleDiffViewer: EventEmitter<string> = new EventEmitter();
+  public enableDiffViewer: EventEmitter<string> = new EventEmitter();
   public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
@@ -52,6 +56,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
+  public refreshLayout: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
@@ -70,7 +75,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
-  
+  public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
+  public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
+  public overwriteDatasetEmitter: EventEmitter<void> = new EventEmitter()
+
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
@@ -85,6 +93,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
   public saveCursorPosition = true; 
+  public compareDataset = false;
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -300,7 +309,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     }
   }
 
+  public removeActiveFromAllFiles() {
+    for (const file of this.openFileList.getValue()) {
+      file.opened = false;
+      file.active = false;
+    }
+  }
+
   public selectFileHandler(fileContext: ProjectContext) {
+    this.compareDataset = false;
     if(this.saveCursorPosition) {  
       this.saveCursorState();
     }
@@ -572,6 +589,169 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       this.snackBar.open(`${error}`, 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       this.openDirectory.next(results.directory);
     });
+  }
+
+  public isContentValidForDatasetWrite(content: string[], datasetAttrs: DatasetAttributes): boolean | string {
+    //TODO: validation of record length that is aware of how DBCS will effect actual length
+    //FB must have exactly lrecl, VB must have no more than lrecl. content cant be undefined.
+    if (!content) {
+      return 'No Content';
+    }
+    if(datasetAttrs.recfm.recordLength === 'U') {
+      return 'Cannot save a dataset with Undefined record format';
+    }
+    let maxRecordLen = datasetAttrs.dsorg.maxRecordLen;
+    for (let i = 0; i < content.length; i++) {
+      let record = content[i];
+      if (record.length > maxRecordLen) {
+        return `Line ${i+1} exceeds record length limit of ${maxRecordLen}`;
+      }
+    }
+    if (JSON.stringify({records:content}).length > MAX_CONTENT_LENGTH) {
+      return 'Content over currently supported max size ('+ (MAX_CONTENT_LENGTH/(1024*1024)) +'MB)';
+    }
+    return true;
+  }
+  
+  saveDatasetHandler(context?: ProjectContext, destinationOverride?: any): Observable<void> {
+    const _openDataset = this.openFileList.getValue();
+    const editor = this._editor.getValue();
+    const forceWrite = false;
+    let _activeDataset: ProjectContext;
+    let _observer: Observer<void>;
+    let _observable: Observable<void>;
+    let contents;
+    if (editor) {
+      contents = editor.getValue();
+    }
+    if (context != null) {
+      _activeDataset = context;
+    } else {
+      _activeDataset = _openDataset.filter(dataset => dataset.active === true)[0];
+    }
+    const model = _activeDataset.model;
+    const fullName = _activeDataset.model.fileName;
+
+    _observable = new Observable((observer) => {
+      _observer = observer;
+    });
+
+    if (contents === undefined) {
+      this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+      return;
+    }
+
+    if (!destinationOverride && fullName) {
+      contents = editor.getValue().split('\n');
+      const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+      this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
+      let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
+      if (result === true) {
+        this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
+      } else {
+        this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+      }
+    } else {
+      //dataset is new or needs some alteration we can't do yet
+      this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
+                         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
+    }
+    return _observable;
+  }
+
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>): void {
+    const editor = this._editor.getValue();
+    let contents;
+    const model = activeDataset.model;
+    const fullName = model.fileName;
+    const etag = model.etag;
+    contents = model.contents.split('\n');
+    let headers = new Headers({'Etag': etag})
+    let reqBody = {records:contents};
+    if(etag) {
+      reqBody['etag'] = etag;
+    } else {
+      forceWrite = true;
+    }
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+    this.ngHttp.post(requestUrl, reqBody, {headers: headers, params:{force: forceWrite}}).subscribe(r => {
+      model.etag = r.json().etag;
+      this.snackBar.open(`${activeDataset.name} has been saved!`,'Close', {duration:MessageDuration.Short, panelClass: 'center'});
+      /* Send buffer saved event */
+      this.bufferSaved.next({ buffer: activeDataset.model.contents, file: activeDataset.model.name });
+      this.openFileList.getValue()
+        .map(file => {
+          if (file.id === context.id) {
+            file.changed = false;
+          }
+          return file;
+        });
+      if (_observer != null) {
+        _observer.next(null);
+      }
+    }, e => {
+      const error = e._body;
+      if(error) {
+        // TODO: Below message will vary depending upon the response from the server.
+        if(error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
+          if(!this.compareDataset) {
+            let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+              width: '500px',
+              data: { fileName: fullName}
+            });
+            overwriteRef.afterClosed().subscribe(option => {
+              if (option === 'force') {
+                forceWrite = true;
+                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable);
+              }
+              if (option === 'compare') {
+                this.compareFiles(context, activeDataset, _observer, _observable);
+              }
+            });
+          }
+        } else {
+          this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
+          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        }
+      } else {
+        this.snackBar.open(`${activeDataset.name} could not be saved!`,
+        'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+      }
+    }); 
+  }
+
+  compareFiles(fileContext: ProjectContext, activeDataset: ProjectContext, _observer: Observer<void>, _observable: Observable<void>): void {
+    let updatedFileContext: ProjectContext;
+    let acceptChangeSub: Subscription;
+    let overwriteSub: Subscription;
+    const reqContent = ZoweZLUX.uriBroker.datasetContentsUri(activeDataset.model.fileName);
+    this.http.get(reqContent).subscribe((response:any) => {
+      updatedFileContext = _.cloneDeep(fileContext);
+      updatedFileContext.model.etag = response.etag;
+      updatedFileContext.model.contents = (response.records).join('\n');
+      this.compareDataset = true;
+      this.compareDatasetEmitter.emit(updatedFileContext);
+      fileContext.active = true;
+      acceptChangeSub = this.acceptChangeEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.removeActiveFromAllFiles();
+        this.closeFileHandler(fileContext);
+        this.closeFile.next(fileContext);
+        this.openFile('', updatedFileContext.model);
+        this.refreshLayout.next();
+        acceptChangeSub.unsubscribe();
+        overwriteSub.unsubscribe();
+      })
+      overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
+        overwriteSub.unsubscribe();
+        acceptChangeSub.unsubscribe();
+      })
+    }, e => {
+      this.snackBar.open(`${fileContext.name} could not be compared!`,
+      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+    })
   }
 
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
@@ -900,7 +1080,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      */
   saveBuffer(buffer: ZLUX.EditorBufferHandle, path: string | null): Observable<void> {
     this.saveFile.emit(<ProjectContext>buffer);
-    return this.saveFileHandler(buffer, path);
+    if (buffer.model.isDataset) {
+      return this.saveDatasetHandler(buffer, path);
+    } else {
+      return this.saveFileHandler(buffer, path);
+    }
   }
   /**
     * Get the contents of a buffer.
