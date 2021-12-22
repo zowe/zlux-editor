@@ -31,6 +31,8 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import * as _ from 'lodash';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
+import { discardPeriodicTasks } from '@angular/core/testing';
+import { resolve } from 'url';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -567,19 +569,51 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  closeAll() {
-    let closeAllRef;
-    if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
+  saveBeforeClosing(file: ProjectContext): Promise<any>{
+    return new Promise((resolve, reject) => {
+      if(file.changed) {
+        const title = 'Do you want to save the changes you made to ' + file.name;
+        const warningMessage = 'Your changes will be lost if you don\'t save them.';
+        let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
+          if(response == true) {
+            // when user selects to save the file and close it
+            let sub = this.monacoService.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe(() => {
+            resolve(true);
+            });
+          } else if (response != false) {
+            // when user selects to cancel then do not close any file
+            return; 
+          } else {
+            // when user selects not to save the file and close it
+            resolve(true);
+          }
+        });
+      } else {
+        resolve(true);
+      }
+    })
+  }
+
+  async closeAll() {
+    //TODO: Enhance such that closeAll not visible if no tabs are open
+    let closeAllRef; 
+    if (this.fileCount == 0) { 
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
-      this.editorControl.closeAllFiles.next();
-      closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+      const openedFiles = this.editorControl.openFileList.getValue();
+      let promiseArray = [];
+      for (const file of openedFiles) {
+        promiseArray.push(await this.saveBeforeClosing(file));  
+      }
+      await Promise.all(promiseArray).then(() => {
+        this.editorControl.closeAllFiles.next();
+        closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+        closeAllRef.onAction().subscribe(() => {
+          this.editorControl.undoCloseAllFiles.next();
+          this.editorControl.fetchActiveFile();
+        });
+      });
     }
-
-    closeAllRef.onAction().subscribe(() => {
-      this.editorControl.undoCloseAllFiles.next();
-    });
-    this.editorControl.fetchActiveFile()
   }
 
   refreshFile() {
