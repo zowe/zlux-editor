@@ -31,8 +31,6 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import * as _ from 'lodash';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
-import { discardPeriodicTasks } from '@angular/core/testing';
-import { resolve } from 'url';
 
 function initMenu(menuItems) {
   menuItems.forEach(function(menuItem) {
@@ -569,7 +567,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  saveBeforeClosing(file: ProjectContext): Promise<any>{
+  promptToSave(file: ProjectContext): Promise<any>{
     return new Promise((resolve, reject) => {
       if(file.changed) {
         const title = 'Do you want to save the changes you made to \'' + file.name + '\?';
@@ -603,7 +601,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       const openedFiles = this.editorControl.openFileList.getValue();
       let promiseArray = [];
       for (const file of openedFiles) {
-        promiseArray.push(await this.saveBeforeClosing(file));  
+        promiseArray.push(await this.promptToSave(file));  
       }
       await Promise.all(promiseArray).then(() => {
         this.editorControl.closeAllFiles.next();
