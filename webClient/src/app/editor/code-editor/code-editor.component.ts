@@ -296,8 +296,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     } else {
       if(fileContext.changed) {
         let directory = fileContext.model.path || this.editorControl.activeDirectory;
-        const title = 'Do you want to save changes made to \'' + fileContext.name + '\'?';
-        const warningMessage = 'Changes will be lost if not saved.';
+        const title = 'Do you want to save the changes you made to  ' + fileContext.name + '\'?';
+        const warningMessage = 'Your changes will be lost if you don\'t save them.';
         let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
           if(response == true) {
             let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => {
