@@ -176,7 +176,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: fileNode.model.contents, etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
