@@ -567,7 +567,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  promptToSave(file: ProjectContext): Promise<any>{
+  promptToSave(file: ProjectContext): Promise<String>{
     return new Promise((resolve, reject) => {
       if(file.changed) {
         const title = 'Do you want to save the changes you made to \'' + file.name + '\?';
@@ -575,19 +575,19 @@ export class MenuBarComponent implements OnInit, OnDestroy {
         let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
           if(response == true) {
             // when user selects to save the file and close it
-            let sub = this.monacoService.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe(() => {
-            resolve(true);
+            let sub = this.monacoService.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
+              resolve(res);
             });
-          } else if (response != false) {
+          } else if (response != false && response != true) {
             // when user selects to cancel then do not close any file
-            return; 
+            resolve('Cancel'); 
           } else {
             // when user selects not to save the file and close it
-            resolve(true);
+            resolve('DontSave');
           }
         });
       } else {
-        resolve(true);
+        resolve('UnmodifiedFile');
       }
     })
   }
@@ -601,15 +601,23 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       const openedFiles = this.editorControl.openFileList.getValue();
       let promiseArray = [];
       for (const file of openedFiles) {
-        promiseArray.push(await this.promptToSave(file));  
+        let respose = await this.promptToSave(file);
+        if (respose === 'Cancel'){
+          promiseArray.push(respose);  
+          break;
+        } else {
+          promiseArray.push(respose);  
+        }
       }
-      await Promise.all(promiseArray).then(() => {
-        this.editorControl.closeAllFiles.next();
-        closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
-        closeAllRef.onAction().subscribe(() => {
+      await Promise.all(promiseArray).then((promiseArray) => {
+        if(promiseArray.indexOf('Cancel') === -1){
+          this.editorControl.closeAllFiles.next();
+          closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+          closeAllRef.onAction().subscribe(() => {
           this.editorControl.undoCloseAllFiles.next();
           this.editorControl.fetchActiveFile();
         });
+        }
       });
     }
   }

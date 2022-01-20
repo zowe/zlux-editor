@@ -401,7 +401,7 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
         this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
@@ -423,8 +423,11 @@ export class MonacoService implements OnDestroy {
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+          } else {
+            obs.next('Cancel');
           }
+          
           });
         }
 
@@ -451,7 +454,9 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                } else {
+                  obs.next('Cancel');
                 }
               });
             }
