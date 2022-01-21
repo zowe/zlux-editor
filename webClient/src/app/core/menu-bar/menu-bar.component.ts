@@ -567,31 +567,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  promptToSave(file: ProjectContext): Promise<String>{
-    return new Promise((resolve, reject) => {
-      if(file.changed) {
-        const title = 'Do you want to save the changes you made to \'' + file.name + '\?';
-        const warningMessage = 'Your changes will be lost if you don\'t save them.';
-        let response = this.monacoService.confirmAction(title, warningMessage).subscribe(response => {
-          if(response == true) {
-            // when user selects to save the file and close it
-            let sub = this.monacoService.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
-              resolve(res);
-            });
-          } else if (response != false && response != true) {
-            // when user selects to cancel then do not close any file
-            resolve('Cancel'); 
-          } else {
-            // when user selects not to save the file and close it
-            resolve('DontSave');
-          }
-        });
-      } else {
-        resolve('UnmodifiedFile');
-      }
-    })
-  }
-
   async closeAll() {
     //TODO: Enhance such that closeAll not visible if no tabs are open
     let closeAllRef; 
@@ -601,7 +576,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       const openedFiles = this.editorControl.openFileList.getValue();
       let promiseArray = [];
       for (const file of openedFiles) {
-        let respose = await this.promptToSave(file);
+        let respose = await this.monacoService.promptToSave(file);
         promiseArray.push(respose);  
         if (respose === 'Cancel'){
           break;

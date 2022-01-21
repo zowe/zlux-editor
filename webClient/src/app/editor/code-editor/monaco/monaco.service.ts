@@ -404,7 +404,7 @@ export class MonacoService implements OnDestroy {
   saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -440,7 +440,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -480,6 +480,32 @@ export class MonacoService implements OnDestroy {
       //});
     //}
   //}
+
+  promptToSave(file: ProjectContext): Promise<String>{
+    return new Promise((resolve, reject) => {
+      if(file.changed) {
+        const title = 'Do you want to save the changes you made to \'' + file.name + '\?';
+        const warningMessage = 'Your changes will be lost if you don\'t save them.';
+        let response = this.confirmAction(title, warningMessage).subscribe(response => {
+          if(response == true) {
+            // when user selects to save the file and close it
+            let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => { sub.unsubscribe();
+              console.log('icome here baby');
+              resolve(res);
+            });
+          } else if (response != false && response != true) {
+            // when user selects to cancel then do not close any file
+            resolve('Cancel'); 
+          } else {
+            // when user selects not to save the file and close it
+            resolve('DontSave');
+          }
+        });
+      } else {
+        resolve('UnmodifiedFile');
+      }
+    })
+  }
 
   generateUri(editorFile: ProjectStructure): string {
     // have to use lowercase here!

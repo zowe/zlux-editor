@@ -20,7 +20,7 @@ export interface DialogData {
 @Component({
   selector: 'app-prompt-to-confirm',
   templateUrl: './confirm-action-component.html',
-  styleUrls: ['./confirm-action-component.scss',  '../../../../styles.scss']
+  styleUrls: ['../../../../styles.scss']
 })
 
 export class ConfirmAction {
