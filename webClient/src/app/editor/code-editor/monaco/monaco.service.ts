@@ -489,8 +489,7 @@ export class MonacoService implements OnDestroy {
         let response = this.confirmAction(title, warningMessage).subscribe(response => {
           if(response == true) {
             // when user selects to save the file and close it
-            let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => { sub.unsubscribe();
-              console.log('icome here baby');
+            let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
               resolve(res);
             });
           } else if (response != false && response != true) {
