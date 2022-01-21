@@ -35,7 +35,7 @@
     "@angular/router": "~12.0.0",
     "@types/node": "~8.10.59",
     "@zlux/widgets": "git+https://github.com/zowe/zlux-widgets.git#feature/upgrade-angular",
-    "@zowe/zlux-angular-file-tree": "file://../../../zlux/zlux-file-explorer",
+    "@zowe/zlux-angular-file-tree": "0.12.0-RC1",
     "angular2-template-loader": "~0.6.2",
     "codelyzer": "~5.1.0",
     "compression-webpack-plugin": "~6.1.1",
