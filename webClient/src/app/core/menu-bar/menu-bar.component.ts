@@ -602,11 +602,9 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       let promiseArray = [];
       for (const file of openedFiles) {
         let respose = await this.promptToSave(file);
+        promiseArray.push(respose);  
         if (respose === 'Cancel'){
-          promiseArray.push(respose);  
           break;
-        } else {
-          promiseArray.push(respose);  
         }
       }
       await Promise.all(promiseArray).then((promiseArray) => {
