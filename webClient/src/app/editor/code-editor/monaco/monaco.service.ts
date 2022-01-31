@@ -484,7 +484,7 @@ export class MonacoService implements OnDestroy {
   promptToSave(file: ProjectContext): Promise<String>{
     return new Promise((resolve, reject) => {
       if(file.changed) {
-        const title = 'Do you want to save the changes you made to \'' + file.name + '\?';
+        const title = 'Do you want to save the changes you made to \'' + file.name + '\'\?';
         const warningMessage = 'Your changes will be lost if you don\'t save them.';
         let response = this.confirmAction(title, warningMessage).subscribe(response => {
           if(response == true) {
