@@ -41,6 +41,7 @@ export class MonacoService implements OnDestroy {
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     private http: HttpService,
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
@@ -79,6 +80,7 @@ export class MonacoService implements OnDestroy {
     }
     document.addEventListener("keydown", this.fileSaveListener);
 
+    this.initJsonSchemas();
 
     //this.editorControl.saveAllFile.subscribe(() => {
       //this.saveAllFile();
@@ -492,6 +494,23 @@ export class MonacoService implements OnDestroy {
   cleanDecoration() {
     this.editorControl.editor.getValue().deltaDecorations(this.decorations, []);
   }
+
+  initJsonSchemas(): void {
+    const uri = ZoweZLUX.uriBroker.pluginResourceUri(this.pluginDefinition.getBasePlugin(), 'assets/schemas/zowe-schema.json');
+    (monaco.languages as any).yaml.yamlDefaults.setDiagnosticsOptions({
+      hover: true,
+      completion: true,
+      validate: true,
+      format: true,
+      enableSchemaRequest: true,
+      schemas: [
+        {
+          fileMatch: ['inmemory://**zowe.yaml/**'],
+          uri: uri
+        },
+      ],
+    });
+  } 
 }
 
 /*
