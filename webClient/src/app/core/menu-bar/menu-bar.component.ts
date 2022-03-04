@@ -567,19 +567,32 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  closeAll() {
-    let closeAllRef;
-    if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
+  async closeAll() {
+    //TODO: Enhance such that closeAll not visible if no tabs are open
+    let closeAllRef; 
+    if (this.fileCount == 0) { 
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
-      this.editorControl.closeAllFiles.next();
-      closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+      const openedFiles = this.editorControl.openFileList.getValue();
+      let promiseArray = [];
+      for (const file of openedFiles) {
+        let respose = await this.monacoService.promptToSave(file);
+        promiseArray.push(respose);  
+        if (respose === 'Cancel'){
+          break;
+        }
+      }
+      await Promise.all(promiseArray).then((promiseArray) => {
+        if(promiseArray.indexOf('Cancel') === -1){
+          this.editorControl.closeAllFiles.next();
+          closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+          closeAllRef.onAction().subscribe(() => {
+          this.editorControl.undoCloseAllFiles.next();
+          this.editorControl.fetchActiveFile();
+        });
+        }
+      });
     }
-
-    closeAllRef.onAction().subscribe(() => {
-      this.editorControl.undoCloseAllFiles.next();
-    });
-    this.editorControl.fetchActiveFile()
   }
 
   refreshFile() {

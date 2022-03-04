@@ -11,12 +11,13 @@
 <zlux-tab-trap></zlux-tab-trap>
 <h2 mat-dialog-title>E-tag Mismatch</h2>
 <mat-dialog-content>
-    The dataset {{datasetName}} has been previously updated on the server. Would you like to overwrite the dataset? 
+    The dataset {{datasetName}} has been previously updated on the server. How would you like to proceed?
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-dialog-close class="right">Cancel</button>
   <!-- The mat-dialog-close directive optionally accepts a value as a result for the dialog. -->
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="force">Overwrite</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="compare">Compare Difference</button>
+  <button mat-button mat-stroked-button class="right" color="warn" [mat-dialog-close]="force">Overwrite</button>
 </mat-dialog-actions>
 
 <!-- 

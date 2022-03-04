@@ -23,7 +23,7 @@
     (remove)="closeFile($event)"
     (compareContents)="compareContents($event)"></app-file-tabs>
   <app-monaco-settings (options)="setOptions($event)" *ngIf="showSettings"></app-monaco-settings>
-  <app-monaco [editorFile]="editorFile" [options]="options" #monaco></app-monaco>
+  <app-monaco [editorFile]="editorFile" [options]="options" [compareDataset]="compareDataset" #monaco></app-monaco>
 </div>
 
 <!-- 

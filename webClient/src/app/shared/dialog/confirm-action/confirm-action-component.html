@@ -1,5 +1,4 @@
-
-/*
+<!-- 
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
@@ -7,33 +6,21 @@
   SPDX-License-Identifier: EPL-2.0
   
   Copyright Contributors to the Zowe Project.
-*/
-import { Component, OnInit, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material';
+-->
+<zlux-tab-trap></zlux-tab-trap>
+<button mat-dialog-close class="close-dialog-btn" (click)="onCancel()"><i class=" fa fa-close "></i></button>
+<h2 mat-dialog-title>{{data.title}}</h2>
+<mat-dialog-content>
+    <p><b>Warning: </b>{{data.warningMessage}}</p>
+</mat-dialog-content>
 
-@Component({
-  selector: 'app-overwrite-dataset',
-  templateUrl: './overwrite-dataset.component.html',
-  styleUrls: ['../../../../styles.scss']
-})
-export class OverwriteDatasetComponent{
+<div mat-dialog-actions>
+    <button mat-raised-button class="right " color="primary" (click)="onConfirm() ">Yes</button>
+    <button mat-button class="right " (click)="onDismiss() ">No</button>
+</div>
 
-  private force: string;
-  private compare: string;
-  private datasetName: string;
 
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { 
-    this.force = 'force';
-    this.compare = 'compare';
-    this.datasetName = data.fileName;
-  }
-  
-  ngOnInit() {
-  }
-
-}
-
-/*
+<!-- 
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
@@ -41,4 +28,4 @@ export class OverwriteDatasetComponent{
   SPDX-License-Identifier: EPL-2.0
   
   Copyright Contributors to the Zowe Project.
-*/
+-->

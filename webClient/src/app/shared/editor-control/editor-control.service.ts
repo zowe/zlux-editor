@@ -75,7 +75,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
-  
+  public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
+  public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
+  public overwriteDatasetEmitter: EventEmitter<void> = new EventEmitter()
+
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
@@ -90,6 +93,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
   public saveCursorPosition = true; 
+  public compareDataset = false;
 
   /**
    * An event that is triggered when a file is opened inside the editor.
@@ -313,6 +317,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public selectFileHandler(fileContext: ProjectContext) {
+    this.compareDataset = false;
     if(this.saveCursorPosition) {  
       this.saveCursorState();
     }
@@ -629,41 +634,36 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     _observable = new Observable((observer) => {
       _observer = observer;
-    });
-
-    if (contents === undefined) {
-      this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
-      return;
-    }
-
-    if (!destinationOverride && fullName) {
-      contents = editor.getValue().split('\n');
-      const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-      this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
-      let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
-      if (result === true) {
-        this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
-      } else {
-        this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+      if (contents === undefined) {
+        this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+        return;
       }
-    } else {
-      //dataset is new or needs some alteration we can't do yet
-      this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
-                         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
-    }
+      if (!destinationOverride && fullName) {
+        contents = editor.getValue().split('\n');
+        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+        this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
+        let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
+        if (result === true) {
+          this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
+        } else {
+          this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+        }
+      } else {
+        //dataset is new or needs some alteration we can't do yet
+        this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
+                           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
+      }
+    });
     return _observable;
   }
 
-  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>) {
+  saveDataset(context: ProjectContext, activeDataset: ProjectContext, forceWrite: boolean, _observer: Observer<void>, _observable: Observable<void>): void {
     const editor = this._editor.getValue();
     let contents;
-    if(editor) {
-      contents = editor.getValue();
-    }
     const model = activeDataset.model;
     const fullName = model.fileName;
     const etag = model.etag;
-    contents = editor.getValue().split('\n');
+    contents = model.contents.split('\n');
     let headers = new Headers({'Etag': etag})
     let reqBody = {records:contents};
     if(etag) {
@@ -692,15 +692,21 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if(error) {
         // TODO: Below message will vary depending upon the response from the server.
         if(error.includes('Provided etag did not match system etag. To write, read the dataset again and resolve the difference, then retry.')) {
-          let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
-            width: '500px',
-            data: { fileName: fullName}
-          });
-          overwriteRef.afterClosed().subscribe(forceWrite => {
-            if (forceWrite) {
-              this.saveDataset(context, activeDataset, forceWrite, _observer, _observable)
-            }
-          });
+          if(!this.compareDataset) {
+            let overwriteRef = this.dialog.open(OverwriteDatasetComponent, {
+              width: '500px',
+              data: { fileName: fullName}
+            });
+            overwriteRef.afterClosed().subscribe(option => {
+              if (option === 'force') {
+                forceWrite = true;
+                this.saveDataset(context, activeDataset, forceWrite, _observer, _observable);
+              }
+              if (option === 'compare') {
+                this.compareFiles(context, activeDataset, _observer, _observable);
+              }
+            });
+          }
         } else {
           this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
@@ -710,6 +716,40 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
       }
     }); 
+  }
+
+  compareFiles(fileContext: ProjectContext, activeDataset: ProjectContext, _observer: Observer<void>, _observable: Observable<void>): void {
+    let updatedFileContext: ProjectContext;
+    let acceptChangeSub: Subscription;
+    let overwriteSub: Subscription;
+    const reqContent = ZoweZLUX.uriBroker.datasetContentsUri(activeDataset.model.fileName);
+    this.http.get(reqContent).subscribe((response:any) => {
+      updatedFileContext = _.cloneDeep(fileContext);
+      updatedFileContext.model.etag = response.etag;
+      updatedFileContext.model.contents = (response.records).join('\n');
+      this.compareDataset = true;
+      this.compareDatasetEmitter.emit(updatedFileContext);
+      fileContext.active = true;
+      acceptChangeSub = this.acceptChangeEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.removeActiveFromAllFiles();
+        this.closeFileHandler(fileContext);
+        this.closeFile.next(fileContext);
+        this.openFile('', updatedFileContext.model);
+        this.refreshLayout.next();
+        acceptChangeSub.unsubscribe();
+        overwriteSub.unsubscribe();
+      })
+      overwriteSub = this.overwriteDatasetEmitter.subscribe(() => {
+        this.compareDataset = false;
+        this.saveDataset(fileContext, activeDataset, true, _observer, _observable);
+        overwriteSub.unsubscribe();
+        acceptChangeSub.unsubscribe();
+      })
+    }, e => {
+      this.snackBar.open(`${fileContext.name} could not be compared!`,
+      'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+    })
   }
 
   saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
@@ -760,82 +800,78 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     
     _observable = new Observable((observer) => {
       _observer = observer;
-    });
-    
-    /* If the file already exists or it's
-     * untagged, then we can use it's current
-     * file properties.
-     */
-    if (!results || isUntagged) {
-      fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
-        _activeFile.model.path.substring(1) :
-        _activeFile.model.path;
-        fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
-        const forceOverwrite = true;
-        /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                  fileDir+'/'+fileName,
-                                                  { sourceEncoding,
-                                                    targetEncoding,
-                                                    forceOverwrite });
-      sessionID = 0;
-      this.ngHttp.put(requestUrl, null).subscribe(r => {
-        sessionID = r.json().sessionID;
+      /* If the file already exists or it's
+      * untagged, then we can use it's current
+      * file properties.
+      */
+      if (!results || isUntagged) {
+        fileDir = ['/', '\\'].indexOf(_activeFile.model.path.substring(0, 1)) > -1 ?
+          _activeFile.model.path.substring(1) :
+          _activeFile.model.path;
+          fileName = _activeFile.model.fileName ? _activeFile.model.fileName : _activeFile.model.name;
+          const forceOverwrite = true;
+          /* Request to get sessionID */
         requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
                                                     fileDir+'/'+fileName,
-                                                    { sessionID,
-                                                      forceOverwrite,
-                                                      lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-        /** Update the new encoding value, in opeFileList Models */
-        let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-        this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-        this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
-      }, e => {
-        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                          'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-      });
-    }
-    
-    /* The file is newly created, so
-     * we are using the data returned
-     * from the dialog.
-     */
-    else {
-      /* If the user started it with a slash
-       * remove it for when the URL is formatted.
-       * This should be validated in the dialog
-       * in future enhancements.
-       */
-      if (results.directory.charAt(0) === '/') {
-        results.directory.substr(1);
-      }
-      
-      /* Request to get sessionID */
-      requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                  results.directory+'/'+results.fileName,
-                                                  { sourceEncoding,
-                                                    targetEncoding,
-                                                    forceOverwrite: true });
-      sessionID = 0;
-      
-      this.ngHttp.put(requestUrl, null).subscribe(r => {
-        sessionID = r.json().sessionID;
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                    results.directory+'/'+results.fileName,
-                                                    { forceOverwrite: true,
-                                                      sessionID,
-                                                      lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-        /** Update the new encoding value, in opeFileList Models */
+                                                    { sourceEncoding,
+                                                      targetEncoding,
+                                                      forceOverwrite });
+        sessionID = 0;
+        this.ngHttp.put(requestUrl, null).subscribe(r => {
+          sessionID = r.json().sessionID;
+          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                      fileDir+'/'+fileName,
+                                                      { sessionID,
+                                                        forceOverwrite,
+                                                        lastChunk: true });
+          this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+          /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-      }, e => {
-        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-      }); 
-    }
-    
+          this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
+        }, e => {
+          this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        });
+      }
+      
+      /* The file is newly created, so
+      * we are using the data returned
+      * from the dialog.
+      */
+      else {
+        /* If the user started it with a slash
+        * remove it for when the URL is formatted.
+        * This should be validated in the dialog
+        * in future enhancements.
+        */
+        if (results.directory.charAt(0) === '/') {
+          results.directory.substr(1);
+        }
+        /* Request to get sessionID */
+        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                    results.directory+'/'+results.fileName,
+                                                    { sourceEncoding,
+                                                      targetEncoding,
+                                                      forceOverwrite: true });
+        sessionID = 0;
+        this.ngHttp.put(requestUrl, null).subscribe(r => {
+          sessionID = r.json().sessionID;
+          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
+                                                      results.directory+'/'+results.fileName,
+                                                      { forceOverwrite: true,
+                                                        sessionID,
+                                                        lastChunk: true });
+          this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+          /** Update the new encoding value, in opeFileList Models */
+            let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+            this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        }, e => {
+          this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        });
+      }
+    });
     return _observable;
   }
 

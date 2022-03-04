@@ -9,28 +9,43 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialogRef } from '@angular/material';
 import { MAT_DIALOG_DATA } from '@angular/material';
 
+export interface DialogData {
+  title: string;
+  warningMessage: string;
+}
+
 @Component({
-  selector: 'app-overwrite-dataset',
-  templateUrl: './overwrite-dataset.component.html',
+  selector: 'app-prompt-to-confirm',
+  templateUrl: './confirm-action-component.html',
   styleUrls: ['../../../../styles.scss']
 })
-export class OverwriteDatasetComponent{
 
-  private force: string;
-  private compare: string;
-  private datasetName: string;
-
-  constructor(@Inject(MAT_DIALOG_DATA) public data: any) { 
-    this.force = 'force';
-    this.compare = 'compare';
-    this.datasetName = data.fileName;
-  }
+export class ConfirmAction {
+  constructor(
+    public dialogRef: MatDialogRef<ConfirmAction>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData
+  ) {}
   
   ngOnInit() {
   }
 
+  onConfirm(): void {
+    // Close the dialog, return true
+    this.dialogRef.close(true);
+  }
+
+  onDismiss(): void {
+    // Close the dialog, return false
+    this.dialogRef.close(false);
+  }
+
+  onCancel(): void {
+    // Close the dialog, return nothing
+    this.dialogRef.close();
+  }
 }
 
 /*

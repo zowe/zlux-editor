@@ -51,6 +51,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   };
   
   @Input() editorFile;
+  @Input() compareDataset;
   @ViewChild('monacoEditor')
   monacoEditorRef: ElementRef;
   private editor: any;
@@ -341,6 +342,20 @@ export class MonacoComponent implements OnInit, OnChanges {
       this.showDiffViewer = !this.showEditor;
     }
   }
+
+  acceptChange(): void {
+    this.showDiffViewer = false;
+    this.showEditor = true;
+    this.editorControl.acceptChangeEmitter.emit();
+  }
+
+  overwriteDataset(): void {
+    this.showDiffViewer = false;
+    this.showEditor = true;
+    this.editorControl.overwriteDatasetEmitter.emit();
+  }
+
+
 }
 
 /*
