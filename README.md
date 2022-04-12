@@ -18,7 +18,7 @@ To install that as a prereq, you must first do:
 
 `npm config set @zowe:registry https://zowe.jfrog.io/zowe/api/npm/npm-release/`
 
-Afterwards, read this wiki on building: https://github.com/zowe/zlux/wiki/Building-Plugins
+Afterwards, read this wiki on building: https://docs.zowe.org/stable/extend/extend-desktop/mvd-buildingplugins/
 
 ## Installing
 
