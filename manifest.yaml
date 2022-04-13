@@ -1,0 +1,28 @@
+---
+name: editor
+id: org.zowe.editor
+# Without the v
+version: 3.0.0
+# Human readable component name
+title: Editor
+# Human readable component description
+description: 'Zowe Editor'
+homepage: https://zowe.org
+keywords:
+  - zlux
+  - appfw
+  - app
+  - angular
+  - editor
+license: EPL-2.0
+repository:
+  type: git
+  url: https://github.com/zowe/zlux-editor.git
+# we do not specify encoding here because its already tagged ascii
+build:
+  branch: "{{build.branch}}"
+  number: "{{build.number}}"
+  commitHash: "{{build.commitHash}}"
+  timestamp: "{{build.timestamp}}"
+appfwPlugins:
+  - path: .
