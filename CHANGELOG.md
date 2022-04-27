@@ -1,5 +1,10 @@
 # Zlux Editor Changelog
 
+## `3.0.0`
+
+- Breaking change: The app now uses angular 12, making it compatible with Zowe v2 desktop and incompatible with v1 desktop.
+- Enhancement: The app now contains a manifest file so that it can be installed with `zwe components install`
+
 ## `2.9.0`
 - Added the feature to update the dataset in the editor
 - Added the check for e-tag while updating the dataset
