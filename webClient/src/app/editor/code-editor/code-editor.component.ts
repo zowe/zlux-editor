@@ -294,7 +294,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       let nextFileContext = this.editorControl.fetchActiveFile();
       this.selectFile(nextFileContext, true);
     } else {
-      this.codeEditorService.closeFile(fileContext);
+      const directory = fileContext.model.path || this.editorControl.activeDirectory;
+      this.monacoService.promptToSave(fileContext).then((res) => {
+        if(res !== 'Cancel'){
+          this.codeEditorService.closeFile(fileContext);
+        }
+      });
     }
   }
 
