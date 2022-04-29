@@ -9,7 +9,6 @@
 - Added the feature to prompt the user to save the unsaved files before closing
 - Added the feature to submit the JOB, from Menu Bar. for opened JCL in Editor
 
-
 ## `2.8.0`
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
 - Bugfix: Unable to recalculate the size of monaco-code-container when switching from diff-viewer to code-editor.
