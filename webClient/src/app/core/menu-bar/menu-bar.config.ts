@@ -46,7 +46,7 @@ export const LANGUAGE_MENUS = {
           let content = context.controller.fetchActiveFile().model.contents + '\\n';
           if (content && content.length > 0) {
             content = content.replace(/\\n/g,'\\\\n');
-            const uri = '/jes';
+            const uri = ZoweZLUX.uriBroker.agentRootUri('jes');
             const stringJsonBody = '{ "jcl": "'+content+'"}';
             fetch(uri, {method: 'PUT', body: stringJsonBody,
                         credentials: 'include',

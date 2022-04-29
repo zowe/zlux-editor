@@ -7,6 +7,7 @@
 - Added the ability to view the dataset write conflicts in the diff-viewer
 - Added the ability to overwrite the dataset and accept incoming change inside the diff-viewer
 - Added the feature to prompt the user to save the unsaved files before closing
+- Added the feature to submit the JOB, from Menu Bar. for opened JCL in Editor
 
 
 ## `2.8.0`
