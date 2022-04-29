@@ -55,7 +55,7 @@ export const LANGUAGE_MENUS = {
             .then((response)=> {
               if (!response.ok) {
                 response.text().then(text => {
-                  context.controller.snackBar.open('Error submitting JCL: ' + text + ', Status: ' + response.status, 'Dismiss', {duration: 5000, panelClass: 'center' })
+                  context.controller.snackBar.open('Error submitting JCL: ' + text + ', Status: ' + response.status, 'Dismiss', {duration: 10000, panelClass: 'center' })
                 });
                 } else {
                 response.json().then((response) => {
