@@ -178,6 +178,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       this.hideFileMenus();
     })
 
+    // TODO: Undoing Close All has a regression in it that breaks tabs
     this.editorControl.undoCloseAllFiles.subscribe(() => {
       if (this.previousSessionData.fileCount) {
         this.fileCount = this.previousSessionData.fileCount;
@@ -573,12 +574,13 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
       this.editorControl.closeAllFiles.next();
-      closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
+      // closeAllRef = this.snackBar.open('Closed.', 'Undo?', { duration: MessageDuration.Medium, panelClass: 'center' })
     }
 
-    closeAllRef.onAction().subscribe(() => {
-      this.editorControl.undoCloseAllFiles.next();
-    });
+    // TODO: Undoing Close All has a regression in it that breaks tabs
+    // closeAllRef.onAction().subscribe(() => {
+    //   this.editorControl.undoCloseAllFiles.next();
+    // });
     this.editorControl.fetchActiveFile()
   }
 
