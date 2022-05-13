@@ -882,44 +882,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                             'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         });
       }
-      
-      /* The file is newly created, so
-      * we are using the data returned
-      * from the dialog.
-      */
-      else {
-        /* If the user started it with a slash
-        * remove it for when the URL is formatted.
-        * This should be validated in the dialog
-        * in future enhancements.
-        */
-        if (results.directory.charAt(0) === '/') {
-          results.directory.substr(1);
-        }
-        /* Request to get sessionID */
-        requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                    results.directory+'/'+results.fileName,
-                                                    { sourceEncoding,
-                                                      targetEncoding,
-                                                      forceOverwrite: true });
-        sessionID = 0;
-        this.ngHttp.put(requestUrl, null).subscribe(r => {
-          sessionID = r.json().sessionID;
-          requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                      results.directory+'/'+results.fileName,
-                                                      { forceOverwrite: true,
-                                                        sessionID,
-                                                        lastChunk: true });
-          this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
-          /** Update the new encoding value, in opeFileList Models */
-            let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-            this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-        }, e => {
-          this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-        });
-      }
-    });
     return _observable;
   }
 
