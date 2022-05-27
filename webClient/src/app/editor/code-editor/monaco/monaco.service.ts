@@ -21,6 +21,7 @@ import { Http } from '@angular/http';
 import { Observable } from '../../../../../node_modules/rxjs/Observable';
 import { MatDialog } from '@angular/material';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
+import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-action-component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
@@ -175,7 +176,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: fileNode.changed ? fileNode.model.contents : '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -374,6 +375,18 @@ export class MonacoService implements OnDestroy {
     }
   }
 
+  confirmAction(title: any, warningMessage: any): Observable<boolean>  {
+    var response = new Subject<String>();
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      maxWidth: '400px',
+      data: {
+          title: title,
+          warningMessage: warningMessage,
+        }
+    });
+    return dialogRef.afterClosed();
+  }
+
   preSaveCheck(fileContext?: ProjectContext): boolean {
     let _activeFile: ProjectContext = fileContext;
     let canBeISO = true;
@@ -388,10 +401,10 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -410,8 +423,11 @@ export class MonacoService implements OnDestroy {
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+          } else {
+            obs.next('Cancel');
           }
+          
           });
         }
 
@@ -424,7 +440,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -438,7 +454,9 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                } else {
+                  obs.next('Cancel');
                 }
               });
             }
@@ -462,6 +480,31 @@ export class MonacoService implements OnDestroy {
       //});
     //}
   //}
+
+  promptToSave(file: ProjectContext): Promise<String>{
+    return new Promise((resolve, reject) => {
+      if(file.changed) {
+        const title = 'Do you want to save the changes you made to \'' + file.name + '\'\?';
+        const warningMessage = 'Your changes will be lost if you don\'t save them.';
+        let response = this.confirmAction(title, warningMessage).subscribe(response => {
+          if(response == true) {
+            // when user selects to save the file and close it
+            let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
+              resolve(res);
+            });
+          } else if (response != false && response != true) {
+            // when user selects to cancel then do not close any file
+            resolve('Cancel'); 
+          } else {
+            // when user selects not to save the file and close it
+            resolve('DontSave');
+          }
+        });
+      } else {
+        resolve('UnmodifiedFile');
+      }
+    })
+  }
 
   generateUri(editorFile: ProjectStructure): string {
     // have to use lowercase here!
