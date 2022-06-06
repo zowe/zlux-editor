@@ -18,6 +18,7 @@ import { OpenFolderComponent } from './open-folder/open-folder.component';
 import { DeleteFileComponent } from './delete-file/delete-file.component';
 import { NewFileComponent } from './new-file/new-file.component';
 import { SaveToComponent } from './save-to/save-to.component';
+import { ConfirmAction } from './confirm-action/confirm-action-component';
 import { LanguageServerComponent } from './language-server/language-server.component';
 import { TagComponent } from './tag/tag.component';
 import { ZluxTabbingModule } from '@zlux/widgets';
@@ -48,6 +49,7 @@ import { MatButtonModule } from '@angular/material/button';
         DeleteFileComponent,
         NewFileComponent,
         SaveToComponent,
+        ConfirmAction,
         LanguageServerComponent,
         TagComponent,
         OverwriteDatasetComponent,
@@ -60,6 +62,7 @@ import { MatButtonModule } from '@angular/material/button';
         DeleteFileComponent,
         NewFileComponent,
         SaveToComponent,
+        ConfirmAction,
         LanguageServerComponent,
         TagComponent,
         OverwriteDatasetComponent,

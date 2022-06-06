@@ -568,9 +568,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  closeAll() {
-    let closeAllRef;
-    if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
+  async closeAll() {
+    //TODO: Enhance such that closeAll not visible if no tabs are open
+    let closeAllRef; 
+    if (this.fileCount == 0) { 
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
       this.editorControl.closeAllFiles.next();
