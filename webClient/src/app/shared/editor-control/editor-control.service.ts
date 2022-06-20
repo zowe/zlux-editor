@@ -85,7 +85,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
-  private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  public _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
   private _defaultTheme: string;
 
   private _projectName = '';
