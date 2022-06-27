@@ -510,8 +510,12 @@ export class MonacoService implements OnDestroy {
   }
 
   generateUri(editorFile: ProjectStructure): string {
-    // have to use lowercase here!
-    return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
+    // have to use lowercase here!. This is uniquely identify the Editor Models
+    if(editorFile.isDataset){
+      return `inmemory://${editorFile.path.toLowerCase()}`;
+    } else{
+      return `inmemory://${editorFile.path.toLowerCase()}/${editorFile.name.toLowerCase()}`;
+    }
   }
 
   fileDuplicateChecker(uri: string): boolean {
