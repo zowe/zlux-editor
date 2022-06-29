@@ -253,6 +253,26 @@ export class ProjectTreeComponent {
     }
 }
 
+onDeleteClick($event: any){
+  if($event.data === 'File'){
+    // USS File
+    for (const file of this.editorControl._openFileList.getValue()) {
+      if (file.model.fileName === $event.name && file.model.path === $event.path.substring(0,$event.path.lastIndexOf("/")) ) {
+        this.editorControl.closeFileHandler(file);
+        break;
+      }
+    }
+  } else{
+    // Dataset
+    for (const file of this.editorControl._openFileList.getValue()) {
+      if (file.model.name === $event.data.name && file.model.path === $event.data.path ) {
+        this.editorControl.closeFileHandler(file);
+        break;
+      }
+    }
+  }
+}
+
   onPathChanged($event: any) {
     this.editorControl.activeDirectory = $event;
   }

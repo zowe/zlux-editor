@@ -13,6 +13,7 @@
   <zlux-file-tree #fileExplorer
     (nodeClick)="onNodeClick($event)"
     (openInNewTab)="onOpenInNewTab($event)"
+    (deleteClick)="onDeleteClick($event)"
     (pathChanged)="onPathChanged($event)"
     [style]="{'height': '100%', 'padding-bottom': '100px'}"
   >
