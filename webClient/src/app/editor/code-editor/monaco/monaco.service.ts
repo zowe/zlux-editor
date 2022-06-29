@@ -428,7 +428,7 @@ export class MonacoService implements OnDestroy {
             // Check if file already exists at destination
             this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
               const title = `"${result.fileName}" already exists. Do you want to replace it?`;
-              const warningMessage = 'A file or folder with the same name already exists in the folder monaco. Replacing it will overwrite its current contents..';
+              const warningMessage = 'Replacing it will overwrite its current contents';
               let response = this.confirmAction(title, warningMessage).subscribe(response => {
                 if(response == true) {
                   // when user selects to overwite the file
@@ -446,7 +446,7 @@ export class MonacoService implements OnDestroy {
                   this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
                 }
               } else{
-                this.snackBar.open(`Error: Failed to verify if "${result.directory + '/' + result.fileName}" already exists`,
+                this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
                 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               }
             });          
