@@ -423,6 +423,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.closeAll();
         } else if (event.which === KeyCode.KEY_R && event.shiftKey) {
           this.refreshFile();
+        } else if (event.which === KeyCode.KEY_S && event.shiftKey) {
+          this.saveAsFile();
         }
         // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
         //   this.saveAll();
@@ -627,6 +629,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     } else {
       let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
     }   
+  }
+
+  saveAsFile() {
+    let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
+    if (!fileContext) {
+      this.snackBar.open('Warning: Cannot save, no content found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+    } else {
+      let sub = this.monacoService.saveFile(fileContext, directory, true).subscribe(() => { sub.unsubscribe(); });
+    }
   }
 
   //saveAll() {

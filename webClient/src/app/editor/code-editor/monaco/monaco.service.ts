@@ -404,7 +404,7 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: any): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
         this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
@@ -414,7 +414,7 @@ export class MonacoService implements OnDestroy {
           * perhaps this should be done in real
           * time as an enhancement.
           */
-        if (fileContext.temp) {
+        if (fileContext.temp || saveAs) {
           let x = this.preSaveCheck(fileContext);
           /* Open up a dialog with the standard,
             * "save as" format.
@@ -426,7 +426,18 @@ export class MonacoService implements OnDestroy {
           });
           saveRef.afterClosed().subscribe(result => {
           if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+            this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
+              this.snackBar.open(`File ${result.directory}/${result.fileName} already exists.` ,
+              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+            }, error => {
+              if(error.status === 404){
+                this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+              } else{
+                this.snackBar.open(`Problem verifying if ${result.directory}/${result.fileName} already exists.` ,
+                'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              }
+            }
+            );
           } else {
             obs.next('Cancel');
           }
