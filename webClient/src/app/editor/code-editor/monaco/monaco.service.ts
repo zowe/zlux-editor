@@ -482,7 +482,15 @@ export class MonacoService implements OnDestroy {
                 }
               });
             }
-          })
+          }, error => {
+            if(error.status === 404){
+              this.snackBar.open(`File ${fileContext.model.path}/${fileContext.model.name} does not exist. Status: ${error.status}`, 
+              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            } else{
+              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
+              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            }
+          });
         }
       }
     });
