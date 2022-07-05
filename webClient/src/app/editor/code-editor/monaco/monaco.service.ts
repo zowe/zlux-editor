@@ -407,7 +407,7 @@ export class MonacoService implements OnDestroy {
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: any): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -431,7 +431,7 @@ export class MonacoService implements OnDestroy {
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
             }, error => {
               if(error.status === 404){
-                this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
               } else{
                 this.snackBar.open(`Problem verifying if ${result.directory}/${result.fileName} already exists.` ,
                 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
@@ -454,7 +454,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+              this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -468,7 +468,7 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
                 } else {
                   obs.next('Cancel');
                 }

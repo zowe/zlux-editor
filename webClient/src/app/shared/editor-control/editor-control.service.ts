@@ -539,7 +539,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   doSaving(context: ProjectContext, requestUrl: string, _activeFile: ProjectContext, results: any, isUntagged: boolean,
-          _observer: Observer<void>, _observable: Observable<void>) {
+          _observer: Observer<void>, _observable: Observable<void>, saveAs?: boolean) {
     /* We must BASE64 encode the contents
      * of the file before it is sent
      * to the server.
@@ -550,36 +550,41 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * to save the file.
      */
     this.http.put(requestUrl, encodedFileContents).subscribe(r => {
-      
+      // if we are doing SaveAs then do not update the openedFileList
+      if(saveAs){
+        this.snackBar.open(`${results.fileName} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+        this.openDirectory.next(results.directory);
+      }
       /* It was a new file, we
        * can set the new fileName. */
-      if (results && !isUntagged) {
-        _activeFile.name = results.fileName;
-        _activeFile.model.name = results.fileName;
-        _activeFile.model.fileName = results.fileName;
-        _activeFile.model.encoding = this.getIntEncoding(results.encoding);
-        _activeFile.model.path = results.directory;
-        _activeFile.temp = false;
+      else{
+         if (results && !isUntagged) {
+          _activeFile.name = results.fileName;
+          _activeFile.model.name = results.fileName;
+          _activeFile.model.fileName = results.fileName;
+          _activeFile.model.encoding = this.getIntEncoding(results.encoding);
+          _activeFile.model.path = results.directory;
+          _activeFile.temp = false;
+        }
+        /* This will probably need to be changed
+        * for the sake of accessibility.
+        */
+        this.snackBar.open(`${_activeFile.name} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
+        /* Send buffer saved event */
+        this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
+        let fileList = this.openFileList.getValue()
+          .map(file => {
+            if (file.id === context.id) {
+              file.changed = false;
+            }
+            return file;
+          });
+        this.openFileList.next(fileList);
+        if (results) {
+        this.openDirectory.next(results.directory);
+        }
+        if (_observer != null) { _observer.next(null); }
       }
-      /* This will probably need to be changed
-       * for the sake of accessibility.
-       */
-      this.snackBar.open(`${_activeFile.name} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
-      
-      /* Send buffer saved event */
-      this.bufferSaved.next({ buffer: _activeFile.model.contents, file: _activeFile.model.name });
-      let fileList = this.openFileList.getValue()
-        .map(file => {
-          if (file.id === context.id) {
-            file.changed = false;
-          }
-          return file;
-        });
-      this.openFileList.next(fileList);
-      if (results) {
-      this.openDirectory.next(results.directory);
-      }
-      if (_observer != null) { _observer.next(null); }
     }, e => {
       let error = e.error.error;
       
@@ -758,7 +763,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     })
   }
 
-  saveFileHandler(context?: ProjectContext, results?: any): Observable<void> {
+  saveFileHandler(context?: ProjectContext, results?: any, saveAs?: boolean): Observable<void> {
     const _openFile = this.openFileList.getValue();
     let _activeFile: ProjectContext;
     let _observer: Observer<void>;
@@ -832,7 +837,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     { sessionID,
                                                       forceOverwrite,
                                                       lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable, saveAs);
         /** Update the new encoding value, in opeFileList Models */
         let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
         this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
@@ -872,7 +877,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                     { forceOverwrite: true,
                                                       sessionID,
                                                       lastChunk: true });
-        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable);
+        this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable, saveAs);
         /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
@@ -1082,12 +1087,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * @param   path    The path of the file into which the buffer should be saved, or null if the buffer is already associated with a file
      * @returns         An observable that pushes when the file has been saved
      */
-  saveBuffer(buffer: ZLUX.EditorBufferHandle, path: string | null): Observable<void> {
+  saveBuffer(buffer: ZLUX.EditorBufferHandle, path: string | null,  saveAs?: boolean): Observable<void> {
     this.saveFile.emit(<ProjectContext>buffer);
     if (buffer.model.isDataset) {
       return this.saveDatasetHandler(buffer, path);
     } else {
-      return this.saveFileHandler(buffer, path);
+      return this.saveFileHandler(buffer, path, saveAs);
     }
   }
   /**
