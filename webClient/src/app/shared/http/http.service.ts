@@ -10,7 +10,7 @@
 */
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { retry } from 'rxjs/operators';
+import { retry, map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 @Injectable()
@@ -29,30 +29,31 @@ export class HttpService {
   get(url: string, options?: any): Observable<any> {
     return this.http.get(url, options ? options : this.HttpOptions)
       .pipe(
-        retry(3)
-    )
-  }
+        retry(0)
+        )      .pipe(map(res => res));
+      }
 
   put<T>(url: string, params: T, options?: any): Observable<any> {
     return this.http.put(url, params, options ? options : this.HttpOptions)
       .pipe(
-        retry(3)
-      )
-  }
+        retry(0)
+        )      .pipe(map(res => res));
+      }
 
   post<T>(url: string, body, options?: any): Observable<any> {
     return this.http.post(url, body, options ? options : this.HttpOptions).
       pipe(
-        retry(3)
-      )
+        retry(0)
+      )      .pipe(map(res => res));
+
   }
 
   delete<T>(url: string, options?: any): Observable<any> {
     return this.http.delete(url, options ? options : this.HttpOptions).
       pipe(
-        retry(3)
-      )
-  }
+        retry(0)
+        )      .pipe(map(res => res));
+      }
 }
 
 /*
