@@ -404,7 +404,7 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: any): Observable<String> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
         this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
