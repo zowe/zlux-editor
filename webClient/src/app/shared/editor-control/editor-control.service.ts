@@ -85,7 +85,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _projectNode: BehaviorSubject<ProjectStructure[]> = new BehaviorSubject<ProjectStructure[]>(undefined);
   private _editorCore: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   private _editor: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
-  private _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
+  public _openFileList: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>([]);
   private _defaultTheme: string;
 
   private _projectName = '';
@@ -634,28 +634,26 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     _observable = new Observable((observer) => {
       _observer = observer;
-    });
-
-    if (contents === undefined) {
-      this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
-      return;
-    }
-
-    if (!destinationOverride && fullName) {
-      contents = editor.getValue().split('\n');
-      const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-      this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
-      let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
-      if (result === true) {
-        this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
-      } else {
-        this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+      if (contents === undefined) {
+        this.snackBar.open(`Cannot retrieve contents to save`, "Close", {duration: MessageDuration.Medium, panelClass: 'center'});
+        return;
       }
-    } else {
-      //dataset is new or needs some alteration we can't do yet
-      this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
-                         'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
-    }
+      if (!destinationOverride && fullName) {
+        contents = editor.getValue().split('\n');
+        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+        this.log.debug(`Should save contents to dataset. dataset=${fullName}, route=${requestUrl}`);
+        let result = this.isContentValidForDatasetWrite(contents, model.datasetAttrs);
+        if (result === true) {
+          this.saveDataset(context, _activeDataset, forceWrite, _observer, _observable);
+        } else {
+          this.snackBar.open(`Content invalid for saving to dataset. Reason=${result}`, 'Close', { duration:MessageDuration.Long, panelClass: 'center'});
+        }
+      } else {
+        //dataset is new or needs some alteration we can't do yet
+        this.snackBar.open(`${_activeDataset.name} could not be saved, feature not yet implemented.`, 
+                           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });    
+      }
+    });
     return _observable;
   }
 
@@ -878,12 +876,12 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         /** Update the new encoding value, in opeFileList Models */
           let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
           this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
-      }, e => {
-        this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
-                           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
-      }); 
-    }
-    
+          this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
+        }, e => {
+          this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
+                            'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+        });
+      }
     return _observable;
   }
 
