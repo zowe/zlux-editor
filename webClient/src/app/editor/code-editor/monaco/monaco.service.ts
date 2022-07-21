@@ -484,8 +484,8 @@ export class MonacoService implements OnDestroy {
             }
           }, error => {
             if(error.status === 404){
-              this.snackBar.open(`File ${fileContext.model.path}/${fileContext.model.name} does not exist. Status: ${error.status}`, 
-              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+              let fileInfo: any = {fileName:fileContext.name, directory:fileContext.model.path, encoding:this.editorControl.getStringEncoding(fileContext.model.encoding) };
+              this.editorControl.saveBuffer(fileContext, fileInfo).subscribe(() => obs.next('Save'));
             } else{
               this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
               'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
