@@ -29,28 +29,28 @@ export class HttpService {
   get(url: string, options?: any): Observable<any> {
     return this.http.get(url, options ? options : this.HttpOptions)
       .pipe(
-        retry(3)
+        retry(0)
     )
   }
 
   put<T>(url: string, params: T, options?: any): Observable<any> {
     return this.http.put(url, params, options ? options : this.HttpOptions)
       .pipe(
-        retry(3)
+        retry(0)
       )
   }
 
   post<T>(url: string, body, options?: any): Observable<any> {
     return this.http.post(url, body, options ? options : this.HttpOptions).
       pipe(
-        retry(3)
+        retry(0)
       )
   }
 
   delete<T>(url: string, options?: any): Observable<any> {
     return this.http.delete(url, options ? options : this.HttpOptions).
       pipe(
-        retry(3)
+        retry(0)
       )
   }
 }
