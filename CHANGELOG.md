@@ -4,6 +4,7 @@
 
 - Breaking change: The app now uses angular 12, making it compatible with Zowe v2 desktop and incompatible with v1 desktop.
 - Enhancement: The app now contains a manifest file so that it can be installed with `zwe components install`
+- Enhancement: Remove the opened file or dataset from Editor when deleted from file-tree.
 
 ## `2.9.0`
 - Added the feature to update the dataset in the editor
