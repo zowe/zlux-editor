@@ -425,23 +425,31 @@ export class MonacoService implements OnDestroy {
               fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
           });
           saveRef.afterClosed().subscribe(result => {
-          if (result) {
+            // Check if file already exists at destination
             this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
-              this.snackBar.open(`File ${result.directory}/${result.fileName} already exists.` ,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              const title = `"${result.fileName}" already exists. Do you want to replace it?`;
+              const warningMessage = 'Replacing it will overwrite its current contents';
+              let response = this.confirmAction(title, warningMessage).subscribe(response => {
+                if(response == true) {
+                  // when user selects to overwite the file
+                  if (result) {
+                    this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  }
+                } else {
+                  // when user selects not to overwrite or cancel
+                  obs.next('Cancel');
+                }
+              });
             }, error => {
-              if(error.status === 404){
-                this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
+              if(error.status == 404) {// if file does not exist at destination, then try to save it
+                if (result) {
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                }
               } else{
-                this.snackBar.open(`Problem verifying if ${result.directory}/${result.fileName} already exists.` ,
+                this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
                 'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               }
-            }
-            );
-          } else {
-            obs.next('Cancel');
-          }
-          
+            });          
           });
         }
 
@@ -474,7 +482,15 @@ export class MonacoService implements OnDestroy {
                 }
               });
             }
-          })
+          }, error => {
+            if(error.status === 404){
+              let fileInfo: any = {fileName:fileContext.name, directory:fileContext.model.path, encoding:this.editorControl.getStringEncoding(fileContext.model.encoding) };
+              this.editorControl.saveBuffer(fileContext, fileInfo).subscribe(() => obs.next('Save'));
+            } else{
+              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
+              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            }
+          });
         }
       }
     });
