@@ -183,6 +183,13 @@ export const MENU = [
                     internalName: 'saveFile'
                 },
                 keyMap: 'Ctrl+S'
+            },
+            {
+              name: 'Save As',
+              action: {
+                  internalName: 'saveAsFile'
+              },
+              keyMap: 'Alt+S+Shift'
             },   
             {
               name: 'group-end'

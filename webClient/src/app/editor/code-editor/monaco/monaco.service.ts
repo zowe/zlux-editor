@@ -404,17 +404,17 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
           * perhaps this should be done in real
           * time as an enhancement.
           */
-        if (fileContext.temp) {
+        if (fileContext.temp || saveAs) {
           let x = this.preSaveCheck(fileContext);
           /* Open up a dialog with the standard,
             * "save as" format.
@@ -462,7 +462,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+              this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -476,7 +476,7 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
                 } else {
                   obs.next('Cancel');
                 }
