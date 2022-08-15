@@ -1,5 +1,8 @@
 # Zlux Editor Changelog
 
+## `2.9.1`
+- Bugfix: Fixed job submission not working when we click "Submit Job"
+
 ## `2.9.0`
 - Added the feature to update the dataset in the editor
 - Added the check for e-tag while updating the dataset
