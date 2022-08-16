@@ -2,7 +2,9 @@ name: Build zlux-editor workflow
 on:
   push:
     branches:
-      - staging, master, rc 
+      - v1.x/staging
+      - v1.x/master
+      - v1.x/rc
   pull_request:
     types: [opened, reopened, synchronize]
 
@@ -79,5 +81,4 @@ jobs:
           pax-name: zlux-editor
 
       - name: '[Prep 8] deploy '
-        uses: zowe-actions/zlux-builds/deploy-pax@main 
-        
+        uses: zowe-actions/zlux-builds/deploy-pax@main
