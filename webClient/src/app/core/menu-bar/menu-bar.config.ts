@@ -13,14 +13,14 @@ export const TEST_LANGUAGE_MENU = [{name:'TEST_REPLACE',
                   action: {
                     functionString:`
                     console.log("My context=",context);
-                    context.editor.model.setValue("GOODBYE TEXT");`, params:[]}, keyMap: ''},
+                    context.editor._modelData.model.setValue("GOODBYE TEXT");`, params:[]}, keyMap: ''},
                  {name:'Crop',
                   action: {
                     functionString:`
                     const selection = context.editor.cursor.getSelection();
                     context.log.info('selection=',selection);
                     if (selection) {
-                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
+                      context.editor._modelData.model.setValue(context.editor._modelData.model.getValueInRange(selection));
                     }`, params:[]}, keyMap: ''},
                  {name:'Is Dataset?',
                   action: {
@@ -56,7 +56,7 @@ export const LANGUAGE_MENUS = {
         functionString:`
         const file = context.controller.fetchActiveFile();
         if (file) {
-          let content = context.editor.model.getValue();
+          let content = context.editor._modelData.model.getValue();
           if (content && content.length > 0) {
             content = content.replace(/\\n/g,'\\\\n');
             const uri = '/api/v1/jobs/string';
