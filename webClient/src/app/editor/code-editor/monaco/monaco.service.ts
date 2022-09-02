@@ -404,17 +404,17 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<String> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
           * perhaps this should be done in real
           * time as an enhancement.
           */
-        if (fileContext.temp) {
+        if (fileContext.temp || saveAs) {
           let x = this.preSaveCheck(fileContext);
           /* Open up a dialog with the standard,
             * "save as" format.
@@ -425,12 +425,31 @@ export class MonacoService implements OnDestroy {
               fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
           });
           saveRef.afterClosed().subscribe(result => {
-          if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
-          } else {
-            obs.next('Cancel');
-          }
-          
+            // Check if file already exists at destination
+            this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
+              const title = `"${result.fileName}" already exists. Do you want to replace it?`;
+              const warningMessage = 'Replacing it will overwrite its current contents';
+              let response = this.confirmAction(title, warningMessage).subscribe(response => {
+                if(response == true) {
+                  // when user selects to overwite the file
+                  if (result) {
+                    this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  }
+                } else {
+                  // when user selects not to overwrite or cancel
+                  obs.next('Cancel');
+                }
+              });
+            }, error => {
+              if(error.status == 404) {// if file does not exist at destination, then try to save it
+                if (result) {
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                }
+              } else{
+                this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
+                'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              }
+            });          
           });
         }
 
@@ -443,7 +462,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next('Save'));
+              this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -457,13 +476,21 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
                 } else {
                   obs.next('Cancel');
                 }
               });
             }
-          })
+          }, error => {
+            if(error.status === 404){
+              let fileInfo: any = {fileName:fileContext.name, directory:fileContext.model.path, encoding:this.editorControl.getStringEncoding(fileContext.model.encoding) };
+              this.editorControl.saveBuffer(fileContext, fileInfo).subscribe(() => obs.next('Save'));
+            } else{
+              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
+              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            }
+          });
         }
       }
     });
@@ -510,8 +537,12 @@ export class MonacoService implements OnDestroy {
   }
 
   generateUri(editorFile: ProjectStructure): string {
-    // have to use lowercase here!
-    return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
+    // have to use lowercase here!. This is uniquely identify the Editor Models
+    if(editorFile.isDataset){
+      return `inmemory://${editorFile.path.toLowerCase()}`;
+    } else{
+      return `inmemory://${editorFile.path.toLowerCase()}/${editorFile.name.toLowerCase()}`;
+    }
   }
 
   fileDuplicateChecker(uri: string): boolean {
