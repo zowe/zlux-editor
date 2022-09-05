@@ -1,5 +1,4 @@
-import { environment } from '../../../../../environments/environment';
-const jclDebug = !environment.production;
+const jclDebug = false;
 
 const JCL_KEYWORDS = '(CNTL|DD|EXEC|EXPORT|JOB|INCLUDE|JCLLIB|OUTPUT|PROC|SCHEDULE|SET|XMIT|COMMAND|JOBGROUP|\
 GJOB|JOBSET|SJOB|ENDSET|AFTER|BEFORE|CONCURRENT|ENDGROUP)';

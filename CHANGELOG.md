@@ -1,5 +1,8 @@
 # Zlux Editor Changelog
 
+## `3.0.1`
+- Bugfix: Added a few rules for JCL syntax highlighter
+
 ## `3.0.0`
 
 - Breaking change: The app now uses angular 12, making it compatible with Zowe v2 desktop and incompatible with v1 desktop.
