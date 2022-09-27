@@ -18,6 +18,7 @@ import { UtilsService } from '../../../shared/utils.service';
 import { DataAdapterService } from '../../../shared/http/http.data.adapter.service';
 import { MatDialog } from '@angular/material/dialog';
 import { SaveToComponent } from '../../../shared/dialog/save-to/save-to.component';
+import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-action-component';
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
@@ -178,7 +179,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
-      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: '', etag: '', language: '' }, true).subscribe(() => {
+      this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: fileNode.changed ? fileNode.model.contents : '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
           this.editorControl.editor.getValue().revealPosition({ lineNumber: line, column: 0 });
@@ -377,6 +378,18 @@ export class MonacoService implements OnDestroy {
     }
   }
 
+  confirmAction(title: any, warningMessage: any): Observable<boolean>  {
+    var response = new Subject<String>();
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      maxWidth: '400px',
+      data: {
+          title: title,
+          warningMessage: warningMessage,
+        }
+    });
+    return dialogRef.afterClosed();
+  }
+
   preSaveCheck(fileContext?: ProjectContext): boolean {
     let _activeFile: ProjectContext = fileContext;
     let canBeISO = true;
@@ -391,17 +404,17 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
   
-  saveFile(fileContext: ProjectContext, fileDirectory?: string): Observable<void> {
+  saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
           * perhaps this should be done in real
           * time as an enhancement.
           */
-        if (fileContext.temp) {
+        if (fileContext.temp || saveAs) {
           let x = this.preSaveCheck(fileContext);
           /* Open up a dialog with the standard,
             * "save as" format.
@@ -412,9 +425,31 @@ export class MonacoService implements OnDestroy {
               fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
           });
           saveRef.afterClosed().subscribe(result => {
-          if (result) {
-            this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
-          }
+            // Check if file already exists at destination
+            this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
+              const title = `"${result.fileName}" already exists. Do you want to replace it?`;
+              const warningMessage = 'Replacing it will overwrite its current contents';
+              let response = this.confirmAction(title, warningMessage).subscribe(response => {
+                if(response == true) {
+                  // when user selects to overwite the file
+                  if (result) {
+                    this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  }
+                } else {
+                  // when user selects not to overwrite or cancel
+                  obs.next('Cancel');
+                }
+              });
+            }, error => {
+              if(error.status == 404) {// if file does not exist at destination, then try to save it
+                if (result) {
+                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                }
+              } else{
+                this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
+                'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+              }
+            });          
           });
         }
 
@@ -427,7 +462,7 @@ export class MonacoService implements OnDestroy {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
-              this.editorControl.saveBuffer(fileContext, null).subscribe(() => obs.next());
+              this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
             }
             /* The file was never tagged, so we should
             * ask the user if they would like to tag it.
@@ -441,11 +476,21 @@ export class MonacoService implements OnDestroy {
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next());
+                  this.editorControl.saveBuffer(fileContext, result, saveAs).subscribe(() => obs.next('Save'));
+                } else {
+                  obs.next('Cancel');
                 }
               });
             }
-          })
+          }, error => {
+            if(error.status === 404){
+              let fileInfo: any = {fileName:fileContext.name, directory:fileContext.model.path, encoding:this.editorControl.getStringEncoding(fileContext.model.encoding) };
+              this.editorControl.saveBuffer(fileContext, fileInfo).subscribe(() => obs.next('Save'));
+            } else{
+              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
+              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            }
+          });
         }
       }
     });
@@ -466,9 +511,38 @@ export class MonacoService implements OnDestroy {
     //}
   //}
 
+  promptToSave(file: ProjectContext): Promise<String>{
+    return new Promise((resolve, reject) => {
+      if(file.changed) {
+        const title = 'Do you want to save the changes you made to \'' + file.name + '\'\?';
+        const warningMessage = 'Your changes will be lost if you don\'t save them.';
+        let response = this.confirmAction(title, warningMessage).subscribe(response => {
+          if(response == true) {
+            // when user selects to save the file and close it
+            let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
+              resolve(res);
+            });
+          } else if (response != false && response != true) {
+            // when user selects to cancel then do not close any file
+            resolve('Cancel'); 
+          } else {
+            // when user selects not to save the file and close it
+            resolve('DontSave');
+          }
+        });
+      } else {
+        resolve('UnmodifiedFile');
+      }
+    })
+  }
+
   generateUri(editorFile: ProjectStructure): string {
-    // have to use lowercase here!
-    return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
+    // have to use lowercase here!. This is uniquely identify the Editor Models
+    if(editorFile.isDataset){
+      return `inmemory://${editorFile.path.toLowerCase()}`;
+    } else{
+      return `inmemory://${editorFile.path.toLowerCase()}/${editorFile.name.toLowerCase()}`;
+    }
   }
 
   fileDuplicateChecker(uri: string): boolean {

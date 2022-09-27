@@ -423,6 +423,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.closeAll();
         } else if (event.which === KeyCode.KEY_R && event.shiftKey) {
           this.refreshFile();
+        } else if (event.which === KeyCode.KEY_S && event.shiftKey) {
+          this.saveAsFile();
         }
         // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
         //   this.saveAll();
@@ -568,9 +570,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.editorControl.toggleTree.next();
   }
 
-  closeAll() {
-    let closeAllRef;
-    if (this.fileCount == 0) { //TODO: Enhance such that closeAll not visible if no tabs are open
+  async closeAll() {
+    //TODO: Enhance such that closeAll not visible if no tabs are open
+    let closeAllRef; 
+    if (this.fileCount == 0) { 
       closeAllRef = this.snackBar.open('No tabs are open.', 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
     } else {
       this.editorControl.closeAllFiles.next();
@@ -626,6 +629,16 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     } else {
       let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => { sub.unsubscribe(); });
     }   
+  }
+
+  saveAsFile() {
+    let fileContext = this.editorControl.fetchActiveFile();
+    let directory = fileContext.model.path || this.editorControl.activeDirectory;
+    if (!fileContext) {
+      this.snackBar.open('Warning: Cannot save, no content found', 'Dismiss', {duration: MessageDuration.Medium, panelClass: 'center'});
+    } else {
+      let sub = this.monacoService.saveFile(fileContext, directory, true).subscribe(() => { sub.unsubscribe(); });
+    }
   }
 
   //saveAll() {

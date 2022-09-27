@@ -19,7 +19,7 @@
         title="{{item.name}}"
         (contextmenu)="onRightClickTab($event, item)">
           <span class="filename">{{item.name}}</span>
-          <mat-icon class="close-file" (click)="remove.next(item)">clear</mat-icon>
+          <mat-icon class="close-file" (click)="remove.next(item);$event.stopPropagation()">clear</mat-icon>
           <mat-icon *ngIf="item.changed" class="changed-file">fiber_manual_record</mat-icon>
       </li>
     </ul>
