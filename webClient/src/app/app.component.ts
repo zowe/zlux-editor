@@ -42,13 +42,15 @@ export class AppComponent {
   }
 
   ngOnInit() {
-    if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
-      this.handleLaunchOrMessageObject(this.launchMetadata.data);
-    }
-
     const editorheaderElement = this.editorheaderElementRef.nativeElement;
     this.appKeyboard.registerKeyUpEvent(editorheaderElement);
     this.appKeyboard.registerKeyDownEvent(editorheaderElement);
+  }
+
+  ngAfterViewInit() {
+    if (this.launchMetadata && this.launchMetadata.data && this.launchMetadata.data.type) {
+      this.handleLaunchOrMessageObject(this.launchMetadata.data);
+    }
   }
 
   handleLaunchOrMessageObject(data: any) {
