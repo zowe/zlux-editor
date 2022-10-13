@@ -90,7 +90,7 @@ export class AppComponent {
                 this.editorControl.openFile('', nodes[i]).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
                 });
-                this.editorControl.loadDirectory(nodes[i].path); 
+                this.editorControl.loadDirectory(nodes[i].path ? nodes[i].path : '/'); 
               }
             }
           }, e => {
