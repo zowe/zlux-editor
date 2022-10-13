@@ -89,7 +89,8 @@ export class AppComponent {
               if (nodes[i].fileName == fileName) {
                 this.editorControl.openFile('', nodes[i]).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
-                });                
+                });
+                this.editorControl.loadDirectory(nodes[i].path); 
               }
             }
           }, e => {
