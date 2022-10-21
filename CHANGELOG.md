@@ -2,6 +2,7 @@
 
 ## `3.0.1`
 - Bugfix: Added a few rules for JCL syntax highlighter
+- Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
 
 ## `3.0.0`
 
