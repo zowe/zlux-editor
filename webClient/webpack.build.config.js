@@ -62,7 +62,7 @@ var config = {
     "net": "empty"
   },
   'plugins': [
-    new CopyWebpackPlugin([{
+    new CopyWebpackPlugin({patterns:[{
         from: path.resolve(__dirname, './src/assets'),
         to: path.resolve('../web/assets')
       },
@@ -78,7 +78,7 @@ var config = {
         from: path.resolve(__dirname, './node_modules/monaco-editor/min/vs/base'),
         to: path.resolve('../web/assets/monaco/base')
       }
-    ]),
+    ]}),
     new CompressionPlugin({
       threshold: 50000,
       minRatio: 0.8
