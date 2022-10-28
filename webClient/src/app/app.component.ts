@@ -63,6 +63,7 @@ export class AppComponent {
       //TODO should this or must this also load the directory at the time that the file is
       let lastSlash = data.name.lastIndexOf("/");
       let firstSlash = data.name.indexOf("/");
+      let selectedlines = data.lines.split("-");
       if (lastSlash == data.name.length-1) { 
         this.log.warn(`Ignoring opening invalid file or dataset name=${data.name}`);
         return;
@@ -87,7 +88,7 @@ export class AppComponent {
             let fileName = data.name.substring(lastSlash+1);
             for (let i = 0; i < nodes.length; i++) {
               if (nodes[i].fileName == fileName) {
-                this.editorControl.openFile('', nodes[i]).subscribe(x => {
+                this.editorControl.openFile('', nodes[i], selectedlines).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
                 });
                 this.editorControl.loadDirectory(nodes[i].path ? nodes[i].path : '/'); 

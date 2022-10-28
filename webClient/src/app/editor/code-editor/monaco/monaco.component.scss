@@ -27,6 +27,11 @@
       background-color: yellow;
       color: black;
     }
+    ::ng-deep .myLineDecoration {
+      background: lightblue;
+      width: 5px !important;
+      margin-left: 3px;
+    }
   }
   .loading-indicator {
     position: absolute;

@@ -1044,7 +1044,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * @param   targetBuffer The buffer into which the file should be opened, or null to open a new buffer
      * @returns              An observable that pushes a handle to the buffer into which the file was opened
      */
-  openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null): Observable<ZLUX.EditorBufferHandle> {
+  openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null, selectedlines?: any): Observable<ZLUX.EditorBufferHandle> {
     // targetBuffer is a context of project in GCE.
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;
@@ -1058,7 +1058,34 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     fileOpenSub = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
       let model = e.buffer.model;
       lastFile = `${model.fileName}:${model.path}`;
-
+      let firstLine = 1;
+      let lastLine = 1;
+      //If we are opening a file with selected line via URL link to file
+      if(selectedlines.length >0){
+        if(selectedlines.length == 1){
+          firstLine = Number(selectedlines[0]);
+          lastLine = firstLine;
+        } else{
+          firstLine = Number(selectedlines[0]);
+          lastLine = Number(selectedlines[1]);
+        }
+        let editor = this.editor.getValue();
+        this.editor.subscribe((value)=> {
+          value.revealRangeAtTop(new monaco.Range(firstLine, 1, lastLine, 1));
+          value.deltaDecorations(
+            [],
+            [
+              {
+                range: new monaco.Range(firstLine, 1, lastLine, 1),
+                options: {
+                   isWholeLine: true,
+                  linesDecorationsClassName: 'myLineDecoration'
+                }
+              }
+            ]
+          );
+        })
+      }
       // if have subscriber
       if (resultObserver) {
         if (e.buffer != null && e.buffer.id === targetBuffer.id) {

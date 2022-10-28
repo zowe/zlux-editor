@@ -23,6 +23,9 @@ import * as monaco from 'monaco-editor';
 import { Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
 import { KeyCode } from '../../../shared/keycode-enum';
+import { SnackBarService } from '../../../shared/snack-bar.service';
+import { MessageDuration } from "../../../shared/message-duration";
+
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -65,7 +68,9 @@ export class MonacoComponent implements OnInit, OnChanges {
     private editorControl: EditorControlService,
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
+    public snackBar: SnackBarService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
       this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
         if (event.which === KeyCode.KEY_V) {
@@ -116,6 +121,25 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.refreshLayout.subscribe(() =>{
       setTimeout(() => this.editor.layout(), 1);
     });
+
+    this.editor.onContextMenu(function (e) {
+      console.log(e.target.position.lineNumber);
+      /*
+      * lines = "22-44" -> where 22 is the first line and 44 is last line
+      * lines = "22" -> where 22 is the first line and 22 is last line
+      */
+      let lines = e.target.position.lineNumber;
+      // let link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent('path')}","lines": "${lines}","toggleTree":true}`;
+      let link = `${window.location.origin}${window.location.pathname}?pluginId=org.zowe.editor:data:{"type":"openFile","name":"${encodeURIComponent('path')}","lines": "${lines}","toggleTree":true}`;
+      console.log(link);
+
+      navigator.clipboard.writeText(link).then(() => {
+        this.log.debug("Link copied to clipboard");
+        this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+      }).catch(() => {
+        console.error("Failed to copy link to clipboard");
+      });
+    });
   }
 
   focus(e: any) {
@@ -143,6 +167,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     }
   }
 
+  
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
