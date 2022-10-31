@@ -3,6 +3,7 @@
 ## `3.0.1`
 - Bugfix: Added a few rules for JCL syntax highlighter
 - Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
+- Added the feature to copy the line content and copy URL link to open a file at a specific line
 
 ## `3.0.0`
 
