@@ -122,21 +122,19 @@ export class MonacoComponent implements OnInit, OnChanges {
       setTimeout(() => this.editor.layout(), 1);
     });
 
-    this.editor.onContextMenu( (e: any) => {
-      const activeFile = this.editorControl.fetchActiveFile();
-      const filePath = activeFile.model.path + "/"+ activeFile.model.name;
-      /*
-      * lines = "22-44" -> where 22 is the first line and 44 is last line
-      * lines = "22" -> where 22 is the first line and 22 is last line
-      */
-      let lines = e.target.position.lineNumber;
-      let link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
-      navigator.clipboard.writeText(link).then(() => {
-        this.log.debug("Link copied to clipboard");
-        this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
-      }).catch(() => {
-        console.error("Failed to copy link to clipboard");
-      });
+    this.editor.onContextMenu((e: any) => {
+      if(e.target.type === 3){ //if right click is on top of the line numbers
+        this.viewportEvents.spawnContextMenu(e.event.browserEvent.clientX, e.event.browserEvent.clientY, [
+          {
+            text: 'Copy permalink',
+            action: () => this.copyPermalink(e)               
+          },
+          {
+            text: 'Copy line',
+            action: () => this.copyLine(e)               
+          }
+        ], true)
+      }
     });
   }
 
@@ -252,6 +250,39 @@ export class MonacoComponent implements OnInit, OnChanges {
         return null;
       }
     });
+  }
+
+  copyPermalink(event: any){
+      /*
+      * lines = "22-44" -> where 22 is the first line and 44 is last line ( TODO: Select multiple lines )
+      * lines = "22" -> where 22 is the first line and 22 is last line
+      */
+      const lines = event.target.position.lineNumber;
+      const activeFile = this.editorControl.fetchActiveFile();
+      const filePath = activeFile.model.path + "/"+ activeFile.model.name;
+      const link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      navigator.clipboard.writeText(link).then(() => {
+        this.log.debug("Link copied to clipboard");
+        this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+      }).catch((error) => {
+        console.error("Failed to copy link to clipboard"+ error);
+      });
+  }
+
+  copyLine(event: any){
+      /*
+      * lines = "22-44" -> where 22 is the first line and 44 is last line ( TODO: Select multiple lines )
+      * lines = "22" -> where 22 is the first line and 22 is last line
+      */
+      const lines = event.target.position.lineNumber;
+      const lineContent = this.editor.getModel().getLineContent(lines);
+      console.log(lineContent);
+      navigator.clipboard.writeText(lineContent).then(() => {
+        this.log.debug("Line copied to clipboard");
+        this.snackBar.open("Copied line successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+      }).catch((error) => {
+        console.error("Failed to copy link to clipboard"+ error);
+      });
   }
 
   saveFile() {
