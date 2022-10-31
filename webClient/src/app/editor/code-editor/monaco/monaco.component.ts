@@ -122,17 +122,15 @@ export class MonacoComponent implements OnInit, OnChanges {
       setTimeout(() => this.editor.layout(), 1);
     });
 
-    this.editor.onContextMenu(function (e) {
-      console.log(e.target.position.lineNumber);
+    this.editor.onContextMenu( (e: any) => {
+      const activeFile = this.editorControl.fetchActiveFile();
+      const filePath = activeFile.model.path + "/"+ activeFile.model.name;
       /*
       * lines = "22-44" -> where 22 is the first line and 44 is last line
       * lines = "22" -> where 22 is the first line and 22 is last line
       */
       let lines = e.target.position.lineNumber;
-      // let link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent('path')}","lines": "${lines}","toggleTree":true}`;
-      let link = `${window.location.origin}${window.location.pathname}?pluginId=org.zowe.editor:data:{"type":"openFile","name":"${encodeURIComponent('path')}","lines": "${lines}","toggleTree":true}`;
-      console.log(link);
-
+      let link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
       navigator.clipboard.writeText(link).then(() => {
         this.log.debug("Link copied to clipboard");
         this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
