@@ -25,7 +25,6 @@ import { EditorKeybindingService } from '../../../shared/editor-keybinding.servi
 import { KeyCode } from '../../../shared/keycode-enum';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
-
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -145,7 +144,6 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editor.layout();
   }
 
-
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
       if (input === 'editorFile' && changes[input].currentValue != null) {
@@ -253,14 +251,17 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   copyPermalink(event: any){
-      /*
-      * lines = "22-44" -> where 22 is the first line and 44 is last line ( TODO: Select multiple lines )
-      * lines = "22" -> where 22 is the first line and 22 is last line
-      */
       const lines = event.target.position.lineNumber;
       const activeFile = this.editorControl.fetchActiveFile();
-      const filePath = activeFile.model.path + "/"+ activeFile.model.name;
-      const link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      let filePath = '';
+      let link = '';
+      if(activeFile.model.isDataset){
+        filePath = activeFile.model.path;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      } else {
+        filePath = activeFile.model.path + "/" + activeFile.model.name;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      }
       navigator.clipboard.writeText(link).then(() => {
         this.log.debug("Link copied to clipboard");
         this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
@@ -270,13 +271,8 @@ export class MonacoComponent implements OnInit, OnChanges {
   }
 
   copyLine(event: any){
-      /*
-      * lines = "22-44" -> where 22 is the first line and 44 is last line ( TODO: Select multiple lines )
-      * lines = "22" -> where 22 is the first line and 22 is last line
-      */
       const lines = event.target.position.lineNumber;
       const lineContent = this.editor.getModel().getLineContent(lines);
-      console.log(lineContent);
       navigator.clipboard.writeText(lineContent).then(() => {
         this.log.debug("Line copied to clipboard");
         this.snackBar.open("Copied line successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });

@@ -54,6 +54,14 @@ export class AppComponent {
   }
 
   handleLaunchOrMessageObject(data: any) {
+    /**
+     * selectedLines=[2] -> selected line is number 2 (in URL the info will look like "lines":"2")
+     * selectedLines=[2,7] -> selected lines are number 2-7 (TODO: Need to add the option to copy multiple lines and pass the info in the URL like "lines":"2-7")
+     */
+    let selectedLines = [];
+    if(data.lines){
+      selectedLines = data.lines.split("-")
+    }
     switch (data.type) {
     case 'test-language':
       this.log.info(`Setting language test mode`);
@@ -63,7 +71,6 @@ export class AppComponent {
       //TODO should this or must this also load the directory at the time that the file is
       let lastSlash = data.name.lastIndexOf("/");
       let firstSlash = data.name.indexOf("/");
-      let selectedlines = data.lines.split("-");
       if (lastSlash == data.name.length-1) { 
         this.log.warn(`Ignoring opening invalid file or dataset name=${data.name}`);
         return;
@@ -88,7 +95,7 @@ export class AppComponent {
             let fileName = data.name.substring(lastSlash+1);
             for (let i = 0; i < nodes.length; i++) {
               if (nodes[i].fileName == fileName) {
-                this.editorControl.openFile('', nodes[i], selectedlines).subscribe(x => {
+                this.editorControl.openFile('', nodes[i], selectedLines).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
                 });
                 this.editorControl.loadDirectory(nodes[i].path ? nodes[i].path : '/'); 
@@ -100,13 +107,13 @@ export class AppComponent {
           });
       } else {
         this.log.info(`Opening dataset=${data.name}`);
-        this.editorControl.openDataset.next(data.name);
+        this.editorControl.openDataset.next({datasetName: data.name, selectedLines: selectedLines});
       }
       break;
     case 'openDataset':
       if (data.name) {
         this.log.info(`Opening dataset=${data.name}`);
-        this.editorControl.openDataset.next(data.name);
+        this.editorControl.openDataset.next({datasetName: data.name, selectedLines: selectedLines});
       } else {
         this.log.warn(`Dataset name missing. Skipping operation`);
       }
