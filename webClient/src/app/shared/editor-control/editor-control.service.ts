@@ -1059,7 +1059,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       let model = e.buffer.model;
       lastFile = `${model.fileName}:${model.path}`;
       //If we are opening a file with selected line or lines via URL link to file
-      if(selectedLines.length > 0){
+      if(selectedLines && selectedLines.length > 0){
         let firstLine = 1;
         let lastLine = 1;
         if(selectedLines.length == 1){
