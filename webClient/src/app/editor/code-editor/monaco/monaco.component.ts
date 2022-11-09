@@ -263,10 +263,10 @@ export class MonacoComponent implements OnInit, OnChanges {
         link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
       }
       navigator.clipboard.writeText(link).then(() => {
-        this.log.debug("Link copied to clipboard");
-        this.snackBar.open("Copied link successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+        this.log.debug("Permalink copied to clipboard");
       }).catch((error) => {
-        console.error("Failed to copy link to clipboard"+ error);
+        console.error("Failed to copy permalink Error: " + error); 
+        this.snackBar.open("Failed to copy permalink. Error: " + error, 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
       });
   }
 
@@ -277,7 +277,8 @@ export class MonacoComponent implements OnInit, OnChanges {
         this.log.debug("Line copied to clipboard");
         this.snackBar.open("Copied line successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
       }).catch((error) => {
-        console.error("Failed to copy link to clipboard"+ error);
+        console.error("Failed to copy line. Error: " + error);
+        this.snackBar.open("Failed to copy line. Error: " + error, 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
       });
   }
 
