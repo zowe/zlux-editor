@@ -1078,7 +1078,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
               {
                 range: new monaco.Range(firstLine, 1, lastLine, 1000000),
                 options: {
-                   isWholeLine: true,
                    inlineClassName: 'myLineDecoration'
                 }
               }
