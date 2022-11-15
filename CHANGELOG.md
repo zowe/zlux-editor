@@ -1,5 +1,8 @@
 # Zlux Editor Changelog
 
+## `2.9.2`
+- Bugfix: Added a few rules for JCL syntax highlighter
+
 ## `2.9.1`
 - Bugfix: Fixed job submission not working when we click "Submit Job"
 
