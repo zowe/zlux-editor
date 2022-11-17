@@ -561,10 +561,16 @@ export class MonacoService implements OnDestroy {
     this.editorControl.removeActiveFromAllFiles();
     fileNode.changed = true;
     fileNode.active = true;
+    this.cleanDecoration();
   }
 
   cleanDecoration() {
-    this.editorControl.editor.getValue().deltaDecorations(this.decorations, []);
+    let editorValue = this.editorControl.editor.getValue();
+    let decorationIds=[];
+    editorValue.getModel().getAllDecorations().forEach((decoration) => {
+      decorationIds.push(decoration.id);
+    });
+    editorValue.deltaDecorations(decorationIds, []);
   }
 }
 

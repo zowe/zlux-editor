@@ -275,7 +275,6 @@ export class MonacoComponent implements OnInit, OnChanges {
       const lineContent = this.editor.getModel().getLineContent(lines);
       navigator.clipboard.writeText(lineContent).then(() => {
         this.log.debug("Line copied to clipboard");
-        this.snackBar.open("Copied line successfully", 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
       }).catch((error) => {
         console.error("Failed to copy line. Error: " + error);
         this.snackBar.open("Failed to copy line. Error: " + error, 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
