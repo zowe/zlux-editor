@@ -53,7 +53,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public createDirectory: EventEmitter<string> = new EventEmitter();
   public openProject: EventEmitter<string> = new EventEmitter();
   public openDirectory: EventEmitter<string> = new EventEmitter();
-  public openDataset: EventEmitter<string> = new EventEmitter();
+  public openDataset: EventEmitter<any> = new EventEmitter();
   public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
@@ -1042,9 +1042,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      *
      * @param   file         The path of the file that should be opened
      * @param   targetBuffer The buffer into which the file should be opened, or null to open a new buffer
+     * @param   selectedLines Array that stores the first and last selected lines
      * @returns              An observable that pushes a handle to the buffer into which the file was opened
      */
-  openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null): Observable<ZLUX.EditorBufferHandle> {
+  openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null, selectedLines?: any): Observable<ZLUX.EditorBufferHandle> {
     // targetBuffer is a context of project in GCE.
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;
@@ -1054,11 +1055,36 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     resultOpenObs = new Observable((observer) => {
       resultObserver = observer;
     });
-
     fileOpenSub = this.fileOpened.subscribe((e: ZLUX.EditorFileOpenedEvent) => {
       let model = e.buffer.model;
       lastFile = `${model.fileName}:${model.path}`;
-
+      //If we are opening a file with selected line or lines via URL link to file
+      if(selectedLines && selectedLines.length > 0){
+        let firstLine = 1;
+        let lastLine = 1;
+        if(selectedLines.length == 1){
+          firstLine = Number(selectedLines[0]);
+          lastLine = firstLine;
+        } else if(selectedLines.length == 2){
+          firstLine = Number(selectedLines[0]);
+          lastLine = Number(selectedLines[1]);
+        }
+        let editor = this.editor.getValue();
+        this.editor.subscribe((value)=> {
+          value.revealRangeAtTop(new monaco.Range(firstLine, 1, lastLine, 1));
+          value.deltaDecorations(
+            [],
+            [
+              {
+                range: new monaco.Range(firstLine, 1, lastLine, 1000000),
+                options: {
+                   marginClassName: 'myLineDecoration'
+                }
+              }
+            ]
+          );
+        })
+      }
       // if have subscriber
       if (resultObserver) {
         if (e.buffer != null && e.buffer.id === targetBuffer.id) {

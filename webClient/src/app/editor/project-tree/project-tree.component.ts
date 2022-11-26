@@ -156,7 +156,9 @@ export class ProjectTreeComponent {
       }
     });
 
-    this.editorControl.openDataset.subscribe(dirName => {
+    this.editorControl.openDataset.subscribe(datasetInfo => {
+      let dirName= datasetInfo.datasetName;
+      const selectedLines = datasetInfo.selectedLines;
       if (dirName != null && dirName !== '') {
         if (dirName[0] != '/') {
           dirName = dirName.toUpperCase();
@@ -181,9 +183,9 @@ export class ProjectTreeComponent {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               if(isMember){
-                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName)).subscribe(x=> {this.log.debug('Dataset Member opened')});
+                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName), datasetInfo.selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
               } else{
-                this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
+                this.editorControl.openFile('',this.nodes[0], datasetInfo.selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
               }
             }, e => {
               // TODO

@@ -23,6 +23,8 @@ import * as monaco from 'monaco-editor';
 import { Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
 import { KeyCode } from '../../../shared/keycode-enum';
+import { SnackBarService } from '../../../shared/snack-bar.service';
+import { MessageDuration } from "../../../shared/message-duration";
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -65,7 +67,9 @@ export class MonacoComponent implements OnInit, OnChanges {
     private editorControl: EditorControlService,
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
+    public snackBar: SnackBarService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
       this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
         if (event.which === KeyCode.KEY_V) {
@@ -116,6 +120,21 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.refreshLayout.subscribe(() =>{
       setTimeout(() => this.editor.layout(), 1);
     });
+
+    this.editor.onContextMenu((e: any) => {
+      if(e.target.type === 3){ //if right click is on top of the line numbers
+        this.viewportEvents.spawnContextMenu(e.event.browserEvent.clientX, e.event.browserEvent.clientY, [
+          {
+            text: 'Copy permalink',
+            action: () => this.copyPermalink(e)               
+          },
+          {
+            text: 'Copy line',
+            action: () => this.copyLine(e)               
+          }
+        ], true)
+      }
+    });
   }
 
   focus(e: any) {
@@ -124,7 +143,6 @@ export class MonacoComponent implements OnInit, OnChanges {
   layout(e: any) {
     this.editor.layout();
   }
-
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
@@ -143,6 +161,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     }
   }
 
+  
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
@@ -229,6 +248,37 @@ export class MonacoComponent implements OnInit, OnChanges {
         return null;
       }
     });
+  }
+
+  copyPermalink(event: any){
+      const lines = event.target.position.lineNumber;
+      const activeFile = this.editorControl.fetchActiveFile();
+      let filePath = '';
+      let link = '';
+      if(activeFile.model.isDataset){
+        filePath = activeFile.model.path;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      } else {
+        filePath = activeFile.model.path + "/" + activeFile.model.name;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+      }
+      navigator.clipboard.writeText(link).then(() => {
+        this.log.debug("Permalink copied to clipboard");
+      }).catch((error) => {
+        console.error("Failed to copy permalink Error: " + error); 
+        this.snackBar.open("Failed to copy permalink. Error: " + error, 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+      });
+  }
+
+  copyLine(event: any){
+      const lines = event.target.position.lineNumber;
+      const lineContent = this.editor.getModel().getLineContent(lines);
+      navigator.clipboard.writeText(lineContent).then(() => {
+        this.log.debug("Line copied to clipboard");
+      }).catch((error) => {
+        console.error("Failed to copy line. Error: " + error);
+        this.snackBar.open("Failed to copy line. Error: " + error, 'Dismiss', { duration: MessageDuration.Short, panelClass: 'center' });
+      });
   }
 
   saveFile() {
