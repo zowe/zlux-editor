@@ -246,11 +246,11 @@ export class ProjectTreeComponent {
   onOpenInNewTab($event: any){
     if ($event.data === 'File'){
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent($event.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openFile","name":"${$event.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
     } else{
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent($event.data.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openDataset","name":"${$event.data.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
     }
 }
