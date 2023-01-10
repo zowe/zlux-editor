@@ -257,10 +257,10 @@ export class MonacoComponent implements OnInit, OnChanges {
       let link = '';
       if(activeFile.model.isDataset){
         filePath = activeFile.model.path;
-        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openDataset","name":"${filePath}","lines":"${lines}","toggleTree":true}`)}`;
       } else {
         filePath = activeFile.model.path + "/" + activeFile.model.name;
-        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent(filePath)}","lines":"${lines}","toggleTree":true}`;
+        link = `${window.location.origin}${window.location.pathname}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openFile","name":"${filePath}","lines":"${lines}","toggleTree":true}`)}`;
       }
       navigator.clipboard.writeText(link).then(() => {
         this.log.debug("Permalink copied to clipboard");
