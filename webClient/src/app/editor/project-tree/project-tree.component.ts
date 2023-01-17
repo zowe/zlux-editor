@@ -165,6 +165,7 @@ export class ProjectTreeComponent {
           let dsMemberName;
           if (dirName == dsName) {
             let periodPos = dirName.lastIndexOf('.');
+            console.log("This build is for James");
             if (periodPos >= 0) {
               this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
             } else {
