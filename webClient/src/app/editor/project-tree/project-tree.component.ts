@@ -156,7 +156,9 @@ export class ProjectTreeComponent {
       }
     });
 
-    this.editorControl.openDataset.subscribe(dirName => {
+    this.editorControl.openDataset.subscribe(datasetInfo => {
+      let dirName= datasetInfo.datasetName;
+      const selectedLines = datasetInfo.selectedLines;
       if (dirName != null && dirName !== '') {
         if (dirName[0] != '/') {
           dirName = dirName.toUpperCase();
@@ -182,9 +184,9 @@ export class ProjectTreeComponent {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               if(isMember){
-                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName)).subscribe(x=> {this.log.debug('Dataset Member opened')});
+                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName), datasetInfo.selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
               } else{
-                this.editorControl.openFile('',this.nodes[0]).subscribe(x=> {this.log.debug('Dataset opened')});
+                this.editorControl.openFile('',this.nodes[0], datasetInfo.selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
               }
             }, e => {
               // TODO
@@ -245,11 +247,11 @@ export class ProjectTreeComponent {
   onOpenInNewTab($event: any){
     if ($event.data === 'File'){
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openFile","name":"${encodeURIComponent($event.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openFile","name":"${$event.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
     } else{
       const baseURI = `${window.location.origin}${window.location.pathname}`;
-      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:{"type":"openDataset","name":"${encodeURIComponent($event.data.path)}","toggleTree":true}`, '_blank');
+      const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openDataset","name":"${$event.data.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
     }
 }
