@@ -547,14 +547,13 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   openDatasets() {
-    console.log("This build is for James1");
     let openDirRef = this.dialog.open(OpenDatasetComponent, {
       width: '500px'
     });
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.openDataset.next(result);
+        this.editorControl.openDataset.next({datasetName: result});
       }
     });
   }
