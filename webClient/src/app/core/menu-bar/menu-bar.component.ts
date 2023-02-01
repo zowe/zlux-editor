@@ -553,7 +553,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
     openDirRef.afterClosed().subscribe(result => {
       if (result) {
-        this.editorControl.openDataset.next(result);
+        this.editorControl.openDataset.next({datasetName: result});
       }
     });
   }
