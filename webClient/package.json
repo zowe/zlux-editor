@@ -5,7 +5,8 @@
   "scripts": {
     "start": "export NODE_OPTIONS=--max_old_space_size=4096 || set NODE_OPTIONS=--max_old_space_size=4096 && webpack --config ./webpack.build.config.js --watch --progress",
     "build": "export NODE_OPTIONS=--max_old_space_size=4096 || set NODE_OPTIONS=--max_old_space_size=4096 && webpack --config ./webpack.build.config.js --progress && node prune.js",
-    "lint": "tslint -c tslint.json \"./**/*.ts\""
+    "lint": "tslint -c tslint.json \"./**/*.ts\"",
+	"test": "exit 0"
   },
   "dependencies": {
     "@angular/cdk": "~6.3.3",
