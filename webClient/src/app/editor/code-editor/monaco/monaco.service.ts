@@ -540,7 +540,7 @@ export class MonacoService implements OnDestroy {
     if(editorFile.isDataset){
       return `inmemory://${editorFile.path.toLowerCase()}`;
     } else{
-    return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
+      return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
     }
   }
 
