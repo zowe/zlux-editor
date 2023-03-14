@@ -24,22 +24,6 @@ import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
 
-function getDatasetName(dirName) {
-  let lParenIndex = dirName.indexOf('(');
-  let rParenIndex = dirName.lastIndexOf(')');
-  if (lParenIndex > 0 && lParenIndex < 46 && rParenIndex == dirName.length-1) {
-    return dirName.substring(0,lParenIndex);
-  } else {
-    return dirName;
-  }
-}
-
-function getDatasetMemberName(dirName) {
-  let lParenIndex = dirName.indexOf('(');
-  let rParenIndex = dirName.lastIndexOf(')');
-  return dirName.substring(lParenIndex + 1,rParenIndex);
-}
-
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
@@ -150,32 +134,36 @@ export class ProjectTreeComponent {
           this.editorControl.activeDirectory = dirName;
           this.fileExplorer.updateDirectory(dirName);
         } else {
-          let dsName = getDatasetName(dirName);
+          let dsName = this.utils.getDatasetName(dirName);
           this.fileExplorer.updateDSList(dsName);
         } 
       }
     });
 
     this.editorControl.openDataset.subscribe(datasetInfo => {
+      console.log('Dataset Info: ', datasetInfo);
       let dirName = datasetInfo.datasetName;
       const selectedLines = datasetInfo.selectedLines;
       if (dirName != null && dirName !== '') {
         if (dirName[0] != '/') {
           dirName = dirName.toUpperCase();
           let isMember = false;
-          let dsName = getDatasetName(dirName);
+          let dsName = this.utils.getDatasetName(dirName);
           let dsMemberName;
           if (dirName == dsName) {
             let periodPos = dirName.lastIndexOf('.');
             if (periodPos >= 0) {
-              this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
+              console.log('dirName.substring(0,periodPos+1)+**', dirName.substring(0,periodPos+1)+'**');
+              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
             } else {
-              this.fileExplorer.updateDSList(dirName);
+              console.log('Update ds list on: ', dirName);
+              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName);
             }
           } else {
             isMember = true;
-            dsMemberName = getDatasetMemberName(dirName);
-            this.fileExplorer.updateDSList(dsName);
+            dsMemberName = this.utils.getDatasetMemberName(dirName);
+            console.log('updateDsList on:', dsName);
+            if(this.fileExplorer) this.fileExplorer.updateDSList(dsName);
           }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(dsName.toUpperCase()), 'true', undefined, true);
           this.httpService.get(requestUrl)
@@ -183,8 +171,10 @@ export class ProjectTreeComponent {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               if(isMember){
+                console.log('Opening dataset member');
                 this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
               } else{
+                console.log('Opening dataset');
                 this.editorControl.openFile('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
               }
             }, e => {

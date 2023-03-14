@@ -107,7 +107,20 @@ export class AppComponent {
           });
       } else {
         this.log.info(`Opening dataset=${data.name}`);
-        this.editorControl.openDataset.next({datasetName: data.name, selectedLines: selectedLines});
+        let isMember = (data.name == this.utils.getDatasetName(data.name));
+        let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(this.utils.getDatasetName(data.name).toUpperCase()), 'true', undefined, true);
+        this.httpService.get(requestUrl)
+        .subscribe((response: any) => {
+          let nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
+          this.editorControl.setProjectNode(nodes);
+          if(isMember){
+            console.log('Opening dataset member');
+            this.editorControl.openFile('',nodes.find(item => item.name === this.utils.getDatasetMemberName(data.name)), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
+          } else{
+            console.log('Opening dataset');
+            this.editorControl.openFile('',nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
+          }
+        })
       }
       break;
     case 'openDataset':
