@@ -114,10 +114,8 @@ export class AppComponent {
           let nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
           this.editorControl.setProjectNode(nodes);
           if(isMember){
-            console.log('Opening dataset member');
             this.editorControl.openFile('',nodes.find(item => item.name === this.utils.getDatasetMemberName(data.name)), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
           } else{
-            console.log('Opening dataset');
             this.editorControl.openFile('',nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
           }
         })
