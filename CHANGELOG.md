@@ -7,6 +7,7 @@
 - Bugfix: Getting 400 BAD REQUEST in browser when opening the file or dataset in a new browser tab
 - Bugfix: When opening New File, editor keeps on using the earlier opened file and its model
 - Bugfix: Fix app2app 'openDataset' function
+- Rename 'openFile' to 'openBuffer' in editor-control.serverice.ts
 
 ## `3.0.0`
 
