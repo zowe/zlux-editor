@@ -168,9 +168,9 @@ export class ProjectTreeComponent {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               if(isMember){
-                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
+                this.editorControl.openBuffer('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
               } else{
-                this.editorControl.openFile('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
+                this.editorControl.openBuffer('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
               }
             }, e => {
               // TODO
@@ -211,14 +211,14 @@ export class ProjectTreeComponent {
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
     };
   
-      this.editorControl.openFile('', nodeData).subscribe(x => {
+      this.editorControl.openBuffer('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
         this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
       if($event.type == 'file'){
-        this.editorControl.openFile('', (data)).subscribe(x => {
+        this.editorControl.openBuffer('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
           if(x) {
             this.editorControl.checkForAndSetReadOnlyMode(x.model);
@@ -297,7 +297,7 @@ onDeleteClick($event: any){
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
-      this.editorControl.openFile('', nodeData).subscribe(x => {
+      this.editorControl.openBuffer('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
       });
