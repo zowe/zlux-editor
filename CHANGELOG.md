@@ -5,6 +5,7 @@
 - Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
 - Added the feature to copy the line content and copy URL link to open a file at a specific line
 - Bugfix: Getting 400 BAD REQUEST in browser when opening the file or dataset in a new browser tab
+- Bugfix: When opening New File, editor keeps on using the earlier opened file and its model
 
 ## `3.0.0`
 
