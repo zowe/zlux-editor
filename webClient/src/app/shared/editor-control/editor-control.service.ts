@@ -746,7 +746,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.removeActiveFromAllFiles();
         this.closeFileHandler(fileContext);
         this.closeFile.next(fileContext);
-        this.openFile('', updatedFileContext.model);
+        this.openBuffer('', updatedFileContext.model);
         this.refreshLayout.next();
         acceptChangeSub.unsubscribe();
         overwriteSub.unsubscribe();
@@ -981,7 +981,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.rootContext.next(rootContext);
     this.createFileEmitter.next(name);
     // let new file open in editor
-    this.openFile(null, fileStructure);
+    this.openBuffer(null, fileStructure);
     // get focus of editor
     setTimeout(()=> {
       this.editor.getValue().focus();
@@ -1045,7 +1045,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * @param   selectedLines Array that stores the first and last selected lines
      * @returns              An observable that pushes a handle to the buffer into which the file was opened
      */
-  openFile(file: string, targetBuffer: ZLUX.EditorBufferHandle | null, selectedLines?: any): Observable<ZLUX.EditorBufferHandle> {
+  openBuffer(file: string, targetBuffer: ZLUX.EditorBufferHandle | null, selectedLines?: any): Observable<ZLUX.EditorBufferHandle> {
     // targetBuffer is a context of project in GCE.
     let resultOpenObs: Observable<ZLUX.EditorBufferHandle>;
     let fileOpenSub: Subscription;

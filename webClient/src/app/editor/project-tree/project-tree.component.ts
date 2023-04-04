@@ -24,22 +24,6 @@ import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
 
-function getDatasetName(dirName) {
-  let lParenIndex = dirName.indexOf('(');
-  let rParenIndex = dirName.lastIndexOf(')');
-  if (lParenIndex > 0 && lParenIndex < 46 && rParenIndex == dirName.length-1) {
-    return dirName.substring(0,lParenIndex);
-  } else {
-    return dirName;
-  }
-}
-
-function getDatasetMemberName(dirName) {
-  let lParenIndex = dirName.indexOf('(');
-  let rParenIndex = dirName.lastIndexOf(')');
-  return dirName.substring(lParenIndex + 1,rParenIndex);
-}
-
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
@@ -150,32 +134,33 @@ export class ProjectTreeComponent {
           this.editorControl.activeDirectory = dirName;
           this.fileExplorer.updateDirectory(dirName);
         } else {
-          let dsName = getDatasetName(dirName);
+          let dsName = this.utils.getDatasetName(dirName);
           this.fileExplorer.updateDSList(dsName);
         } 
       }
     });
 
     this.editorControl.openDataset.subscribe(datasetInfo => {
+      console.log('Dataset Info: ', datasetInfo);
       let dirName = datasetInfo.datasetName;
       const selectedLines = datasetInfo.selectedLines;
       if (dirName != null && dirName !== '') {
         if (dirName[0] != '/') {
           dirName = dirName.toUpperCase();
           let isMember = false;
-          let dsName = getDatasetName(dirName);
+          let dsName = this.utils.getDatasetName(dirName);
           let dsMemberName;
           if (dirName == dsName) {
             let periodPos = dirName.lastIndexOf('.');
             if (periodPos >= 0) {
-              this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
+              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
             } else {
-              this.fileExplorer.updateDSList(dirName);
+              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName);
             }
           } else {
             isMember = true;
-            dsMemberName = getDatasetMemberName(dirName);
-            this.fileExplorer.updateDSList(dsName);
+            dsMemberName = this.utils.getDatasetMemberName(dirName);
+            if(this.fileExplorer) this.fileExplorer.updateDSList(dsName);
           }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(dsName.toUpperCase()), 'true', undefined, true);
           this.httpService.get(requestUrl)
@@ -183,9 +168,9 @@ export class ProjectTreeComponent {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
               if(isMember){
-                this.editorControl.openFile('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
+                this.editorControl.openBuffer('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
               } else{
-                this.editorControl.openFile('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
+                this.editorControl.openBuffer('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
               }
             }, e => {
               // TODO
@@ -226,14 +211,14 @@ export class ProjectTreeComponent {
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
     };
   
-      this.editorControl.openFile('', nodeData).subscribe(x => {
+      this.editorControl.openBuffer('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
         this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
     } else if($event.data.isDataset){
       let data: ProjectStructure = ($event.data as ProjectStructure);
       if($event.type == 'file'){
-        this.editorControl.openFile('', (data)).subscribe(x => {
+        this.editorControl.openBuffer('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
           if(x) {
             this.editorControl.checkForAndSetReadOnlyMode(x.model);
@@ -312,7 +297,7 @@ onDeleteClick($event: any){
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
-      this.editorControl.openFile('', nodeData).subscribe(x => {
+      this.editorControl.openBuffer('', nodeData).subscribe(x => {
         this.log.debug(`NodeData=`,nodeData);
         this.log.debug(`file loaded through project explorer.`);
       });
