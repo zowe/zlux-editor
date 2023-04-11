@@ -90,7 +90,9 @@ export class ProjectTreeComponent {
     private codeEditorService: EditorService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition) {
+  }
 
+  ngOnInit(){
     this.editorControl.projectNode.subscribe((nodes) => {
       this.nodes = nodes;
     });
@@ -126,8 +128,10 @@ export class ProjectTreeComponent {
             this.editorControl.initProjectContext(projectName, this.nodes);
           });
       }
-    });
+    });    
+  }
 
+  ngAfterViewInit(){
     this.editorControl.openDirectory.subscribe(dirName => {
       if(dirName) {
         if (dirName.startsWith('/')) {
@@ -136,10 +140,9 @@ export class ProjectTreeComponent {
         } else {
           let dsName = this.utils.getDatasetName(dirName);
           this.fileExplorer.updateDSList(dsName);
-        } 
+        }
       }
     });
-
     this.editorControl.openDataset.subscribe(datasetInfo => {
       console.log('Dataset Info: ', datasetInfo);
       let dirName = datasetInfo.datasetName;
