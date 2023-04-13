@@ -145,7 +145,7 @@ export class FrameComponent implements OnInit, OnDestroy {
   }
 
   openFile(file: ProjectContext) {
-    this.editorControl.openFile('', file.model);
+    this.editorControl.openBuffer('', file.model);
     // this.editorControl.openFileEmitter.next(file.model);
   }
 
@@ -194,7 +194,7 @@ export class FrameComponent implements OnInit, OnDestroy {
     // let memberContext = <ProjectContext>this.editorControl.generateProjectContext({ name: map.member, line: map.line }, dsContext);
     // dsContext.children ? dsContext.children.push(memberContext) : dsContext.children = [memberContext];
     // this.editorControl.openFile.next(memberContext.model);
-    this.editorControl.openFile('', { name: map.member, parent: map.dataset, line: map.line, hasChildren: false });
+    this.editorControl.openBuffer('', { name: map.member, parent: map.dataset, line: map.line, hasChildren: false });
     // this.editorControl.openFileEmitter.next({ name: map.member, parent: map.dataset, line: map.line, hasChildren: false });
   }
 
