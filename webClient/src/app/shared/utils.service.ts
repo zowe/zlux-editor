@@ -21,6 +21,22 @@ export class UtilsService {
     return compiled(options);
   }
 
+  getDatasetName(dirName) {
+    let lParenIndex = dirName.indexOf('(');
+    let rParenIndex = dirName.lastIndexOf(')');
+    if (lParenIndex > 0 && lParenIndex < 46 && rParenIndex == dirName.length-1) {
+      return dirName.substring(0,lParenIndex);
+    } else {
+      return dirName;
+    }
+  }
+  
+   getDatasetMemberName(dirName) {
+    let lParenIndex = dirName.indexOf('(');
+    let rParenIndex = dirName.lastIndexOf(')');
+    return dirName.substring(lParenIndex + 1,rParenIndex);
+  }
+
 
   /**
    * get folder name from a path

@@ -95,7 +95,7 @@ export class AppComponent {
             let fileName = data.name.substring(lastSlash+1);
             for (let i = 0; i < nodes.length; i++) {
               if (nodes[i].fileName == fileName) {
-                this.editorControl.openFile('', nodes[i], selectedLines).subscribe(x => {
+                this.editorControl.openBuffer('', nodes[i], selectedLines).subscribe(x => {
                   this.log.debug(`file loaded through app2app.`);
                 });
                 this.editorControl.loadDirectory(nodes[i].path ? nodes[i].path : '/'); 
@@ -107,7 +107,18 @@ export class AppComponent {
           });
       } else {
         this.log.info(`Opening dataset=${data.name}`);
-        this.editorControl.openDataset.next({datasetName: data.name, selectedLines: selectedLines});
+        let isMember = (data.name == this.utils.getDatasetName(data.name));
+        let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(this.utils.getDatasetName(data.name).toUpperCase()), 'true', undefined, true);
+        this.httpService.get(requestUrl)
+        .subscribe((response: any) => {
+          let nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
+          this.editorControl.setProjectNode(nodes);
+          if(isMember){
+            this.editorControl.openBuffer('',nodes.find(item => item.name === this.utils.getDatasetMemberName(data.name)), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
+          } else{
+            this.editorControl.openBuffer('',nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
+          }
+        })
       }
       break;
     case 'openDataset':
