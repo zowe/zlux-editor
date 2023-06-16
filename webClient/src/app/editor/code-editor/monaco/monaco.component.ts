@@ -61,6 +61,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   private showEditor: boolean;
   private showDiffViewer: boolean;
   private keyBindingSub: Subscription = new Subscription();
+  private diffEditor: monaco.editor.IStandaloneDiffEditor | null ;
 
   constructor(
     private monacoService: MonacoService,
@@ -82,6 +83,11 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.monacoConfig = new MonacoConfig();
     let options = this._options ? Object.assign({}, this._options) : {};
     const hasModel = !!options.model;
+
+    this.viewportEvents.resized.subscribe(() => {
+      this.handleDiffEditorResize();
+    });
+
     
     if (hasModel) {
       const model = monaco.editor.getModel(options.model.uri || '');
@@ -115,10 +121,16 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.enableDiffViewer.subscribe(() =>{
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     });
     
     this.editorControl.refreshLayout.subscribe(() =>{
       setTimeout(() => this.editor.layout(), 1);
+      if (this.showDiffViewer) {
+        setTimeout(() => this.diffEditor.layout(), 1);
+      }
     });
 
     this.editor.onContextMenu((e: any) => {
@@ -135,6 +147,17 @@ export class MonacoComponent implements OnInit, OnChanges {
         ], true)
       }
     });
+  }
+
+  ngAfterViewInit() {
+    this.handleDiffEditorResize();
+  }
+
+
+  handleDiffEditorResize() {
+    if (this.showDiffViewer && this.diffEditor) {
+      setTimeout(() => this.diffEditor.layout(), 1);
+    }
   }
 
   focus(e: any) {
@@ -157,6 +180,7 @@ export class MonacoComponent implements OnInit, OnChanges {
         }
         this.showEditor = true;
         this.showDiffViewer = false;
+        this.diffEditor = null;
       }
     }
   }
@@ -386,10 +410,14 @@ export class MonacoComponent implements OnInit, OnChanges {
     if (this.showDiffViewer) {
       this.showDiffViewer = false;
       this.showEditor = true;
+      this.diffEditor.dispose();
     }
     else {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     }
   }
 
