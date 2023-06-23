@@ -10,7 +10,6 @@
 */
 import { Component, ViewChild, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { TreeNode } from 'angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
@@ -23,6 +22,25 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
+
+interface TreeNode {
+  children: TreeNode[];
+  data: any;
+  displayField: string;
+  elementRef: any;
+  hasChildren: boolean;
+  id: string;
+  index: number;
+  isActive: boolean;
+  isCollapsed: boolean;
+  isExpanded: boolean;
+  isFocused: boolean;
+  isLeaf: boolean;
+  isRoot: boolean;
+  level: number;
+  parent: TreeNode;
+  path: string;
+}
 
 @Component({
   selector: 'app-project-tree',
