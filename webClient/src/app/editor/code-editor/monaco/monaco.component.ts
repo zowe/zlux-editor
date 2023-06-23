@@ -27,6 +27,7 @@ import { EditorKeybindingService } from '../../../shared/editor-keybinding.servi
 import { KeyCode } from '../../../shared/keycode-enum';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
+import { debounceTime } from 'rxjs/operators';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -86,11 +87,12 @@ export class MonacoComponent implements OnInit, OnChanges {
     let options = this._options ? Object.assign({}, this._options) : {};
     const hasModel = !!options.model;
 
-    this.viewportEvents.resized.subscribe(() => {
-      this.handleDiffEditorResize();
-    });
+    this.viewportEvents.resized
+      .pipe(debounceTime(100))
+      .subscribe(() => {
+        this.handleDiffEditorResize();
+      });
 
-    
     if (hasModel) {
       const model = monaco.editor.getModel(options.model.uri || '');
       if (model) {
@@ -130,9 +132,6 @@ export class MonacoComponent implements OnInit, OnChanges {
 
     this.editorControl.refreshLayout.subscribe(() => {
       setTimeout(() => this.editor.layout(), 1);
-      if (this.showDiffViewer) {
-        setTimeout(() => this.diffEditor.layout(), 1);
-      }
     });
 
     this.editor.onContextMenu((e: any) => {
@@ -151,14 +150,10 @@ export class MonacoComponent implements OnInit, OnChanges {
     });
   }
 
-  ngAfterViewInit() {
-    this.handleDiffEditorResize();
-  }
-
 
   handleDiffEditorResize() {
     if (this.showDiffViewer && this.diffEditor) {
-      setTimeout(() => this.diffEditor.layout(), 1);
+      this.diffEditor.layout();
     }
   }
 
