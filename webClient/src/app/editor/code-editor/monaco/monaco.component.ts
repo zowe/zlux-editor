@@ -85,12 +85,6 @@ export class MonacoComponent implements OnInit, OnChanges {
     let options = this._options ? Object.assign({}, this._options) : {};
     const hasModel = !!options.model;
 
-    this.viewportEvents.resized
-      .pipe(debounceTime(100))
-      .subscribe(() => {
-        this.handleDiffEditorResize();
-      });
-
     if (hasModel) {
       const model = monaco.editor.getModel(options.model.uri || '');
       if(model) {
@@ -128,10 +122,6 @@ export class MonacoComponent implements OnInit, OnChanges {
       }
     });
 
-    this.editorControl.refreshLayout.subscribe(() => {
-      setTimeout(() => this.editor.layout(), 1);
-    });
-
     this.editor.onContextMenu((e: any) => {
       if(e.target.type === 3){ //if right click is on top of the line numbers
         this.viewportEvents.spawnContextMenu(e.event.browserEvent.clientX, e.event.browserEvent.clientY, [
@@ -158,9 +148,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   focus(e: any) {
     this.editor.focus();
   }
-  layout(e: any) {
-    this.editor.layout();
-  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
@@ -171,6 +159,7 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['line']);
         //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
         if (this.showDiffViewer) {
+          console.log("ngOnChanges: refreshing layout")
           setTimeout(() => this.editor.layout(), 1);
         }
         this.showEditor = true;
@@ -184,8 +173,13 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
-    this.viewportEvents.resized.subscribe(()=> {
-      editor.layout()
+    this.viewportEvents.resized
+      .pipe(debounceTime(100))
+      .subscribe(()=> {
+        if (!this.showDiffViewer) {
+          editor.layout()
+        }
+        this.handleDiffEditorResize();
     });
       /* disable for now...
     this.editorControl.connToLS.subscribe((lang) => {
