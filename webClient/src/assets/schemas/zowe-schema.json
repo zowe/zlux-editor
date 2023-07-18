@@ -1,0 +1,74 @@
+{
+  "name": "zowe_yaml_schema",
+  "$id": "http//zowe.org/schemas/yaml-2.0.json",
+  "type": "object",
+  "required": [
+    "zowe",
+    "externalPort"
+  ],
+  "properties": {
+    "zowe": {
+      "properties": {
+        "setup": {
+          "type": "object",
+          "properties": {
+            "mvs": {
+              "type": "object",
+              "description": "MVS data set related configurations",
+              "properties": {
+                "proclib": {
+                  "$ref": "#/$defs/dataset"
+                },
+                "parmlib": {
+                  "$ref": "#/$defs/dataset"
+                },
+                "hlq": {
+                  "description": "where Zowe MVS data sets will be installed",
+                  "$ref": "#/$defs/dataset"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "required": [
+        "name",
+        "prefix"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/jobname"
+        },
+        "prefix": {
+          "type": "string"
+        }
+      }
+    },
+    "externalPort": {
+      "type": "integer"
+    },
+    "logDirectory": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "dataset": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 44
+    },
+    "jobname": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 8
+    },
+    "tcpPort": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65535
+    }
+  }
+}
