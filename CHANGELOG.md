@@ -1,7 +1,6 @@
 # Zlux Editor Changelog
 
 ## `3.0.1`
-- This action making a CHANGELOG note via special syntax from the GitHub PR commit message, like it could automatically update CHANGELOG.md with the message. First job checks if PR body has changelog note or not if it's not there then it asked them to add it and second job is to check if changelog note has been added in changelog.md file or not. (#338)
 - Bugfix: Added a few rules for JCL syntax highlighter
 - Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
 - Added the feature to copy the line content and copy URL link to open a file at a specific line
