@@ -18,6 +18,7 @@
 - BugFix: Editor keeps the content of the file, after an opened file is closed.
 
 ## `2.9.0`
+
 - Added the feature to update the dataset in the editor
 - Added the check for e-tag while updating the dataset
 - Added feature to open a file in new broswer tab
@@ -26,6 +27,7 @@
 - Added the feature to prompt the user to save the unsaved files before closing
 
 ## `2.8.0`
+
 - Bugfix: Fixed error message & phantom tab when opening undefined length dataset
 - Bugfix: Unable to recalculate the size of monaco-code-container when switching from diff-viewer to code-editor.
 - Added previously selected content comparison (Diff viewer)
