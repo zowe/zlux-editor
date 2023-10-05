@@ -1,4 +1,4 @@
-# Zlux Editor Changelog 
+# Zlux Editor Changelog
 
 ## `3.0.1`
  
