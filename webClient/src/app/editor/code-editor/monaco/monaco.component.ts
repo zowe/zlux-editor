@@ -25,6 +25,7 @@ import { EditorKeybindingService } from '../../../shared/editor-keybinding.servi
 import { KeyCode } from '../../../shared/keycode-enum';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
+import { debounceTime } from 'rxjs/operators';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -61,6 +62,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   private showEditor: boolean;
   private showDiffViewer: boolean;
   private keyBindingSub: Subscription = new Subscription();
+  private diffEditor: monaco.editor.IStandaloneDiffEditor | null ;
 
   constructor(
     private monacoService: MonacoService,
@@ -82,7 +84,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.monacoConfig = new MonacoConfig();
     let options = this._options ? Object.assign({}, this._options) : {};
     const hasModel = !!options.model;
-    
+
     if (hasModel) {
       const model = monaco.editor.getModel(options.model.uri || '');
       if(model) {
@@ -92,7 +94,7 @@ export class MonacoComponent implements OnInit, OnChanges {
         options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
       }
     }
-    this.log.debug("New editor with options=",options);
+    this.log.debug("New editor with options=", options);
     let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
     if (options.theme) {
       this.editorControl._setDefaultTheme(options.theme);
@@ -112,13 +114,12 @@ export class MonacoComponent implements OnInit, OnChanges {
       this.toggleDiffViewer();
     });
 
-    this.editorControl.enableDiffViewer.subscribe(() =>{
+    this.editorControl.enableDiffViewer.subscribe(() => {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
-    });
-    
-    this.editorControl.refreshLayout.subscribe(() =>{
-      setTimeout(() => this.editor.layout(), 1);
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     });
 
     this.editor.onContextMenu((e: any) => {
@@ -137,12 +138,17 @@ export class MonacoComponent implements OnInit, OnChanges {
     });
   }
 
+
+  handleDiffEditorResize() {
+    if (this.showDiffViewer && this.diffEditor) {
+      this.diffEditor.layout();
+    }
+  }
+
   focus(e: any) {
     this.editor.focus();
   }
-  layout(e: any) {
-    this.editor.layout();
-  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
@@ -152,11 +158,13 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['reload'],
           changes[input].currentValue['line']);
         //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
-        if(this.showDiffViewer) {
+        if (this.showDiffViewer) {
+          console.log("ngOnChanges: refreshing layout")
           setTimeout(() => this.editor.layout(), 1);
         }
         this.showEditor = true;
         this.showDiffViewer = false;
+        this.diffEditor = null;
       }
     }
   }
@@ -165,8 +173,13 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
-    this.viewportEvents.resized.subscribe(()=> {
-      editor.layout()
+    this.viewportEvents.resized
+      .pipe(debounceTime(100))
+      .subscribe(()=> {
+        if (!this.showDiffViewer) {
+          editor.layout()
+        }
+        this.handleDiffEditorResize();
     });
       /* disable for now...
     this.editorControl.connToLS.subscribe((lang) => {
@@ -386,10 +399,14 @@ export class MonacoComponent implements OnInit, OnChanges {
     if (this.showDiffViewer) {
       this.showDiffViewer = false;
       this.showEditor = true;
+      this.diffEditor.dispose();
     }
     else {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     }
   }
 
