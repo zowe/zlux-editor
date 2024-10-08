@@ -8,22 +8,18 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, Inject, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { EditorControlService } from './shared/editor-control/editor-control.service';
 import { HttpService } from './shared/http/http.service';
 import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
-import * as monaco from 'monaco-editor';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: [
-    '../styles.scss',
-    './app.component.scss'
-  ]
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   title = 'app';
@@ -31,14 +27,16 @@ export class AppComponent {
   @ViewChild('editorheader', { static: true })
   editorheaderElementRef: ElementRef<any>;
 
-  constructor(@Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
+  constructor(
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.LAUNCH_METADATA) private launchMetadata: any,
     private dataAdapter: DataAdapterService,
     private httpService: HttpService,
     private utils: UtilsService,
     private editorControl: EditorControlService,
     private appKeyboard: EditorKeybindingService) {
-    this.log.debug(`Monaco object=`, monaco);
+    // this.log.debug(`Monaco object=`, monaco);
+    console.log('ZLUX-EDITOR CONSTRUCTOR');
   }
 
   ngOnInit() {

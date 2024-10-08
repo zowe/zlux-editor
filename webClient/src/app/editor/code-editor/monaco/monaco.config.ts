@@ -13,7 +13,7 @@ import { EditorServiceInstance } from '../../../shared/editor-control/editor-con
 
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs';
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { BPXPRM_HILITE } from './hiliters/bpxprm';
 import { HLASM_HILITE } from './hiliters/hlasm';

@@ -26,7 +26,7 @@ import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/
 @Component({
   selector: 'app-frame',
   templateUrl: './frame.component.html',
-  styleUrls: ['./frame.component.scss', '../../../styles.scss']
+  styleUrls: ['./frame.component.scss']
 })
 export class FrameComponent implements OnInit, OnDestroy {
 

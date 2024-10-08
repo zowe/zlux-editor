@@ -20,12 +20,14 @@ import { EditorControlService } from './editor-control/editor-control.service';
 import { SnackBarService } from './snack-bar.service';
 import { LanguageServerService } from './language-server/language-server.service';
 import { EditorKeybindingService } from './editor-keybinding.service';
+import { IncludeExternalCssComponent } from './include-external-css.component';
 
 @NgModule({
   imports: [
     CommonModule,
     DialogModule,
     MatSnackBarModule,
+    IncludeExternalCssComponent
   ],
   declarations: [],
   providers: [
@@ -38,6 +40,9 @@ import { EditorKeybindingService } from './editor-keybinding.service';
     LanguageServerService,
     EditorKeybindingService
   ],
+  exports: [
+    IncludeExternalCssComponent
+  ]
 })
 export class SharedModule { }
 

@@ -1,4 +1,3 @@
-
 <!--
 This program and the accompanying materials are
 made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -9,8 +8,10 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-<h2 mat-dialog-title>Save As</h2>
+<div>
+  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <h2 mat-dialog-title>Save As</h2>
+</div>
 <mat-dialog-content>
   <label>File Name:</label>
   <mat-form-field>
@@ -26,14 +27,15 @@ Copyright Contributors to the Zowe Project.
   <mat-form-field>
     <mat-select class="select-encoding" tabindex="0" placeholder="Select" [(ngModel)]="results.encoding">
       @for (option of options; track option) {
-        <mat-option [value]="option">
+      <mat-option [value]="option">
         {{option}}</mat-option>
       }
     </mat-select>
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results" [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results"
+    [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
 </mat-dialog-actions>
 
 <!--

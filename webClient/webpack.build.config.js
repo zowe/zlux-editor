@@ -25,7 +25,6 @@ const pubPath = "../../../plugins/org.zowe.editor/web/";
 process.env.ASSET_PATH = pubPath;
 
 const config = {
-  devtool: 'source-map',
   entry: {
     main: path.resolve(__dirname, './src/plugin.ts'),
   },
@@ -58,15 +57,9 @@ const config = {
         loader: 'svg-inline-loader'
       },
       {
-        test: /\.scss$/,
+        test: /\.scss/,
         use: [
-          'exports-loader?module.exports.toString()',
-          {
-            loader: 'css-loader',
-            options: {
-              sourceMap: false
-            }
-          },
+          'raw-loader',
           {
             loader: 'sass-loader',
             options: {
@@ -74,9 +67,6 @@ const config = {
             }
           }
         ]
-      }, {
-        test: /\.ttf$/,
-        use: ['file-loader']
       }
     ],
   },
@@ -98,6 +88,10 @@ const config = {
         {
           from: path.resolve(__dirname, './node_modules/monaco-editor/min/vs/base'),
           to: path.resolve('../web/assets/monaco/base')
+        },
+        {
+          from: path.resolve(__dirname, './node_modules/zlux-angular-file-tree/assets'),
+          to: path.resolve('../web/assets')
         }
       ]
     }),
@@ -105,7 +99,7 @@ const config = {
       Buffer: ['buffer', 'Buffer'],
     }),
     new CompressionPlugin({
-      threshold: 50000,
+      threshold: 500000,
       minRatio: 0.8
     }),
     new MonacoWebpackPlugin({ publicPath: pubPath }),

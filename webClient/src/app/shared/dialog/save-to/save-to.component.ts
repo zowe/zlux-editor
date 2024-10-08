@@ -13,8 +13,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-save-to',
-  templateUrl: './save-to.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './save-to.component.html'
 })
 export class SaveToComponent {
   results = {

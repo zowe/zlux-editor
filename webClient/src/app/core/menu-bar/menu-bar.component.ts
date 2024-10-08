@@ -63,7 +63,7 @@ function isHidden(el) {
 @Component({
   selector: 'app-menu-bar',
   templateUrl: './menu-bar.component.html',
-  styleUrls: ['./menu-bar.component.scss', '../../../styles.scss']
+  styleUrls: ['./menu-bar.component.scss']
 })
 export class MenuBarComponent implements OnInit, OnDestroy {
 
@@ -294,9 +294,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   private resetLanguageSelectionMenu() {
     this.languageSelectionMenu.children = this.monaco.languages.getLanguages().sort(function (lang1, lang2) {
-      debugger;
-      let name1 = lang1.aliases[0].toLowerCase();
-      let name2 = lang2.aliases[0].toLowerCase();
+      let name1 = lang1 && lang1?.aliases?.length && lang1?.aliases[0]?.toLowerCase();
+      let name2 = lang2 && lang1?.aliases?.length && lang2?.aliases[0]?.toLowerCase();
       if (name1 < name2) {
         return -1;
       } else if (name1 > name2) {

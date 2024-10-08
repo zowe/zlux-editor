@@ -20,7 +20,7 @@ import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib
 @Component({
   selector: 'app-file-tabs',
   templateUrl: './file-tabs.component.html',
-  styleUrls: ['./file-tabs.component.scss', '../../../../styles.scss']
+  styleUrls: ['./file-tabs.component.scss']
 })
 export class FileTabsComponent implements OnInit, AfterViewChecked {
 

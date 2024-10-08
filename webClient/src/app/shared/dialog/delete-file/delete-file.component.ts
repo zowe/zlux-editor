@@ -12,8 +12,7 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-delete-file',
-  templateUrl: './delete-file.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './delete-file.component.html'
 })
 export class DeleteFileComponent implements OnInit {
 

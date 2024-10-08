@@ -20,7 +20,7 @@ import { MonacoConfig } from './monaco.config';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { LanguageServerService } from '../../../shared/language-server/language-server.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../../shared/editor-keybinding.service';
 import { KeyCode } from '../../../shared/keycode-enum';
@@ -226,7 +226,7 @@ export class MonacoComponent implements OnInit, OnChanges {
       // An optional array of keybindings for the action.
       keybindings: [
         // tslint:disable-next-line:no-bitwise
-        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
         // chord
         // tslint:disable-next-line:no-bitwise
         // monaco.KeyMod.chord(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_M)
@@ -365,7 +365,7 @@ export class MonacoComponent implements OnInit, OnChanges {
       // create a language client connection from the JSON RPC connection on demand
       connectionProvider: {
         get: (errorHandler, closeHandler) => {
-          return Promise.resolve(createConnection(connection, errorHandler, closeHandler));
+          return Promise.resolve(createConnection(connection as any, errorHandler, closeHandler));
         }
       }
     });

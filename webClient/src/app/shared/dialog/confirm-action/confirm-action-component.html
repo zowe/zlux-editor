@@ -8,17 +8,30 @@
   Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<button mat-dialog-close class="close-dialog-btn" style="padding-left:15px" (click)="onCancel()"><i class=" fa fa-close "></i></button>
-<h2 mat-dialog-title>{{data.title}}</h2>
+<div class="d-flex">
+  <div>
+    <h2 mat-dialog-title>{{data.title}}</h2>
+  </div>
+  <button mat-dialog-close class="close-dialog-btn d-flex" style="padding:1rem" (click)="onCancel()"><i
+      class=" fa fa-close "></i></button>
+</div>
 <mat-dialog-content>
-    <p><b>Warning: </b>{{data.warningMessage}}</p>
+  <p><b>Warning: </b>{{data.warningMessage}}</p>
 </mat-dialog-content>
-
+<div class="example-button-row">
+  <button mat-flat-button>Basic</button>
+  <button mat-flat-button disabled>Disabled</button>
+</div>
+<div class="example-button-row">
+  <button mat-raised-button>Basic</button>
+  <button mat-raised-button disabled>Disabled</button>
+</div>
+<button mat-raised-button>Basic</button>
+<button mat-flat-button>Yes</button>
 <mat-dialog-actions>
-    <button mat-raised-button class="right " color="primary" (click)="onConfirm() ">Yes</button>
-    <button mat-button class="right " (click)="onDismiss() ">No</button>
+  <button mat-flat-button (click)="onConfirm()">Yes</button>
+  <button mat-button (click)="onDismiss()">No</button>
 </mat-dialog-actions>
-
 
 <!-- 
   This program and the accompanying materials are

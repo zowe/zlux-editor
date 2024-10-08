@@ -15,8 +15,7 @@ import { ENDPOINTS } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-open-folder',
-  templateUrl: './open-folder.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './open-folder.component.html'
 })
 export class OpenFolderComponent implements OnInit {
 

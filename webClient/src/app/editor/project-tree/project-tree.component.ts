@@ -27,7 +27,7 @@ import { ZluxFileTreeComponent } from 'zlux-angular-file-tree';
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss', '../../../styles.scss'],
+  styleUrls: ['./project-tree.component.scss'],
 })
 export class ProjectTreeComponent {
 

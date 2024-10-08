@@ -15,8 +15,7 @@ import { ENDPOINTS } from '../../../../environments/environment';
 import { ProjectDef } from '../../model/project';
 @Component({
   selector: 'app-open-project',
-  templateUrl: './open-project.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './open-project.component.html'
 })
 export class OpenProjectComponent implements OnInit {
   projectList: ProjectDef[] = [];

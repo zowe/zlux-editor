@@ -22,7 +22,7 @@ import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-act
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject, Observable } from 'rxjs';
 import { LoadingStatus } from '../loading-status';

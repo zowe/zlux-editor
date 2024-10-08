@@ -25,7 +25,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { MessageDuration } from "../message-duration";
 import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset/overwrite-dataset.component';
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
@@ -1280,7 +1280,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             }
           } else {
             for (let lang of languages) {
-              if (lang.extensions.indexOf(`.${bufferExt}`) > -1) {
+              if (lang?.extensions?.indexOf(`.${bufferExt}`) > -1) {
                 results.push(lang.id);
                 break;
               }

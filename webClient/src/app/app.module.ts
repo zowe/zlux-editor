@@ -40,10 +40,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor() {
-    debugger;
-    console.log('Plugin loaded ZLUX-EDITOR');
-  }
+  constructor() { }
 }
 
 /*

@@ -8,8 +8,10 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-<h2 mat-dialog-title>Delete File</h2>
+<div>
+  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <h2 mat-dialog-title>Delete File</h2>
+</div>
 <mat-dialog-content>
   Absolute File Path (ex. /u/000/doc1):
   <mat-form-field>
@@ -26,7 +28,6 @@ Copyright Contributors to the Zowe Project.
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
     [disabled]="!value">Delete</button>
 </mat-dialog-actions>
-
 <!--
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies

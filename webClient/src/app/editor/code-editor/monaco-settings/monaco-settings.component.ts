@@ -12,7 +12,7 @@ import { Component, OnInit, Inject, EventEmitter, Output, ViewChild, ElementRef 
 import {Observable} from 'rxjs';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
 import { DEFAULT_CONFIG, MonacoConfigItem, ConfigItemType } from '../monaco/monaco.config';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../../shared/http/http.service';
 
@@ -43,7 +43,7 @@ function getValueNames(values: string[]) {
 @Component({
   selector: 'app-monaco-settings',
   templateUrl: './monaco-settings.component.html',
-  styleUrls: ['./monaco-settings.component.scss',  '../../../../styles.scss']
+  styleUrls: ['./monaco-settings.component.scss']
 })
 export class MonacoSettingsComponent implements OnInit {
   
