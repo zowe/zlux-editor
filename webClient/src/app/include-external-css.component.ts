@@ -14,7 +14,7 @@ import { Component, ViewEncapsulation } from "@angular/core";
   encapsulation: ViewEncapsulation.None
 })
 export class IncludeExternalCssComponent {
-  // No index.html files as prod level to import the css
+  // No index.html files at prod level to import the css. Plugin will be rendered inside zowe and accessed by appmodule and appcomponent so index.html will not be in picture
   // ViewEncapsulation.None will make sure to keep the css as it is. Will not scoped out
   // Mentioned in the component so will be a part of main.js
 }

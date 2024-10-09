@@ -26,7 +26,7 @@ import { LanguageServerService } from '../../shared/language-server/language-ser
 import { MessageDuration } from "../../shared/message-duration";
 import { DeleteFileComponent } from '../../shared/dialog/delete-file/delete-file.component';
 import { Angular2InjectionTokens, Angular2PluginSessionEvents } from 'pluginlib/inject-resources';
-import { Subscription } from 'rxjs';
+import { isEmpty, Subscription } from 'rxjs';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import * as _ from 'lodash';
@@ -293,30 +293,32 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   private resetLanguageSelectionMenu() {
-    this.languageSelectionMenu.children = this.monaco.languages.getLanguages().sort(function (lang1, lang2) {
-      let name1 = lang1 && lang1?.aliases?.length && lang1?.aliases[0]?.toLowerCase();
-      let name2 = lang2 && lang1?.aliases?.length && lang2?.aliases[0]?.toLowerCase();
-      if (name1 < name2) {
-        return -1;
-      } else if (name1 > name2) {
-        return 1;
-      } else {
-        return 0;
-      }
-    }).map(language => {
-      return {
-        name: language.aliases[0],
-        type: 'checkbox',
-        action: {
-          internalName: 'setEditorLanguage',
-          params: [language.id]
-        },
-        active: {
-          internalName: 'languageActiveCheck',
-          params: [language.id]
+    this.languageSelectionMenu.children = this.monaco.languages.getLanguages()
+      .filter(lang => !_.isEmpty(lang.aliases))
+      .sort((lang1, lang2) => {
+        let name1 = lang1?.aliases[0]?.toLowerCase();
+        let name2 = lang2?.aliases[0]?.toLowerCase();
+        if (name1 < name2) {
+          return -1;
+        } else if (name1 > name2) {
+          return 1;
+        } else {
+          return 0;
         }
-      }
-    });
+      }).map(language => {
+        return {
+          name: language.aliases[0],
+          type: 'checkbox',
+          action: {
+            internalName: 'setEditorLanguage',
+            params: [language.id]
+          },
+          active: {
+            internalName: 'languageActiveCheck',
+            params: [language.id]
+          }
+        }
+      });
   }
 
   private getReadableLangName(languageId) {
