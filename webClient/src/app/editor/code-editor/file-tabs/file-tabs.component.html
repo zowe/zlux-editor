@@ -1,4 +1,3 @@
-
 <!--
 This program and the accompanying materials are
 made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -9,24 +8,20 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 -->
 <!-- <perfect-scrollbar [config]="fileTabsScrollConfig" [disabled]="false"> -->
-  <div class="tabs-container">
-    <ul class="tabs-file-list">
-      @for (item of data; track item) {
-        <li mClick class="tabs-file"
-          [fileContext]="item"
-          [ngClass]="{'active':item.active}"
-          (click)="clickHandler($event, item)"
-          title="{{item.name}}"
-          (contextmenu)="onRightClickTab($event, item)">
-          <span class="filename">{{item.name}}</span>
-          <mat-icon class="close-file" (click)="remove.next(item);$event.stopPropagation()">clear</mat-icon>
-          @if (item.changed) {
-            <mat-icon class="changed-file">fiber_manual_record</mat-icon>
-          }
-        </li>
+<div class="tabs-container">
+  <ul class="tabs-file-list">
+    @for (item of data; track item) {
+    <li mClick class="tabs-file" [fileContext]="item" [ngClass]="{'active':item.active}"
+      (click)="clickHandler($event, item)" title="{{item.name}}" (contextmenu)="onRightClickTab($event, item)">
+      <span class="filename">{{item.name}}</span>
+      @if (item.changed) {
+      <mat-icon class="changed-file material-icons">fiber_manual_record</mat-icon>
       }
-    </ul>
-  </div>
+      <mat-icon class="close-file material-icons" (click)="remove.next(item);$event.stopPropagation()">clear</mat-icon>
+    </li>
+    }
+  </ul>
+</div>
 <!-- </perfect-scrollbar> -->
 
 <!--

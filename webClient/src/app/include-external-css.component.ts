@@ -3,10 +3,12 @@ import { Component, ViewEncapsulation } from "@angular/core";
 @Component({
   standalone: true,
   selector: 'include-external-css',
-  template: ``,
+  template: `<ng-content></ng-content>`,
   styleUrls: [
-    "../../styles/global.css",
-    "../../styles.scss"
+    "../../node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
+    "../../node_modules/material-icons/iconfont/material-icons.scss",
+    "../styles/global.css",
+    "../styles.scss"
   ],
   encapsulation: ViewEncapsulation.None
 })

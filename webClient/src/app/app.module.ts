@@ -19,6 +19,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { EditorModule } from './editor/editor.module';
 import { SharedModule } from './shared/shared.module';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { IncludeExternalCssComponent } from './include-external-css.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     EditorModule,
     SharedModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    IncludeExternalCssComponent
   ],
   providers: [
     provideHttpClient()

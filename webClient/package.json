@@ -12,8 +12,8 @@
     "test": "exit 0"
   },
   "dependencies": {
-    "@angular/cdk": "^18.0.0",
     "lodash": "~4.17.10",
+    "material-icons": "^1.13.12",
     "monaco-editor": "^0.21.0",
     "monaco-languageclient": "^0.6.0",
     "ngx-bootstrap": "^18.0.2",
@@ -29,6 +29,7 @@
     "@angular-devkit/build-angular": "^18.2.2",
     "@angular-devkit/core": "^18.2.2",
     "@angular/animations": "~18.0.0",
+    "@angular/cdk": "^18.0.0",
     "@angular/cli": "^18.2.2",
     "@angular/common": "~18.0.0",
     "@angular/compiler": "~18.0.0",

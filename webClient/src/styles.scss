@@ -750,11 +750,12 @@
   }
 
   .close-dialog-btn {
-    float: right;
+    margin-left: auto;
     border: none;
     background: transparent;
     outline: none;
     cursor: pointer;
+    padding: 1rem;
   }
 
   .mat-ripple-element {
@@ -2174,7 +2175,8 @@
   }
 
   mat-dialog-actions {
-    justify-content: flex-end;
+    display: flex;
+    justify-content: flex-end !important;
   }
 
   ul {
@@ -2183,6 +2185,18 @@
 
   .d-flex {
     display: flex;
+  }
+
+  .flex-align-items-start {
+    align-items: flex-start;
+  }
+
+  .flex-justify-content-end {
+    justify-content: flex-end !important;
+  }
+
+  .w-100 {
+    width: 100%;
   }
 
   /*

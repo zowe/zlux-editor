@@ -8,24 +8,26 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<div>
+<div class="d-flex flex-align-items-start">
+  <div>
+    <h2 mat-dialog-title>Save As</h2>
+  </div>
   <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-  <h2 mat-dialog-title>Save As</h2>
 </div>
 <mat-dialog-content>
-  <label>File Name:</label>
-  <mat-form-field>
+  <mat-form-field class="w-100">
+    <mat-label>File Name</mat-label>
     <input matInput type="text" [(ngModel)]="results.fileName">
   </mat-form-field>
   <p></p>
-  <label>Directory:</label>
-  <mat-form-field>
+  <mat-form-field class="w-100">
+    <mat-label>Directory</mat-label>
     <input matInput type="text" [(ngModel)]="results.directory">
   </mat-form-field>
   <p></p>
-  <label>Encoding:</label>
-  <mat-form-field>
-    <mat-select class="select-encoding" tabindex="0" placeholder="Select" [(ngModel)]="results.encoding">
+  <mat-form-field class="w-100">
+    <mat-label>Encoding</mat-label>
+    <mat-select class="select-encoding" tabindex="0" [(ngModel)]="results.encoding">
       @for (option of options; track option) {
       <mat-option [value]="option">
         {{option}}</mat-option>
