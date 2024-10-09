@@ -7,6 +7,7 @@ import { Component, ViewEncapsulation } from "@angular/core";
   styleUrls: [
     "../../node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
     "../../node_modules/material-icons/iconfont/material-icons.scss",
+    "../../node_modules/monaco-editor/min/vs/editor/editor.main.css",
     "../styles/global.css",
     "../styles.scss"
   ],
