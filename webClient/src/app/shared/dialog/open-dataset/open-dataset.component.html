@@ -16,7 +16,8 @@ Copyright Contributors to the Zowe Project.
 </div>
 <mat-dialog-content>
   <mat-form-field>
-    <input matInput tabindex="2" type="text" placeholder="Dataset" [(ngModel)]="value">
+    <mat-label>Dataset</mat-label>
+    <input matInput tabindex="2" type="text" [(ngModel)]="value">
     @if (value) {
     <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''"
       id="open-dataset-clear">

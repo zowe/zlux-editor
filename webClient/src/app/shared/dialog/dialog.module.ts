@@ -21,7 +21,7 @@ import { SaveToComponent } from './save-to/save-to.component';
 import { ConfirmAction } from './confirm-action/confirm-action-component';
 import { LanguageServerComponent } from './language-server/language-server.component';
 import { TagComponent } from './tag/tag.component';
-import { ZluxTabbingModule } from 'zlux-widgets';
+import { ZluxTabbingModule } from '@zlux/widgets';
 import { OverwriteDatasetComponent } from './overwrite-dataset/overwrite-dataset.component';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -55,18 +55,6 @@ import { MatButtonModule } from '@angular/material/button';
         OverwriteDatasetComponent,
     ],
     providers: [HttpService]
-    // entryComponents: [
-    //     OpenProjectComponent,
-    //     OpenDatasetComponent,
-    //     OpenFolderComponent,
-    //     DeleteFileComponent,
-    //     NewFileComponent,
-    //     SaveToComponent,
-    //     ConfirmAction,
-    //     LanguageServerComponent,
-    //     TagComponent,
-    //     OverwriteDatasetComponent,
-    // ]
 })
 export class DialogModule { }
 

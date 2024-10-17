@@ -67,16 +67,18 @@ const config = {
             }
           }
         ]
+      },
+      {
+        test: [/\.js?$/, /\.ts?$/, /\.jsx?$/, /\.tsx?$/],
+        enforce: 'pre',
+        exclude: /node_modules/,
+        use: ['source-map-loader'],
       }
     ],
   },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
-        {
-          from: path.resolve(__dirname, './src/assets'),
-          to: path.resolve('../web/assets')
-        },
         {
           from: path.resolve(__dirname, './src/mock'),
           to: path.resolve('../web/mock')
@@ -86,7 +88,11 @@ const config = {
           to: path.resolve('../web/assets/monaco/base')
         },
         {
-          from: path.resolve(__dirname, './node_modules/zlux-angular-file-tree/assets'),
+          from: path.resolve(__dirname, './node_modules/zlux-angular-file-tree/dist/zlux-file-explorer/assets'),
+          to: path.resolve('../web/assets')
+        },
+        {
+          from: path.resolve(__dirname, './src/assets'),
           to: path.resolve('../web/assets')
         }
       ]

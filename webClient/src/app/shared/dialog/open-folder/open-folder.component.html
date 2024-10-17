@@ -16,7 +16,8 @@ Copyright Contributors to the Zowe Project.
 </div>
 <mat-dialog-content>
   <mat-form-field>
-    <input matInput type="text" tabindex="2" placeholder="Directory" [(ngModel)]="value">
+    <mat-label>Directory</mat-label>
+    <input matInput type="text" tabindex="2" [(ngModel)]="value">
     @if (value) {
     <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
       <mat-icon tabindex="-1">close</mat-icon>

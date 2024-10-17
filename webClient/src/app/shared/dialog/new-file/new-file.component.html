@@ -17,8 +17,9 @@ Copyright Contributors to the Zowe Project.
 <mat-dialog-content>
   File Name:
   <mat-form-field>
+    <mat-label>Name</mat-label>
     <input id="name" name="name" required #name="ngModel" [pattern]="FileName_Pattern" matInput type="text"
-      placeholder="Name" [(ngModel)]="value">
+      [(ngModel)]="value">
     @if (value) {
     <button mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
       <mat-icon>close</mat-icon>

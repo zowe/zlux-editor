@@ -12,6 +12,7 @@
     "test": "exit 0"
   },
   "dependencies": {
+    "@zlux/widgets": "github:wadkarsatish/zlux-widgets-angular18#widgets-Angular-Library",
     "lodash": "~4.17.10",
     "material-icons": "^1.13.12",
     "monaco-editor": "^0.52.0",
@@ -21,8 +22,7 @@
     "rxjs": "^7.8.1",
     "vscode-json-languageservice": "^5.4.1",
     "vscode-ws-jsonrpc": "^3.3.2",
-    "zlux-angular-file-tree": "file:../../npm libraries/zowe/dist/zlux-file-explorer",
-    "zlux-widgets": "github:wadkarsatish/zlux-widgets-angular18#zlux-widgets-angular-library"
+    "zlux-angular-file-tree": "github:wadkarsatish/zlux-file-explorer#zlux-file-explorer-angular18"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.2",

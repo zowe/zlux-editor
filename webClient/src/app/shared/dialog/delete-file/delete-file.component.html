@@ -17,8 +17,8 @@ Copyright Contributors to the Zowe Project.
 <mat-dialog-content>
   Absolute File Path (ex. /u/000/doc1):
   <mat-form-field>
-    <input id="name" name="name" required #name="ngModel" matInput type="text" placeholder="Absolute Path"
-      [(ngModel)]="value">
+    <mat-label>Absolute Path</mat-label>
+    <input id="name" name="name" required #name="ngModel" matInput type="text" [(ngModel)]="value">
     @if (value) {
     <button mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
       <mat-icon>close</mat-icon>

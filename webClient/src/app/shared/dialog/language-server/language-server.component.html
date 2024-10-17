@@ -16,7 +16,8 @@
 </div>
 <mat-dialog-content>
   <mat-form-field>
-    <textarea matInput type="text" placeholder="Put Your Config Here" [cdkTextareaAutosize]="true"
+    <mat-label>Put Your Config Here</mat-label>
+    <textarea matInput type="text" [cdkTextareaAutosize]="true"
       [(ngModel)]="settings.config"></textarea>
   </mat-form-field>
   <section>

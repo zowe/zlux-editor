@@ -19,10 +19,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { EditorComponent } from './editor.component';
 import { EditorService } from './editor.service';
-// import { EditorRoutingModule } from './editor-routing.module';
 import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
-// import { PerfectScrollbarModule } from 'ngx-perfect-scrollbar';
 import { ZluxFileTreeModule } from 'zlux-angular-file-tree';
 import { CodeEditorModule } from './code-editor/code-editor.module';
 
@@ -37,8 +35,6 @@ import { CodeEditorModule } from './code-editor/code-editor.module';
     MatSnackBarModule,
     MatInputModule,
     ZluxFileTreeModule,
-    // EditorRoutingModule,
-    // PerfectScrollbarModule,
     CodeEditorModule,
   ],
   providers: [EditorService],
