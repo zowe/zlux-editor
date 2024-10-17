@@ -88,10 +88,6 @@ const config = {
           to: path.resolve('../web/assets/monaco/base')
         },
         {
-          from: path.resolve(__dirname, './node_modules/zlux-angular-file-tree/dist/zlux-file-explorer/assets'),
-          to: path.resolve('../web/assets')
-        },
-        {
           from: path.resolve(__dirname, './src/assets'),
           to: path.resolve('../web/assets')
         }
