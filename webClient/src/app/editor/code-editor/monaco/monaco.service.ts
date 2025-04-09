@@ -348,6 +348,10 @@ export class MonacoService implements OnDestroy {
     return true;
   }
 
+  getDiffEditor(): monaco.editor.IStandaloneDiffEditor {
+    return this.diffEditor;
+  }
+
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
