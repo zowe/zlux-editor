@@ -41,7 +41,7 @@ jobs:
       check_commit: ${{ steps.check-changelog.outputs.check_commit }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Verify Changelog update
         run: |
@@ -121,7 +121,7 @@ jobs:
     needs: check-permission
     steps:
       - name: '[Prep 1] Checkout'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: '[Prep 2] Cache node modules'
         uses: actions/cache@v4
@@ -135,12 +135,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-cache-node-modules-
       - name: '[Prep 3] Setup Node'
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: 16.15.0
 
       - name: '[Prep 4] Setup jFrog CLI'
-        uses: jfrog/setup-jfrog-cli@v2
+        uses: jfrog/setup-jfrog-cli@v4
         env:
           JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_TOKEN }}
 
