@@ -13,6 +13,10 @@
       "pluginShortNameDefault": "Editor",
       "imageSrc": "assets/icon.png"
     },
+    "entryPoint": {
+      "2.0": "main.js",
+      "3.0": "v3/main.js"
+    },
     "descriptionKey": "MyPluginDescription",
     "descriptionDefault": "Zowe Editor",
     "defaultWindowStyle": {

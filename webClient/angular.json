@@ -14,7 +14,7 @@
           "builder": "@angular-devkit/build-angular:application",
           "options": {
             "outputPath": {
-              "base": "../web",
+              "base": "../web/v3",
               "browser": ""
             },
             "index": "src/index.html",
