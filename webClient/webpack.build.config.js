@@ -21,7 +21,7 @@ if (process.env.MVD_DESKTOP_DIR == null) {
   throw new Error('You must specify MVD_DESKTOP_DIR in your environment');
 }
 
-const pubPath = "../../../plugins/org.zowe.editor/web/";
+const pubPath = "../../../plugins/org.zowe.editor/web/v3";
 process.env.ASSET_PATH = pubPath;
 
 const config = {
@@ -29,7 +29,7 @@ const config = {
     main: path.resolve(__dirname, './src/plugin.ts'),
   },
   output: {
-    path: path.resolve(__dirname, '../web'),
+    path: path.resolve(__dirname, '../web/v3'),
     filename: '[name].js',
     publicPath: pubPath
   },
@@ -81,15 +81,15 @@ const config = {
       patterns: [
         {
           from: path.resolve(__dirname, './src/mock'),
-          to: path.resolve('../web/mock')
+          to: path.resolve('../web/v3/mock')
         },
         {
           from: path.resolve(__dirname, './node_modules/monaco-editor/min/vs/base'),
-          to: path.resolve('../web/assets/monaco/base')
+          to: path.resolve('../web/v3/assets/monaco/base')
         },
         {
           from: path.resolve(__dirname, './src/assets'),
-          to: path.resolve('../web/assets')
+          to: path.resolve('../web/v3/assets')
         }
       ]
     }),
