@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy, HostBinding } from '@angular/core';
 import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
@@ -21,6 +21,7 @@ import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs';
+import { UtilsService } from '../../shared/utils.service';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -40,7 +41,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   public settingsOpen: boolean = false;
   public compareDataset: boolean = false;
 
-  public options;
+  public monacoOptions;
   /*
     = {
     glyphMargin: true,
@@ -68,12 +69,15 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   constructor(private http: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
-    private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     private codeEditorService: CodeEditorService) {
+
+    // TODO: If I wanted to spawn opened tabs from localStorage, like "Resume opened files when reopening Editor" feature
+    //  this is where it would go (*before* App2App  and *after* closeAllFiles )
+
     if (this.windowEvents) {
       this.windowEvents.restored.subscribe(() => {
         this.focus();
@@ -82,7 +86,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.http.get(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(), 'user', 'monaco', 'editorconfig.json'))
       .subscribe((response: any) => {
         if (response && response.contents && response.contents.config) {
-          this.options = response.contents.config;
+          this.monacoOptions = this.editorControl.sanitizeAndSetOptions(response.contents.config);
         }
       });
 
@@ -213,9 +217,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   }
 
-  setOptions(options: any) {
-    if (typeof options == 'object') {
-      this.options = options;
+  ngOnInit() { }
+
+  setMonacoOptions(monacoOptions: any) {
+    if (typeof monacoOptions == 'object') {
+      this.monacoOptions = this.editorControl.sanitizeAndSetOptions(monacoOptions);
     }
   }
 
@@ -246,8 +252,6 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       (this.monacoRef as any).focus();
     }
   }
-
-  ngOnInit() { }
 
   openFile(fileNode: ProjectStructure) {
     // get file context

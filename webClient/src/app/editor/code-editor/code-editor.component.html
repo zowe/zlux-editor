@@ -23,11 +23,12 @@ Copyright Contributors to the Zowe Project.
     (refresh)="refreshFile($event, true)"
     (select)="selectFile($event, true)"
     (remove)="closeFile($event)"
-  (compareContents)="compareContents($event)"></app-file-tabs>
+    (compareContents)="compareContents($event)">
+  </app-file-tabs>
   @if (showSettings) {
-    <app-monaco-settings (options)="setOptions($event)"></app-monaco-settings>
+    <app-monaco-settings (updateMonacoOptions)="setMonacoOptions($event)"></app-monaco-settings>
   }
-  <app-monaco [editorFile]="editorFile" [options]="options" [compareDataset]="compareDataset" #monaco></app-monaco>
+  <app-monaco [editorFile]="editorFile" [monacoOptions]="monacoOptions" [compareDataset]="compareDataset" #monaco></app-monaco>
 </div>
 
 <!--

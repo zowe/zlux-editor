@@ -15,6 +15,8 @@ import { DEFAULT_CONFIG, MonacoConfigItem, ConfigItemType } from '../monaco/mona
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../../shared/http/http.service';
+import * as _ from 'lodash';
+import { UtilsService } from '../../../shared/utils.service';
 
 function getValueNameFromValue(value: string) {
   if (typeof value != 'string') {
@@ -88,14 +90,14 @@ export class MonacoSettingsComponent implements OnInit {
   @ViewChild('monacoPreview', { static: true })
   monacoPreviewRef: ElementRef;
 
-  @Output() options = new EventEmitter<any>();
+  @Output() updateMonacoOptions = new EventEmitter<any>();
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
     private http: HttpService,
-    private editorControl: EditorControlService,
+    private editorControl: EditorControlService
   ) {
     this.resetUI();
   }
@@ -137,8 +139,6 @@ export class MonacoSettingsComponent implements OnInit {
       this.jsonText = this.configToText();
     });
   }
-
-  
   
   setConfig(attribute: string, value?: any, defaultValue?: any) {
     let val = value !== undefined ? value : defaultValue;
@@ -185,6 +185,7 @@ export class MonacoSettingsComponent implements OnInit {
   }
 
   private updateEditor() {
+    this.log.debug("\nEditor is updated!\n");
     this.editor.updateOptions(this.config);
     this.editor.setValue(this.jsonText);
     this.editorControl.setTheme(this.config.theme);
@@ -205,7 +206,8 @@ export class MonacoSettingsComponent implements OnInit {
   }
   
   ngOnInit() {
-    this.editor = monaco.editor.create(this.monacoPreviewRef.nativeElement, this.config);
+    // this.editor = monaco.editor.create(this.monacoPreviewRef.nativeElement, this.utils.sanitizeAndSetOptions(this.config));
+    this.editor = monaco.editor.create(this.monacoPreviewRef.nativeElement, (this.config));
     this.viewportEvents.resized.subscribe(()=> {
       this.editor.layout()
     });
@@ -234,7 +236,7 @@ export class MonacoSettingsComponent implements OnInit {
         }).subscribe((result: any)=> {
         this.log.debug('Settings store success');
     });
-    this.options.next(this.config);
+    this.updateMonacoOptions.next(this.config);
   }
   
   public isTypeDropdown(type: number) {

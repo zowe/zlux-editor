@@ -11,13 +11,19 @@
 import { Injectable } from '@angular/core';
 import * as _ from 'lodash';
 
+// one‐liner is reconfiguring Lodash’s template engine to use “Mustache”-style {{…}} placeholders instead of the default <%= … %>
 _.templateSettings.interpolate = /{([\s\S]+?)}/g;
-@Injectable()
+
+@Injectable({
+  providedIn: 'root',
+})
 export class UtilsService {
-  constructor() { }
+
+  constructor() {
+  }
 
   formatUrl(url: string, options?: any): string {
-    const compiled = _.template(url);
+    const compiled = _.template(url); // See templateSettings.interpolate
     return compiled(options);
   }
 

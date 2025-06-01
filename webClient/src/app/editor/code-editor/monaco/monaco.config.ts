@@ -439,7 +439,7 @@ export class MonacoConfig {
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
       if (editorService != null) {
-        if (editorService._isTestLangMode) {
+        if (editorService.isTestLangMode) {
           console.log(`Adding test language`);
           editorService.registerLanguage({
             id: 'TEST_LANGUAGE',

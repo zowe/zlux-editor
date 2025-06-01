@@ -71,7 +71,15 @@ mat-dialog-actions {
 }
 
 .list-view-label {
-    color: white;
+    color: rgb(0, 0, 0);
+}
+
+.mat-mdc-floating-label {
+    margin-top: -7px !important;
+}
+
+.mdc-floating-label {
+    margin-top: -7px !important;
 }
 
 .button-row {

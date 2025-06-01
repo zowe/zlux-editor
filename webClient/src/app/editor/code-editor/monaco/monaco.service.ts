@@ -33,7 +33,7 @@ const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
 @Injectable()
 export class MonacoService implements OnDestroy {
-  loadingStatusChanged = new Subject<LoadingStatus>();
+  public loadingStatusChanged = new Subject<LoadingStatus>();
   private decorations: string[] = [];
   private previousFileContents: ProjectContext;
   private currentFileContents: ProjectContext;
@@ -357,6 +357,10 @@ export class MonacoService implements OnDestroy {
     //   ignoreCharChanges: true // jump from line to line
     // });
     return true;
+  }
+
+  getDiffEditor(): monaco.editor.IStandaloneDiffEditor {
+    return this.diffEditor;
   }
 
   closeFile(fileNode: ProjectContext) {

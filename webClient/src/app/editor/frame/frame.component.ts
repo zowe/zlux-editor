@@ -207,7 +207,11 @@ export class FrameComponent implements OnInit, OnDestroy {
 
   toggleTree() {
     this.showExplorer = !this.showExplorer;
-    this.editorControl.refreshLayout.next('');
+    setTimeout(() => { /* This is a hack to wait for above ^ to render. A proper implementation is to give FileTree element a template
+      reference, grab ViewChild, and then manually call Angular change detection , and then call layout() but that would be kinda tedious ngl */
+      this.editorControl.editor.getValue().layout();
+    }, 150);
+    
   }
 }
 

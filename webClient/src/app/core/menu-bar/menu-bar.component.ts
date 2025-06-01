@@ -402,7 +402,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    if (this.editorControl._isTestLangMode) {
+    if (this.editorControl.isTestLangMode) {
       this.log.info(`Adding test language menu`);
       this.languagesMenu['TEST_LANGUAGE'] = TEST_LANGUAGE_MENU;
     }

@@ -144,7 +144,7 @@ export class ProjectTreeComponent {
       }
     });
     this.editorControl.openDataset.subscribe(datasetInfo => {
-      console.log('Dataset Info: ', datasetInfo);
+      this.log.info('Dataset Info: ', datasetInfo);
       let dirName = datasetInfo.datasetName;
       const selectedLines = datasetInfo.selectedLines;
       if (dirName != null && dirName !== '') {

@@ -27,6 +27,8 @@ import { EditorKeybindingService } from '../../../shared/editor-keybinding.servi
 import { KeyCode } from '../../../shared/keycode-enum';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
+import { debounceTime } from 'rxjs/operators';
+import { UtilsService } from '../../../shared/utils.service';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
@@ -35,13 +37,12 @@ const ReconnectingWebSocket = require('reconnecting-websocket');
   styleUrls: ['./monaco.component.scss']
 })
 export class MonacoComponent implements OnInit, OnChanges {
-  private _options: any;
-
-  @Input()
-  get options(): any { return this._options; }
-  set options(options: any) {
+  // Usually, we can use 1 public field do our set/get in template, within Angular lifecycle. But we want custom setter. 
+  private _monacoOptions: any;
+  @Input() get monacoOptions(): any { return this._monacoOptions }
+  set monacoOptions(options: any) {
     if (!options) { return; }
-    this._options = options;
+    this._monacoOptions = options;
     if (this.editor) {
       if (options.theme) {
         this.editorControl._setDefaultTheme(options.theme);
@@ -63,6 +64,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   public showEditor: boolean;
   public showDiffViewer: boolean;
   private keyBindingSub: Subscription = new Subscription();
+  private diffEditor: monaco.editor.IStandaloneDiffEditor | null ;
 
   constructor(
     private monacoService: MonacoService,
@@ -70,6 +72,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
     public snackBar: SnackBarService,
+    private utils: UtilsService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
@@ -78,11 +81,17 @@ export class MonacoComponent implements OnInit, OnChanges {
         this.editorControl.toggleDiffViewer.next('');
       }
     }));
+
+    this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
+      if (event.which === KeyCode.KEY_H) {
+        this.editor.layout()
+      }
+    }));
   }
 
   ngOnInit() {
     this.monacoConfig = new MonacoConfig();
-    let options = this._options ? Object.assign({}, this._options) : {};
+    let options = this._monacoOptions ? Object.assign({}, this._monacoOptions) : {};
     const hasModel = !!options.model;
 
     if (hasModel) {
@@ -94,8 +103,9 @@ export class MonacoComponent implements OnInit, OnChanges {
         options.model = monaco.editor.createModel(options.model.value, options.model.language, options.model.uri);
       }
     }
-    this.log.debug("New editor with options=", options);
-    let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, options);
+    this.log.debug("New editor with options=", this.editorControl.sanitizeAndSetOptions(options));
+    let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, this.editorControl.sanitizeAndSetOptions(options));
+    // let editor = monaco.editor.create(this.monacoEditorRef.nativeElement, (options));
     if (options.theme) {
       this.editorControl._setDefaultTheme(options.theme);
     }
@@ -117,10 +127,9 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.enableDiffViewer.subscribe(() => {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
-    });
-
-    this.editorControl.refreshLayout.subscribe(() => {
-      setTimeout(() => this.editor.layout(), 1);
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     });
 
     this.editor.onContextMenu((e: any) => {
@@ -139,12 +148,16 @@ export class MonacoComponent implements OnInit, OnChanges {
     });
   }
 
+  handleDiffEditorResize() {
+    if (this.showDiffViewer && this.diffEditor) {
+      this.diffEditor.layout();
+    }
+  }
+
   focus(e: any) {
     this.editor.focus();
   }
-  layout(e: any) {
-    this.editor.layout();
-  }
+
 
   ngOnChanges(changes: SimpleChanges) {
     for (const input in changes) {
@@ -155,10 +168,12 @@ export class MonacoComponent implements OnInit, OnChanges {
           changes[input].currentValue['line']);
         //TODO: This is a workaround to instruct the editor to remeasure its container when switching from diff-viewer to code-editor
         if (this.showDiffViewer) {
+          this.log.debug("ngOnChanges: refreshing layout")
           setTimeout(() => this.editor.layout(), 1);
         }
         this.showEditor = true;
         this.showDiffViewer = false;
+        this.diffEditor = null;
       }
     }
   }
@@ -167,8 +182,13 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
-    this.viewportEvents.resized.subscribe(() => {
-      editor.layout()
+    this.viewportEvents.resized
+      .pipe(debounceTime(100))
+      .subscribe(()=> {
+        if (!this.showDiffViewer) {
+          editor.layout()
+        }
+        this.handleDiffEditorResize();
     });
     /* disable for now...
   this.editorControl.connToLS.subscribe((lang) => {
@@ -388,10 +408,14 @@ export class MonacoComponent implements OnInit, OnChanges {
     if (this.showDiffViewer) {
       this.showDiffViewer = false;
       this.showEditor = true;
+      this.diffEditor.dispose();
     }
     else {
       this.showEditor = !this.monacoService.spawnDiffViewer();
       this.showDiffViewer = !this.showEditor;
+      if (this.showDiffViewer) {
+        this.diffEditor = this.monacoService.getDiffEditor();
+      }
     }
   }
 
@@ -409,7 +433,6 @@ export class MonacoComponent implements OnInit, OnChanges {
 
 
 }
-
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
