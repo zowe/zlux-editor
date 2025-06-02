@@ -58,7 +58,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   @Input() editorFile;
   @Input() compareDataset;
   @ViewChild('monacoEditor', { static: true })
-  monacoEditorRef: ElementRef;
+  public monacoEditorRef: ElementRef;
   private editor: any;
   private monacoConfig: MonacoConfig;
   public showEditor: boolean;
