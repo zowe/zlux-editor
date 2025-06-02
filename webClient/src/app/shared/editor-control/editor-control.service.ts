@@ -74,7 +74,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public disFromLS: EventEmitter<string> = new EventEmitter();
   public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
-  public selectMenu: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
+  public selectSetting: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
   public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
   public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
@@ -96,7 +96,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public saveCursorPosition = true; 
   public compareDataset = false;
 
-  public monacoOptions: any;
+  /* IMPORTANT There are 4 sets of Monaco Editor options. Search for other occurrences the line you're reading
+  1 - saved config data (not in the code)
+  2 - master state (obtained from 1) 
+  3 - rendered Monaco options for the code viewing Editors
+  4 - rendered Monaco options for the Settings Editor 
+  
+  2 is obtained from 1. Either 3 OR 4 must exist, because sometimes 3 or 4 must be different than 2 (see hasEditorBeenOpened bug)
+  3 and 4 must both exist because we can edit our Editor settings without applying on active tabs, we have "Apply Preview" */
+  public monacoOptions: any; // This is set 2, the master
 
   // Note: These is to workaround Monaco bug by checking for before & after 1st file opened edgecase
   private hasEditorBeenOpened: boolean = false;

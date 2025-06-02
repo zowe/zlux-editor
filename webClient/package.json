@@ -22,7 +22,7 @@
     "rxjs": "^7.8.1",
     "vscode-json-languageservice": "^5.4.1",
     "vscode-ws-jsonrpc": "^3.3.2",
-    "zlux-angular-file-tree": "github:zowe/zlux-file-explorer#zlux-file-explorer-angular18"
+    "zlux-angular-file-tree": "github:zowe/zlux-file-explorer#new-upgrade"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.2",

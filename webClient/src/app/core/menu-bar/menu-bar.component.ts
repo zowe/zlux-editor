@@ -126,7 +126,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
       this.hideFileMenus();
     });
 
-    this.editorControl.selectMenu.subscribe((fileContext) => {
+    this.editorControl.selectSetting.subscribe((fileContext) => {
       this.setMenus(fileContext);
     });
 

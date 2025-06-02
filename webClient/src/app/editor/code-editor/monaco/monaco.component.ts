@@ -58,7 +58,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   @Input() editorFile;
   @Input() compareDataset;
   @ViewChild('monacoEditor', { static: true })
-  monacoEditorRef: ElementRef;
+  public monacoEditorRef: ElementRef;
   private editor: any;
   private monacoConfig: MonacoConfig;
   public showEditor: boolean;
@@ -72,7 +72,6 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
     public snackBar: SnackBarService,
-    private utils: UtilsService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {

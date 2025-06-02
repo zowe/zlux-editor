@@ -12,16 +12,13 @@ import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDe
 import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
-import { ENDPOINTS } from '../../../environments/environment';
 import { MonacoService } from './monaco/monaco.service';
 import { ProjectStructure } from '../../shared/model/editor-project';
-import { EditorService } from '../editor.service';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription } from 'rxjs';
-import { UtilsService } from '../../shared/utils.service';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -38,10 +35,17 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   monacoRef: ElementRef;
 
   public showSettings: boolean = false;
-  public settingsOpen: boolean = false;
   public compareDataset: boolean = false;
 
-  public monacoOptions;
+  /* IMPORTANT There are 4 sets of Monaco Editor options. Search for other occurrences the line you're reading
+  1 - saved config data (not in the code)
+  2 - master state (obtained from 1) 
+  3 - rendered Monaco options for the code viewing Editors
+  4 - rendered Monaco options for the Settings Editor 
+  
+  2 is obtained from 1. Either 3 OR 4 must exist, because sometimes 3 or 4 must be different than 2 (see hasEditorBeenOpened bug)
+  3 and 4 must both exist because we can edit our Editor settings without applying on active tabs, we have "Apply Preview" */
+  public monacoOptions; // This is set 3
   /*
     = {
     glyphMargin: true,
@@ -93,7 +97,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.editorControl.compareDataset = false;
-      if (this.settingsOpen && this.showSettings) {
+      if (this.showSettings) {
         this.showSettings = false;
         if (this.monacoRef) {
           (this.monacoRef as any).focus();
@@ -157,9 +161,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     })
 
     this.editorControl.openSettings.subscribe(() => {
-      if (!this.settingsOpen) {
+      if (!this.showSettings) {
         this.showSettings = true;
-        this.settingsOpen = true;
         this.openFileList.push({
           type: ProjectContextType.menu,
           name: "Settings",
@@ -177,9 +180,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       }
     });
     this.editorControl.closeSettings.subscribe(() => {
-      if (this.settingsOpen) {
+      if (this.showSettings) {
         this.showSettings = false;
-        this.settingsOpen = false;
         for (let i = 0; i < this.openFileList.length; i++) {
           if (this.openFileList[i].id == 'org.zowe.editor.settings') {
             this.openFileList.splice(i, 1);
@@ -316,7 +318,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.codeEditorService.selectFile(fileContext, broadcast);
     } else {
       this.showSettings = true;
-      this.editorControl.selectMenu.next(fileContext);
+      this.editorControl.selectSetting.next(fileContext);
     }
     this.editorFile = { context: fileContext, reload: false, line: line };
     this.updateEditorTitle();
