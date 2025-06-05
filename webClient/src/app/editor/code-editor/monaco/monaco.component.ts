@@ -182,7 +182,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
     this.viewportEvents.resized
-      .pipe(debounceTime(100))
+      .pipe(debounceTime(100) as any)
       .subscribe(()=> {
         if (!this.showDiffViewer) {
           editor.layout()

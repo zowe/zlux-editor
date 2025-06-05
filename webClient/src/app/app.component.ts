@@ -15,6 +15,7 @@ import { HttpService } from './shared/http/http.service';
 import { DataAdapterService } from './shared/http/http.data.adapter.service';
 import { UtilsService } from './shared/utils.service';
 import { EditorKeybindingService } from './shared/editor-keybinding.service';
+import * as monaco from 'monaco-editor';
 
 @Component({
   selector: 'app-root',
@@ -35,8 +36,7 @@ export class AppComponent {
     private utils: UtilsService,
     private editorControl: EditorControlService,
     private appKeyboard: EditorKeybindingService) {
-    // this.log.debug(`Monaco object=`, monaco);
-    this.log.debug('ZLUX-EDITOR CONSTRUCTOR reached');
+    this.log.debug(`zlux-editor main constructor - Monaco object=`, monaco);
   }
 
   ngOnInit() {
