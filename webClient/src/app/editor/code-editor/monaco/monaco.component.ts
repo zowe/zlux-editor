@@ -81,11 +81,6 @@ export class MonacoComponent implements OnInit, OnChanges {
       }
     }));
 
-    this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
-      if (event.which === KeyCode.KEY_H) {
-        this.editor.layout()
-      }
-    }));
   }
 
   ngOnInit() {
