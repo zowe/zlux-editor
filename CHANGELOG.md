@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `3.1.0`
+
+- Editor has been updated to Zowe V3, which includes across the board dependency upgrades and bugfixes associated with that
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
