@@ -36,6 +36,8 @@ const config = {
   resolve: {
     alias: {
       '~': path.resolve(__dirname, './node_modules/'),
+      'zlux-angular-file-tree':
+        path.resolve(__dirname, './node_modules/@zowe/zlux-angular-file-tree')
     },
     fallback: {
       "path": false,
