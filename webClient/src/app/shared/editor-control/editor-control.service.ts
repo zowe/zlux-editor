@@ -1279,14 +1279,16 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             //to solve asm.jcllib, search back-to-front, all langs before moving to next portion of name
             const portions = name.split('.');
             for (let portion of portions) {
-              for (let i = 0; i < languages.length; i++) {
+              for (let i = 0; i < languages?.length - 1; i++) {
                 let lang = languages[i];
-                for (let extension of lang.extensions) {
-                  if (portion === extension
-                      || portion === extension+'lib') {
-                    results.push(lang.id);
-                    i = languages.length;
-                    break;
+                if (lang?.extensions) {
+                  for (let extension of lang?.extensions) {
+                    if (portion === extension
+                        || portion === extension+'lib') {
+                      results.push(lang?.id);
+                      i = languages?.length;
+                      break;
+                    }
                   }
                 }
               }
@@ -1294,17 +1296,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           } else {
             for (let lang of languages) {
               if (lang?.extensions?.indexOf(`.${bufferExt}`) > -1) {
-                results.push(lang.id);
+                results.push(lang?.id);
                 break;
               }
             }
           }
           for (let lang of languages) {
-            if (lang.filenamePatterns) {
-              for (let pattern of lang.filenamePatterns) {
+            if (lang?.filenamePatterns) {
+              for (let pattern of lang?.filenamePatterns) {
                 let regex = new RegExp(pattern);
                 if (regex.test(name)) {
-                  results.push(lang.id);
+                  results.push(lang?.id);
                   break;
                 }
               }
