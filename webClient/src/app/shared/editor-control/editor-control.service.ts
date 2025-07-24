@@ -8,7 +8,7 @@
 
   Copyright Contributors to the Zowe Project.
 */
-import { Injectable, Inject } from '@angular/core';
+import { Injectable, Inject, ViewChild } from '@angular/core';
 import { EventEmitter } from '@angular/core';
 import { ProjectContext } from '../model/project-context';
 import { ProjectStructure, DatasetAttributes } from '../model/editor-project';
@@ -28,6 +28,7 @@ import { OverwriteDatasetComponent } from '../../shared/dialog/overwrite-dataset
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { HttpHeaders, HttpParams } from '@angular/common/http';
 import { map } from 'rxjs/operators';
+import { MonacoComponent } from '../../editor/code-editor/monaco/monaco.component';
 
 let stateCache = {};
 let lastFile;
@@ -57,7 +58,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public toggleFileTreeSearch: EventEmitter<string> = new EventEmitter();
   public closeAllFiles: EventEmitter<string> = new EventEmitter();
   public undoCloseAllFiles: EventEmitter<string> = new EventEmitter();
-  public refreshLayout: EventEmitter<string> = new EventEmitter();
   public activeDirectory = '';
   public refreshFileMetadatdaByPath: EventEmitter<string> = new EventEmitter();
   public deleteFile: EventEmitter<string> = new EventEmitter();
@@ -89,7 +89,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   private _defaultTheme: string;
 
   private _projectName = '';
-  public _isTestLangMode = false;
+  public isTestLangMode = false;
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
@@ -198,6 +198,27 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     catch (e) {
       this.log.warn("EditorControl setTheme failed with error", e);
     }
+  }
+
+  // This fixes a bug with Monaco Editor at init, where it displays the minimap element as a bug even w/o Editor content
+  // monacoOptions arg not mutated
+  public sanitizeAndSetOptions(monacoOptions: any) {
+    this.log.debug("SanitizeConfig entered. hasEditorBeenOpened? ", this.hasEditorBeenOpened);
+    this.monacoOptions = monacoOptions;
+    if (this.hasEditorBeenOpened) { // Bug occurs before single occurrence loading of editor model
+      return monacoOptions;
+    }
+    const clonedMonacoOptions = _.cloneDeep(monacoOptions) || {};
+
+    if (typeof clonedMonacoOptions.minimap !== 'object' || clonedMonacoOptions.minimap === null) {
+      clonedMonacoOptions.minimap = {};
+    }
+    clonedMonacoOptions.minimap.enabled = false;
+
+    this.log.debug("\nBeginning withing object\n", monacoOptions);
+    this.log.debug("\nSanitized to object\n", clonedMonacoOptions);
+
+    return clonedMonacoOptions;
   }
 
   public initProjectContext(name: string, project: ProjectStructure[]): ProjectContext {
@@ -760,7 +781,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         this.closeFileHandler(fileContext);
         this.closeFile.next(fileContext);
         this.openBuffer('', updatedFileContext.model);
-        this.refreshLayout.next('');
         acceptChangeSub.unsubscribe();
         overwriteSub.unsubscribe();
       })
@@ -1091,7 +1111,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
               {
                 range: new monaco.Range(firstLine, 1, lastLine, 1000000),
                 options: {
-                   marginClassName: 'myLineDecoration'
+                   marginClassName: 'myLineDecoration',
+                   minimap: {
+                    enabled: true
+                   }
                 }
               }
             ]
@@ -1112,6 +1135,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
     //tell someone else to open it!
     this.openFileEmitter.emit(targetBuffer);
+
+    // Note: To workaround specific Monaco bug, by refreshing the Editor options 
+    this.log.debug("There's a file opened check here for hasEditorBeenOpened?", this.hasEditorBeenOpened)
+    if (!this.hasEditorBeenOpened) { // activates only on 1st file open
+      this.hasEditorBeenOpened = true;
+      let editor = this.editor.getValue();
+      editor.updateOptions(this.monacoOptions);
+    }
+
     return resultOpenObs;
   }
 

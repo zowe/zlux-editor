@@ -94,14 +94,14 @@ export class MonacoSettingsComponent implements OnInit {
   @ViewChild('monacoPreview', { static: true })
   monacoPreviewRef: ElementRef;
 
-  @Output() options = new EventEmitter<any>();
+  @Output() updateMonacoOptions = new EventEmitter<any>();
   
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents,
     private http: HttpService,
-    private editorControl: EditorControlService,
+    private editorControl: EditorControlService
   ) {
     this.resetUI();
   }
@@ -140,8 +140,6 @@ export class MonacoSettingsComponent implements OnInit {
       this.initConfig();
     });
   }
-
-  
   
   setConfig(attribute: string, value?: any, defaultValue?: any) {
     let val = value !== undefined ? value : defaultValue;
