@@ -22,7 +22,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { ZluxFileTreeComponent } from 'zlux-angular-file-tree';
+import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
   selector: 'app-project-tree',
