@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@zlux/widgets": "github:wadkarsatish/zlux-widgets-angular18#widgets-Angular-Library",
+    "@zowe/zlux-angular-file-tree": "2.0.0-pr-222-434-20250618112040",
     "lodash": "~4.17.10",
     "material-icons": "^1.13.12",
     "monaco-editor": "^0.52.0",
@@ -20,8 +21,7 @@
     "ngx-scrollbar": "^15.1.3",
     "reconnecting-websocket": "3.2.2",
     "vscode-json-languageservice": "^5.4.1",
-    "vscode-ws-jsonrpc": "^3.3.2",
-    "zlux-angular-file-tree": "github:zowe/zlux-file-explorer#new-upgrade"
+    "vscode-ws-jsonrpc": "^3.3.2"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^18.2.2",

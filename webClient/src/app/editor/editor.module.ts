@@ -21,7 +21,7 @@ import { EditorComponent } from './editor.component';
 import { EditorService } from './editor.service';
 import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
-import { ZluxFileTreeModule } from 'zlux-angular-file-tree';
+import { ZluxFileTreeModule } from '@zowe/zlux-angular-file-tree';
 import { CodeEditorModule } from './code-editor/code-editor.module';
 
 @NgModule({
