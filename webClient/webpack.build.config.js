@@ -21,7 +21,7 @@ if (process.env.MVD_DESKTOP_DIR == null) {
   throw new Error('You must specify MVD_DESKTOP_DIR in your environment');
 }
 
-const pubPath = "../../../plugins/org.zowe.editor/web/v3";
+const pubPath = "../../../plugins/org.zowe.editor/web/v3/";
 process.env.ASSET_PATH = pubPath;
 
 const config = {
@@ -69,7 +69,7 @@ const config = {
             }
           }
         ]
-      },
+      },             
       {
         test: [/\.js?$/, /\.ts?$/, /\.jsx?$/, /\.tsx?$/],
         enforce: 'pre',
