@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `3.3.0`
+
+- Breaking change: Editor has been updated to Zowe V3, which includes across-the-board dependency upgrades (like Angular 18, File Tree, Prime, Rxjs, etc.) and bugfixes. This makes the base code incompatible with the Zowe V2 desktop, but a V2 Editor can be used in the V2 Desktop compatibility mode. 
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter

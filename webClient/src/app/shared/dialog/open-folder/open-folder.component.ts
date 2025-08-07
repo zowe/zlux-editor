@@ -15,13 +15,12 @@ import { ENDPOINTS } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-open-folder',
-  templateUrl: './open-folder.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './open-folder.component.html'
 })
 export class OpenFolderComponent implements OnInit {
 
-  private fetching = false;
-  private value = '/';
+ fetching = false;
+ value = '/';
 
   constructor(private http: HttpService, private dialogRef: MatDialogRef<OpenFolderComponent>) { }
 

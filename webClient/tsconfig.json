@@ -1,11 +1,16 @@
 {
   "extends": "../../zlux-app-manager/virtual-desktop/plugin-config/tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "../../zlux-platform/interface/src/mvd-hosting.d.ts"
+    "src/**/*.ts"
   ],
   "exclude": [
     "test.ts",
     "**/*.spec.ts"
-  ]
+  ],
+  "compilerOptions": {
+    "skipLibCheck": true
+  },
+  "angularCompilerOptions": {
+    "enableIvy": true
+  }
 }

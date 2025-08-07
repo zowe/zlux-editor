@@ -22,7 +22,7 @@ import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-act
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
-import * as monaco from 'monaco-editor';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject, Observable } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
@@ -39,7 +39,7 @@ export class MonacoService implements OnDestroy {
   private currentFileContents: ProjectContext;
   private diffEditor;
   private fileSaveListener;
-  
+
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private http: HttpService,
@@ -70,7 +70,7 @@ export class MonacoService implements OnDestroy {
     });
 
     let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
-    this.fileSaveListener = function(e) { // Pure JS, Ctrl-S solution instead...
+    this.fileSaveListener = function (e) { // Pure JS, Ctrl-S solution instead...
       if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
@@ -82,7 +82,7 @@ export class MonacoService implements OnDestroy {
 
 
     //this.editorControl.saveAllFile.subscribe(() => {
-      //this.saveAllFile();
+    //this.saveAllFile();
     //});
   }
 
@@ -92,7 +92,7 @@ export class MonacoService implements OnDestroy {
 
   getFileRequestObservable(fileNode: ProjectContext, reload: boolean, line?: number) {
     if (!reload) {
-      return of({contents: fileNode.model.contents, etag: fileNode.model.etag});
+      return of({ contents: fileNode.model.contents, etag: fileNode.model.etag });
     }
     let requestUrl: string;
     let filePath = ['/', '\\'].indexOf(fileNode.model.path.substring(0, 1)) > -1 ? fileNode.model.path.substring(1) : fileNode.model.path;
@@ -100,8 +100,8 @@ export class MonacoService implements OnDestroy {
       requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(filePath);
     } else {
       requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                  filePath+'/'+fileNode.model.fileName,
-                                                  { responseType: 'b64' });
+        filePath + '/' + fileNode.model.fileName,
+        { responseType: 'b64' });
     }
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -172,7 +172,7 @@ export class MonacoService implements OnDestroy {
    */
   openFile(fileNode: ProjectContext, reload: boolean, line?: number) {
     this.editorControl.openFileList.subscribe((list: ProjectContext[]) => {
-      if(list.length === 1) {
+      if (list.length === 1) {
         this.editorControl.saveCursorPosition = false;
       }
     });
@@ -241,7 +241,7 @@ export class MonacoService implements OnDestroy {
       this.currentFileContents = currentFileContent;
     }
   }
-  
+
   setMonacoModel(fileNode: ProjectContext, file: { contents: string, etag: string, language: string }, makeActiveModel?: boolean): Observable<void> {
     return new Observable((obs) => {
       const coreSubscriber = this.editorControl.editorCore
@@ -285,16 +285,16 @@ export class MonacoService implements OnDestroy {
                 newModel.onDidChangeContent((e: any) => {
                   this.fileContentChangeHandler(e, fileNode, newModel);
                 });
-                const subscriber = this.editorControl.editor.subscribe((value)=> {
+                const subscriber = this.editorControl.editor.subscribe((value) => {
                   if (value) {
                     value.setModel(newModel);
-                    if (subscriber){subscriber.unsubscribe();}
+                    if (subscriber) { subscriber.unsubscribe(); }
                     obs.next();
                   }
                 });
               }
             });
-            if (coreSubscriber) {coreSubscriber.unsubscribe();}
+            if (coreSubscriber) { coreSubscriber.unsubscribe(); }
           }
         });
     });
@@ -303,7 +303,7 @@ export class MonacoService implements OnDestroy {
   spawnDiffViewer(): boolean {
     if (!this.previousFileContents || !this.currentFileContents) {
       this.snackBar.open(`Open at least two files to compare selections.`,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       return false;
     }
 
@@ -312,13 +312,13 @@ export class MonacoService implements OnDestroy {
 
     if (!previousModel) {
       this.snackBar.open(`Open at least two files to compare selections.`,
-              'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+        'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
       return false;
     }
 
     let currentModel;
 
-    if(this.editorControl.compareDataset) {
+    if (this.editorControl.compareDataset) {
       currentModel = monaco.editor.createModel(this.currentFileContents.model.contents);
     } else {
       currentModel = _editor.getModel(this.generateUri(this.currentFileContents.model));
@@ -331,7 +331,7 @@ export class MonacoService implements OnDestroy {
         originalEditable: true
       });
     }
-    
+
     // TODO: Need to figure out how to better re-render Diff viewer with resizing
     diffViewElem.style.display = 'none';
     diffViewElem.style.display = 'block';
@@ -340,14 +340,29 @@ export class MonacoService implements OnDestroy {
       modified: currentModel
     });
 
-    // Going to use monaco.editor instead of our own, so we don't inherit half-working Ctrl+S
-    var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
-      followsCaret: true, // resets the navigator state when the user selects something in the editor
-      ignoreCharChanges: true // jump from line to line
+    // Navigate to first diff
+    this.diffEditor.onDidUpdateDiff(() => {
+      const changes = this.diffEditor.getLineChanges();
+      if (!changes || changes.length === 0) {
+        return;
+      }
+
+      let change = changes[0];
+      this.diffEditor.revealLinesInCenter(change.modifiedStartLineNumber, change.modifiedEndLineNumber);
     });
+
+    // Going to use monaco.editor instead of our own, so we don't inherit half-working Ctrl+S
+    // var navi = monaco.editor.createDiffNavigator(this.diffEditor, {
+    //   followsCaret: true, // resets the navigator state when the user selects something in the editor
+    //   ignoreCharChanges: true // jump from line to line
+    // });
     return true;
   }
 
+  getDiffEditor(): monaco.editor.IStandaloneDiffEditor {
+    return this.diffEditor;
+  }
+  
   closeFile(fileNode: ProjectContext) {
     const editorCore = this.editorControl.editorCore.getValue();
     if (!editorCore) {
@@ -378,14 +393,14 @@ export class MonacoService implements OnDestroy {
     }
   }
 
-  confirmAction(title: any, warningMessage: any): Observable<boolean>  {
+  confirmAction(title: any, warningMessage: any): Observable<boolean> {
     var response = new Subject<String>();
     const dialogRef = this.dialog.open(ConfirmAction, {
       maxWidth: '400px',
       data: {
-          title: title,
-          warningMessage: warningMessage,
-        }
+        title: title,
+        warningMessage: warningMessage,
+      }
     });
     return dialogRef.afterClosed();
   }
@@ -403,7 +418,7 @@ export class MonacoService implements OnDestroy {
     }
     return canBeISO;
   }
-  
+
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
@@ -421,8 +436,10 @@ export class MonacoService implements OnDestroy {
             */
           let saveRef = this.dialog.open(SaveToComponent, {
             width: '500px',
-            data: { canBeISO: x,
-              fileName: fileContext.model.fileName, ...(fileDirectory && {fileDirectory: fileDirectory}) }
+            data: {
+              canBeISO: x,
+              fileName: fileContext.model.fileName, ...(fileDirectory && { fileDirectory: fileDirectory })
+            }
           });
           saveRef.afterClosed().subscribe(result => {
             // Check if file already exists at destination
@@ -430,7 +447,7 @@ export class MonacoService implements OnDestroy {
               const title = `"${result.fileName}" already exists. Do you want to replace it?`;
               const warningMessage = 'Replacing it will overwrite its current contents';
               let response = this.confirmAction(title, warningMessage).subscribe(response => {
-                if(response == true) {
+                if (response == true) {
                   // when user selects to overwite the file
                   if (result) {
                     this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
@@ -441,15 +458,15 @@ export class MonacoService implements OnDestroy {
                 }
               });
             }, error => {
-              if(error.status == 404) {// if file does not exist at destination, then try to save it
+              if (error.status == 404) {// if file does not exist at destination, then try to save it
                 if (result) {
                   this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
                 }
-              } else{
+              } else {
                 this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
-                'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
+                  'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
               }
-            });          
+            });
           });
         }
 
@@ -457,8 +474,7 @@ export class MonacoService implements OnDestroy {
         * has already been set inside of USS via
         * chtag.
         */
-        else
-        {
+        else {
           this.editorControl.getFileMetadata(fileContext.model.path + '/' + fileContext.model.name).subscribe(r => {
             fileContext.model.encoding = r.ccsid;
             if (r.ccsid && r.ccsid != 0) {
@@ -471,8 +487,10 @@ export class MonacoService implements OnDestroy {
               let x = this.preSaveCheck(fileContext);
               let saveRef = this.dialog.open(TagComponent, {
                 width: '500px',
-                data: { canBeISO: x,
-                        fileName: fileContext.model.fileName }
+                data: {
+                  canBeISO: x,
+                  fileName: fileContext.model.fileName
+                }
               });
               saveRef.afterClosed().subscribe(result => {
                 if (result) {
@@ -483,12 +501,12 @@ export class MonacoService implements OnDestroy {
               });
             }
           }, error => {
-            if(error.status === 404){
-              let fileInfo: any = {fileName:fileContext.name, directory:fileContext.model.path, encoding:this.editorControl.getStringEncoding(fileContext.model.encoding) };
+            if (error.status === 404) {
+              let fileInfo: any = { fileName: fileContext.name, directory: fileContext.model.path, encoding: this.editorControl.getStringEncoding(fileContext.model.encoding) };
               this.editorControl.saveBuffer(fileContext, fileInfo).subscribe(() => obs.next('Save'));
-            } else{
-              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`, 
-              'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
+            } else {
+              this.snackBar.open(`Problem accessing file: ${fileContext.model.path}/${fileContext.model.name}. Status: ${error.status}`,
+                'Close', { duration: MessageDuration.Long, panelClass: 'center' });
             }
           });
         }
@@ -497,34 +515,34 @@ export class MonacoService implements OnDestroy {
   }
 
   //saveAllFile() {
-    //let unsavedFile = this.editorControl.openFileList.getValue().filter((file: ProjectContext) => file.changed);
-    // if (unsavedFile[0]) {
-    //   let sub = this.saveFile(unsavedFile[0]).subscribe(() => {
-    //     sub.unsubscribe();
-    //     this.saveAllFile();
-    //   });
-    // }
-    //for (let file of unsavedFile) {
-      //let sub = this.saveFile(file).subscribe(() => {
-        //sub.unsubscribe();
-      //});
-    //}
+  //let unsavedFile = this.editorControl.openFileList.getValue().filter((file: ProjectContext) => file.changed);
+  // if (unsavedFile[0]) {
+  //   let sub = this.saveFile(unsavedFile[0]).subscribe(() => {
+  //     sub.unsubscribe();
+  //     this.saveAllFile();
+  //   });
+  // }
+  //for (let file of unsavedFile) {
+  //let sub = this.saveFile(file).subscribe(() => {
+  //sub.unsubscribe();
+  //});
+  //}
   //}
 
-  promptToSave(file: ProjectContext): Promise<String>{
+  promptToSave(file: ProjectContext): Promise<String> {
     return new Promise((resolve, reject) => {
-      if(file.changed) {
+      if (file.changed) {
         const title = 'Do you want to save the changes you made to \'' + file.name + '\'\?';
         const warningMessage = 'Your changes will be lost if you don\'t save them.';
         let response = this.confirmAction(title, warningMessage).subscribe(response => {
-          if(response == true) {
+          if (response == true) {
             // when user selects to save the file and close it
             let sub = this.saveFile(file, file.model.path || this.editorControl.activeDirectory).subscribe((res) => {
               resolve(res);
             });
           } else if (response != false && response != true) {
             // when user selects to cancel then do not close any file
-            resolve('Cancel'); 
+            resolve('Cancel');
           } else {
             // when user selects not to save the file and close it
             resolve('DontSave');
@@ -537,9 +555,9 @@ export class MonacoService implements OnDestroy {
   }
 
   generateUri(editorFile: ProjectStructure): string {
-    if(editorFile.isDataset){
+    if (editorFile.isDataset) {
       return `inmemory://${editorFile.path.toLowerCase()}`;
-    } else{
+    } else {
       return `inmemory://${editorFile.name.toLowerCase()}/${editorFile.id}`;
     }
   }
@@ -565,7 +583,7 @@ export class MonacoService implements OnDestroy {
 
   cleanDecoration() {
     let editorValue = this.editorControl.editor.getValue();
-    let decorationIds=[];
+    let decorationIds = [];
     editorValue.getModel().getAllDecorations().forEach((decoration) => {
       decorationIds.push(decoration.id);
     });

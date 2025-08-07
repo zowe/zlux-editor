@@ -8,17 +8,19 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, Output, EventEmitter,
-         Directive, HostListener, Inject, ViewChild, AfterViewChecked} from '@angular/core';
+import {
+  Component, OnInit, Input, Output, EventEmitter,
+  Directive, HostListener, Inject, ViewChild, AfterViewChecked
+} from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
 import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
-import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
+// import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 @Component({
   selector: 'app-file-tabs',
   templateUrl: './file-tabs.component.html',
-  styleUrls: ['./file-tabs.component.scss',  '../../../../styles.scss']
+  styleUrls: ['./file-tabs.component.scss']
 })
 export class FileTabsComponent implements OnInit, AfterViewChecked {
 
@@ -27,7 +29,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   @Output() select = new EventEmitter<ProjectContext>();
   @Output() refresh = new EventEmitter<ProjectContext>();
   @Output() compareContents = new EventEmitter<ProjectContext>();
-  @ViewChild(PerfectScrollbarComponent, {static: true}) componentRef: PerfectScrollbarComponent;
+  // @ViewChild(PerfectScrollbarComponent, {static: true}) componentRef: PerfectScrollbarComponent;
 
   private scrollConfig = {
     wheelPropagation: true,
@@ -40,34 +42,34 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     useBothWheelAxes: true
   };
 
-  private prevLength:number;
+  private prevLength: number;
 
   constructor(
     private editorControl: EditorControlService,
-    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {}
+    @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
 
   ngOnInit() {
-    this.viewportEvents.resized.subscribe(()=> {
-      this.componentRef.directiveRef.update();
+    this.viewportEvents.resized.subscribe(() => {
+      // this.componentRef.directiveRef.update();
     });
     this.editorControl.initializedFile.subscribe(() => {
-      this.componentRef.directiveRef.scrollToRight();
+      // this.componentRef.directiveRef.scrollToRight();
     });
 
     this.prevLength = 0;
   }
 
   ngAfterViewChecked() {
-   if (this.prevLength !== this.data.length) {
-    this.data.forEach((tab, i) => {
-      if (!tab.active) {
-        return;
-      }
+    if (this.prevLength !== this.data.length) {
+      this.data.forEach((tab, i) => {
+        if (!tab.active) {
+          return;
+        }
 
-      this.componentRef.directiveRef.scrollToElement(`.tabs-file-list > li:nth-child(${i + 1})`);
-    });
-   }
-   this.prevLength = this.data.length; 
+        // this.componentRef.directiveRef.scrollToElement(`.tabs-file-list > li:nth-child(${i + 1})`);
+      });
+    }
+    this.prevLength = this.data.length;
   }
 
   clickHandler(e: Event, item: ProjectContext) {
@@ -78,7 +80,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     this.viewportEvents.spawnContextMenu(event.clientX, event.clientY, [
       {
         text: 'Close',
-        action: () => this.remove.next(item)               
+        action: () => this.remove.next(item)
       },
       {
         text: "Refresh Contents", // TODO: This needs a confirmation modal
@@ -92,7 +94,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
     event.stopImmediatePropagation();
     event.preventDefault();
   }
-  
+
 }
 
 @Directive({
@@ -109,7 +111,7 @@ export class MouseMiddleClickDirective {
     this.editorControl.closeFile.next(this.fileContext);
   }
   constructor(private editorControl: EditorControlService,
-              @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger) { }
 }
 
 /*

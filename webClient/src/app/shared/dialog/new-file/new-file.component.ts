@@ -12,13 +12,12 @@ import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-new-file',
-  templateUrl: './new-file.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './new-file.component.html'
 })
 export class NewFileComponent implements OnInit {
 
-  private value = '';
-  private FileName_Pattern = /^([^\x00-\x1F!"$'\(\)*,\/:;<>\?\[\\\]\{\|\}\x7F\s]+)\.([a-zA-Z0-9]*)$/;
+  value = '';
+  FileName_Pattern = /^([^\x00-\x1F!"$'\(\)*,\/:;<>\?\[\\\]\{\|\}\x7F\s]+)\.([a-zA-Z0-9]*)$/;
 
   constructor() { }
 
