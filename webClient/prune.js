@@ -11,16 +11,16 @@
 
 const fs = require('fs');
 const path = require('path');
-const files = fs.readdirSync(path.join('..','web'));
+const files = fs.readdirSync(path.join('..', 'web'));
 for (let i = 0; i < files.length; i++) {
   if (files[i].endsWith('.map.gz')) {
-    fs.unlinkSync(path.join('..','web',files[i]));
+    fs.unlinkSync(path.join('..', 'web', files[i]));
   } else if (files[i].endsWith('.map')) {
-    fs.unlinkSync(path.join('..','web',files[i]));
+    fs.unlinkSync(path.join('..', 'web', files[i]));
   } else if (files[i].endsWith('.gz')) {
     for (let j = 0; j < files.length; j++) {
-      if (files[j] == files[i].substring(0,files[i].length-3)) {
-        fs.unlinkSync(path.join('..','web',files[j]));
+      if (files[j] == files[i].substring(0, files[i].length - 3)) {
+        fs.unlinkSync(path.join('..', 'web', files[j]));
       }
     }
   }

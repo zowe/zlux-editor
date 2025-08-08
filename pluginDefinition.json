@@ -1,7 +1,7 @@
 {
   "identifier": "org.zowe.editor",
   "apiVersion": "2.0.0",
-  "pluginVersion": "3.0.0",
+  "pluginVersion": "3.3.0",
   "license": "EPL-2.0",
   "author": "Zowe",
   "homepage": "https://github.com/zowe/zlux-editor",
@@ -12,6 +12,10 @@
       "pluginShortNameKey": "editorTitle",
       "pluginShortNameDefault": "Editor",
       "imageSrc": "assets/icon.png"
+    },
+    "entryPoint": {
+      "2.0": "main.js",
+      "3.0": "v3/main.js"
     },
     "descriptionKey": "MyPluginDescription",
     "descriptionDefault": "Zowe Editor",

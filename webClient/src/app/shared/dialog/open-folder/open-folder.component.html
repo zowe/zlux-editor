@@ -1,34 +1,41 @@
+<!--
+This program and the accompanying materials are
+made available under the terms of the Eclipse Public License v2.0 which accompanies
+this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
 
-<!-- 
-  This program and the accompanying materials are
-  made available under the terms of the Eclipse Public License v2.0 which accompanies
-  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
-  SPDX-License-Identifier: EPL-2.0
-  
-  Copyright Contributors to the Zowe Project.
+SPDX-License-Identifier: EPL-2.0
+
+Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-<h2 mat-dialog-title>Open Directory</h2>
+<div class="d-flex flex-align-items-start">
+  <div>
+    <h2 mat-dialog-title>Open Directory</h2>
+  </div>
+  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+</div>
 <mat-dialog-content>
   <mat-form-field>
-      <input matInput type="text" tabindex="2" placeholder="Directory" [(ngModel)]="value">
-      <button tabindex="1"  mat-button *ngIf="value" matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
-        <mat-icon tabindex="-1">close</mat-icon>
-      </button>
+    <mat-label>Directory</mat-label>
+    <input matInput type="text" tabindex="2" [(ngModel)]="value">
+    @if (value) {
+    <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
+      <mat-icon tabindex="-1">close</mat-icon>
+    </button>
+    }
   </mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value" [disabled]="!value">Open</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
+    [disabled]="!value">Open</button>
 </mat-dialog-actions>
 
-<!-- 
-  This program and the accompanying materials are
-  made available under the terms of the Eclipse Public License v2.0 which accompanies
-  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
-  SPDX-License-Identifier: EPL-2.0
-  
-  Copyright Contributors to the Zowe Project.
+<!--
+This program and the accompanying materials are
+made available under the terms of the Eclipse Public License v2.0 which accompanies
+this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+SPDX-License-Identifier: EPL-2.0
+
+Copyright Contributors to the Zowe Project.
 -->

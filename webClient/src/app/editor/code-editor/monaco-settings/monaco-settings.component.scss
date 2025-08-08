@@ -70,8 +70,16 @@ mat-dialog-actions {
     min-width: 130px;
 }
 
-.list-view-label {
-    color: white;
+.mat-mdc-select-value {
+    padding-top: 10px !important;
+}
+
+.mat-mdc-floating-label {
+    margin-top: -7px !important;
+}
+
+.mdc-floating-label {
+    margin-top: -7px !important;
 }
 
 .button-row {

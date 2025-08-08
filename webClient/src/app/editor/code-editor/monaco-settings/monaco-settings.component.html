@@ -1,67 +1,79 @@
 
-<!-- 
-  This program and the accompanying materials are
-  made available under the terms of the Eclipse Public License v2.0 which accompanies
-  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
-  SPDX-License-Identifier: EPL-2.0
-  
-  Copyright Contributors to the Zowe Project.
-  -->
+<!--
+This program and the accompanying materials are
+made available under the terms of the Eclipse Public License v2.0 which accompanies
+this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+SPDX-License-Identifier: EPL-2.0
+
+Copyright Contributors to the Zowe Project.
+-->
 <div class="outer">
   <div class="container">
     <h4 class="title-card title-card-first">List View</h4>
     <div class="scrolling-list">
-      <div *ngFor="let item of items; index as i">
-        <div style="display: flex; margin: 10px 0px 10px 0px" *ngIf="isTypeDropdown(item.type)">
-          <mat-form-field class="form-field">
-            <mat-label class="list-view-label" style="margin-right: 10px">{{getName(item)}}</mat-label>
-            <mat-select disableRipple="true" [(value)]="items[i].value" (selectionChange)="update(item)">
-              <mat-option class="list-view-label" *ngFor="let value of items[i].values; index as j" [value]="items[i].values[j]">
-                {{item.types[j]}}</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-        <div *ngIf="isTypeNumber(item.type)">
-          <mat-form-field class="form-field">
-            <mat-label class="list-view-label">{{getName(item)}}</mat-label>
-            <input matInput type="number" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
-          </mat-form-field>
-        </div>
-        <div *ngIf="isTypeString(item.type)">
-          <mat-form-field class="form-field">
-            <mat-label class="list-view-label">{{getName(item)}}</mat-label>
-            <input matInput type="text" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
-          </mat-form-field>
-        </div>
-        <div *ngIf="isTypeToggle(item.type)">
-          <mat-checkbox disableRipple="true" labelPosition="before" [(ngModel)]="items[i].value" (change)="update(item)">{{getName(items[i])}}</mat-checkbox>
-        </div>
-        <br>
+      @for (item of items; track item; let i = $index) {
+        <div>
+          @if (isTypeDropdown(item.type)) {
+            <div style="display: flex; margin: 10px 0px 10px 0px">
+              <mat-form-field class="form-field">
+                <mat-label class="list-view-label" style="margin-right: 10px">{{getName(item)}}</mat-label>
+                <mat-select disableRipple="true" [(value)]="items[i].value" (selectionChange)="update(item)">
+                  @for (value of items[i].values; track value; let j = $index) {
+                    <mat-option class="list-view-label" [value]="items[i].values[j]">
+                    {{item.types[j]}}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </div>
+          }
+          @if (isTypeNumber(item.type)) {
+            <div>
+              <mat-form-field class="form-field">
+                <mat-label class="list-view-label">{{getName(item)}}</mat-label>
+                <input matInput type="number" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+              </mat-form-field>
+            </div>
+          }
+          @if (isTypeString(item.type)) {
+            <div>
+              <mat-form-field class="form-field">
+                <mat-label class="list-view-label">{{getName(item)}}</mat-label>
+                <input matInput type="text" [placeholder]="item.default" [(ngModel)]="item.value" (ngModelChange)="update(item)">
+              </mat-form-field>
+            </div>
+          }
+          @if (isTypeToggle(item.type)) {
+            <div>
+              <mat-checkbox disableRipple="true" labelPosition="before" [(ngModel)]="items[i].value" (change)="update(item)">{{getName(items[i])}}</mat-checkbox>
+            </div>
+          }
+          <br>
+          </div>
+        }
+      </div>
+      <div class="button-row">
+        <button mat-raised-button class="menu-button defaults-button" color="warn" (click)="resetToDefault()">Defaults</button>
+        <button mat-raised-button class="menu-button save-button" color="primary" (click)="commitToConfigService()">Save</button>
       </div>
     </div>
-    <div class="button-row">
-      <button mat-raised-button class="menu-button defaults-button" color="warn" (click)="resetToDefault()">Defaults</button>
-      <button mat-raised-button class="menu-button save-button" color="primary" (click)="commitToConfigService()">Save</button>
+    <div class="divider"></div>
+    <div class="preview">
+      <h4 class="title-card">Preview</h4>
+      <div class="monaco-editor-preview" #monacoPreview></div>
+      <div class="button-row">
+        <button mat-raised-button class="menu-button preview-button" (click)="resetEditor()">Revert Preview</button>
+        <button mat-raised-button class="menu-button preview-button" (click)="updateFromPreview()">Apply Preview</button>
+      </div>
     </div>
   </div>
-  <div class="divider"></div>
-  <div class="preview">
-    <h4 class="title-card">Preview</h4>
-    <div class="monaco-editor-preview" #monacoPreview></div>
-    <div class="button-row">
-      <button mat-raised-button class="menu-button preview-button" (click)="resetEditor()">Revert Preview</button>
-      <button mat-raised-button class="menu-button preview-button" (click)="updateFromPreview()">Apply Preview</button>
-    </div>
-  </div>
-</div>
 
-<!-- 
+  <!--
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
   this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
+
   SPDX-License-Identifier: EPL-2.0
-  
+
   Copyright Contributors to the Zowe Project.
--->
+  -->

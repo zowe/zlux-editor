@@ -19,16 +19,15 @@ export interface DialogData {
 
 @Component({
   selector: 'app-prompt-to-confirm',
-  templateUrl: './confirm-action-component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './confirm-action-component.html'
 })
 
 export class ConfirmAction {
   constructor(
     public dialogRef: MatDialogRef<ConfirmAction>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {}
-  
+  ) { }
+
   ngOnInit() {
   }
 

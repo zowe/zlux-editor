@@ -15,13 +15,12 @@ import { ENDPOINTS } from '../../../../environments/environment';
 import { ProjectDef } from '../../model/project';
 @Component({
   selector: 'app-open-project',
-  templateUrl: './open-project.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './open-project.component.html'
 })
 export class OpenProjectComponent implements OnInit {
-  private projectList: ProjectDef[] = [];
-  private selected: ProjectDef;
-  private fetching = false;
+  projectList: ProjectDef[] = [];
+  selected: ProjectDef;
+  fetching = false;
 
   constructor(private http: HttpService, private dialogRef: MatDialogRef<OpenProjectComponent>) { }
 

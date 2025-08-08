@@ -28,7 +28,16 @@ import { EditorKeybindingService } from './editor-keybinding.service';
     MatSnackBarModule,
   ],
   declarations: [],
-  providers: [HttpService, DataAdapterService, UtilsService, ConfigService, EditorControlService, SnackBarService, LanguageServerService, EditorKeybindingService],
+  providers: [
+    HttpService,
+    DataAdapterService,
+    UtilsService,
+    ConfigService,
+    EditorControlService,
+    SnackBarService,
+    LanguageServerService,
+    EditorKeybindingService
+  ]
 })
 export class SharedModule { }
 

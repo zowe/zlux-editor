@@ -26,7 +26,7 @@ import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/
 @Component({
   selector: 'app-frame',
   templateUrl: './frame.component.html',
-  styleUrls: ['./frame.component.scss',  '../../../styles.scss']
+  styleUrls: ['./frame.component.scss']
 })
 export class FrameComponent implements OnInit, OnDestroy {
 
@@ -40,9 +40,9 @@ export class FrameComponent implements OnInit, OnDestroy {
   private fileResultList = [];
   private contentResultList: LineMapping[] = [];
   private cantSearch = true;
-  private showExplorer = true;
+  showExplorer = true;
   private keyBindingSub: Subscription = new Subscription();
-  private activityBar = [
+  activityBar = [
     {
       name: 'Explorer',
       active: true,
@@ -78,14 +78,14 @@ export class FrameComponent implements OnInit, OnDestroy {
     this.editorControl.openProject.subscribe(() => {
       this.cantSearch = false;
     });
-    this.editorControl.toggleTree.subscribe(() =>{
+    this.editorControl.toggleTree.subscribe(() => {
       this.toggleTree();
     });
-    
+
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
-        this.editorControl.toggleTree.next();;
+        this.editorControl.toggleTree.next('');
         event.stopImmediatePropagation();
         event.preventDefault();
       }
@@ -204,10 +204,14 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.monacoService.cleanDecoration();
     }
   }
-  
-  toggleTree(){
-    this.showExplorer=!this.showExplorer;
-    this.editorControl.refreshLayout.next();
+
+  toggleTree() {
+    this.showExplorer = !this.showExplorer;
+    setTimeout(() => { /* This is a hack to wait for above ^ to render. A proper implementation is to give FileTree element a template
+      reference, grab ViewChild, and then manually call Angular change detection , and then call layout() but that would be kinda tedious ngl */
+      this.editorControl.editor.getValue().layout();
+    }, 150);
+    
   }
 }
 
