@@ -8,7 +8,6 @@ on:
     branches:
       - sonarintegration
 
-
 jobs:
   analyze-pr:
     runs-on: ubuntu-latest
@@ -48,11 +47,12 @@ jobs:
           SONAR_TOKEN: 
         with:
           args: >
-            -Dsonar.projectKey=zlux:zlux-editor
+            -Dsonar.projectKey=zowe_zlux-editor
+            -Dsonar.organization=zowe
             -Dsonar.sources=webClient
             -Dsonar.tests=webClient/src/app
             -Dsonar.test.inclusions=**/*.(spec|test).ts,**/*.(spec|test).tsx,**/*.(spec|test).js,**/*.(spec|test).jsx
             -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/*.d.ts
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.javascript.lcov.reportPaths=webClient/coverage/lcov.info
             -Dsonar.qualitygate.wait=true
             -Dsonar.qualitygate.timeout=600
