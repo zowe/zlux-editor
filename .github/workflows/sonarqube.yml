@@ -43,8 +43,8 @@ jobs:
         continue-on-error: true
         uses: SonarSource/sonarqube-scan-action@v2
         env:
-          SONAR_HOST_URL: https://sonarcloud.io
-          SONAR_TOKEN: 
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
             -Dsonar.projectKey=zowe_zlux-editor
