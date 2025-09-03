@@ -1,0 +1,57 @@
+name: SonarQube 
+
+on:
+  pull_request:
+    branches: [ "main", "v3.x/staging" ]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - sonarintegration
+
+jobs:
+  analyze-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout PR head with limited history
+        uses: actions/checkout@v4
+        with:
+          ref: sonarintegration
+          fetch-depth: 0
+        # Checkout action usage and fetch-depth behavior reference [11][12]
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Test with coverage (Jest)
+        run: npm test --if-present -- --coverage
+        env:
+          CI: true
+
+      - name: SonarQube Scan
+        continue-on-error: true
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_TOKEN: 
+        with:
+          args: >
+            -Dsonar.projectKey=zlux:zlux-editor
+            -Dsonar.sources=webClient
+            -Dsonar.tests=webClient/src/app
+            -Dsonar.test.inclusions=**/*.(spec|test).ts,**/*.(spec|test).tsx,**/*.(spec|test).js,**/*.(spec|test).jsx
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/*.d.ts
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=600
