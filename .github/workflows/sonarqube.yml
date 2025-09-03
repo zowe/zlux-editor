@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
-      - sonarintegration
+      - sonarqubeint
 
 jobs:
   analyze-pr:
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout PR head with limited history
         uses: actions/checkout@v4
         with:
-          ref: sonarintegration
+          ref: sonarqubeint
           fetch-depth: 0
         # Checkout action usage and fetch-depth behavior reference [11][12]
 
@@ -41,7 +41,7 @@ jobs:
 
       - name: SonarQube Scan
         continue-on-error: true
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: sonarsource/sonarqube-scan-action@v5
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
