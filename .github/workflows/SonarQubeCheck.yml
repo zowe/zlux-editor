@@ -42,10 +42,6 @@ jobs:
       - name: Install deps
         run: npm ci
 
-      - name: Build
-        run: npm run build --if-present
-        env:
-          MVD_DESKTOP_DIR: ${{ github.workspace }}/zlux-app-manager/virtual-desktop
 
       - name: Test with coverage (Jest)
         run: npm test --if-present -- --coverage
