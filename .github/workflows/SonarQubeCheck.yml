@@ -49,7 +49,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=zowe_zlux-editor
+            -Dsonar.projectKey=zlux:zlux-editor
             -Dsonar.organization=zowe
             -Dsonar.sources=webClient
             -Dsonar.tests=webClient/src/app
