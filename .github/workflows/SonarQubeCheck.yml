@@ -6,7 +6,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
-      - sonarqubeint
+      - SonarQubeIntegration
 
 jobs:
   analyze-pr:
@@ -19,7 +19,7 @@ jobs:
       - name: Checkout PR head with limited history
         uses: actions/checkout@v4
         with:
-          ref: sonarqubeint
+          ref: SonarQubeIntegration
           fetch-depth: 0
         # Checkout action usage and fetch-depth behavior reference [11][12]
 
