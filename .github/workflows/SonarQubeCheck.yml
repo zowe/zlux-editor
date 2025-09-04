@@ -40,28 +40,21 @@ jobs:
         env:
           CI: true
 
-      - name: Configure Sonar Scan
-        uses: zowe-actions/octorelease/script@v1
-        env:
-            COVERAGE_ARTIFACT: "Linux-20.x-results:webClient"
-        with:
-            script: sonarConfig
-
       - name: SonarQube Scan
         continue-on-error: true
         uses: sonarsource/sonarqube-scan-action@v5
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN  }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   args: >
-        #     -Dsonar.projectKey=zlux:zlux-editor
-        #     -Dsonar.organization=zowe
-        #     -Dsonar.sources=webClient
-        #     -Dsonar.tests=webClient/src/app
-        #     -Dsonar.test.inclusions=**/*.(spec|test).ts,**/*.(spec|test).tsx,**/*.(spec|test).js,**/*.(spec|test).jsx
-        #     -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/*.d.ts
-        #     -Dsonar.javascript.lcov.reportPaths=webClient/coverage/lcov.info
-        #     -Dsonar.qualitygate.wait=true
-        #     -Dsonar.qualitygate.timeout=600
+        with:
+          args: >
+            -Dsonar.projectKey=zlux:zlux-editor
+            -Dsonar.organization=zowe
+            -Dsonar.sources=webClient
+            -Dsonar.tests=webClient/src/app
+            -Dsonar.test.inclusions=**/*.(spec|test).ts,**/*.(spec|test).tsx,**/*.(spec|test).js,**/*.(spec|test).jsx
+            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**,**/*.d.ts
+            -Dsonar.javascript.lcov.reportPaths=webClient/coverage/lcov.info
+            -Dsonar.qualitygate.wait=true
+            -Dsonar.qualitygate.timeout=600
