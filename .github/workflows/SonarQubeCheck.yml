@@ -26,6 +26,7 @@ jobs:
       - name: Checkout Zowe Desktop base config
         uses: actions/checkout@v4
         with:
+          ref: v3.x/staging
           repository: zowe/zlux-app-manager
           path: zlux-app-manager
 
