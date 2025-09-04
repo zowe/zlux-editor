@@ -14,13 +14,16 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    defaults:
+      run:
+        working-directory: webClient
 
     steps:
       - name: Checkout PR head with limited history
         uses: actions/checkout@v4
         with:
           ref: SonarQubeIntegration
-          fetch-depth: 0
+          fetch-depth: 1
         # Checkout action usage and fetch-depth behavior reference [11][12]
 
       - name: Use Node.js
