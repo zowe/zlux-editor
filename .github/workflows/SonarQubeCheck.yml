@@ -23,6 +23,11 @@ jobs:
           ref: SonarQubeIntegration
           fetch-depth: 1
         # Checkout action usage and fetch-depth behavior reference [11][12]
+      - name: Checkout Zowe Desktop base config
+        uses: actions/checkout@v4
+        with:
+          repository: zowe/zlux-app-manager
+          path: zlux-app-manager
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -38,7 +43,7 @@ jobs:
       - name: Build
         run: npm run build --if-present
         env:
-          MVD_DESKTOP_DIR: /home/runner/zlux-app-manager/virtual-desktop
+          MVD_DESKTOP_DIR: ${{ github.workspace }}/zlux-app-manager/virtual-desktop
 
       - name: Test with coverage (Jest)
         run: npm test --if-present -- --coverage
