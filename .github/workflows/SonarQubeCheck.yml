@@ -49,7 +49,6 @@ jobs:
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Psonar.host.url=$SONAR_HOST_URL
             -Dsonar.token=$SONAR_TOKEN
             -Dsonar.projectKey=zowe_zlux-editor
             -Dsonar.organization=zowe
