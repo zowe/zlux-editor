@@ -20,7 +20,7 @@ jobs:
       - name: Checkout PR head with limited history
         uses: actions/checkout@v4
         with:
-          ref: SonarQubeIntegration
+          ref: v3.x/staging
           fetch-depth: 0
         # Checkout action usage and fetch-depth behavior reference [11][12]
 
@@ -32,8 +32,6 @@ jobs:
       - name: Install npm
         run: npm install
 
-      - name: Install deps
-        run: npm ci
 
       - name: Test with coverage (Jest)
         run: npm test --if-present -- --coverage
@@ -41,7 +39,7 @@ jobs:
           CI: true
 
       - name: SonarQube Scan
-        continue-on-error: true
+        continue-on-error: false
         uses: sonarsource/sonarqube-scan-action@v5
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
