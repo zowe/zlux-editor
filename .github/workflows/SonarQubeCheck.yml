@@ -41,15 +41,18 @@ jobs:
           CI: true
 
       - name: SonarQube Scan
-        continue-on-error: false
+        continue-on-error: true
         uses: sonarsource/sonarqube-scan-action@v5
         env:
-        #  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=zowe_zlux:zlux-editor
+            -Psonar.host.url=$SONAR_HOST_URL
+            -Dsonar.token=$SONAR_TOKEN
+            -Dsonar.projectKey=zowe_zlux-editor
+            -Dsonar.organization=zowe
             -Dsonar.sources=webClient
             -Dsonar.tests=webClient/src/app
             -Dsonar.test.inclusions=**/*.(spec|test).ts,**/*.(spec|test).tsx,**/*.(spec|test).js,**/*.(spec|test).jsx
