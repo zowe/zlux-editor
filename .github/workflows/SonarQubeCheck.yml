@@ -1,8 +1,10 @@
 name: SonarQube Quality Check
 
 on:
+  push:
+    branches: [ "v3.x/staging" ]
   pull_request:
-    branches: [ "main", "v3.x/staging" ]
+    branches: [ "v3.x/staging" ]
     types: [opened, synchronize, reopened, ready_for_review]
 
 
