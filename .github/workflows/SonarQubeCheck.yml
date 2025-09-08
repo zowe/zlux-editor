@@ -23,8 +23,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: v3.x/staging
-          fetch-depth: 0
-        # Checkout action usage and fetch-depth behavior reference [11][12]
 
       - name: Use Node.js
         uses: actions/setup-node@v4
