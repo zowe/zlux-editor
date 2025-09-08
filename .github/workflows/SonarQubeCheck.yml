@@ -49,7 +49,7 @@ jobs:
         #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: >
-            -Dsonar.token=$SONAR_TOKEN
+            -Dsonar.token=$SONARCLOUD_TOKEN
             -Dsonar.projectKey=zowe_zlux-editor
             -Dsonar.organization=zowe
             -Dsonar.sources=webClient
