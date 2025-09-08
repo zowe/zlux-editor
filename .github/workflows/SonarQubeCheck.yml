@@ -32,7 +32,6 @@ jobs:
       - name: Install npm
         run: npm install
 
-
       - name: Test with coverage (Jest)
         run: npm test --if-present -- --coverage
         env:
