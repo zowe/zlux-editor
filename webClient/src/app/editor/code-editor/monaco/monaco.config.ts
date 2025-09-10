@@ -13,7 +13,7 @@ import { EditorServiceInstance } from '../../../shared/editor-control/editor-con
 
 import { EditorService } from '../../editor.service';
 import { Subscription } from 'rxjs';
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { BPXPRM_HILITE } from './hiliters/bpxprm';
 import { HLASM_HILITE } from './hiliters/hlasm';
@@ -439,7 +439,7 @@ export class MonacoConfig {
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
       if (editorService != null) {
-        if (editorService._isTestLangMode) {
+        if (editorService.isTestLangMode) {
           console.log(`Adding test language`);
           editorService.registerLanguage({
             id: 'TEST_LANGUAGE',

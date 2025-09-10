@@ -8,12 +8,12 @@
   
   Copyright Contributors to the Zowe Project.
 */
-/// <reference path="../../../zlux-platform/interface/src/index.d.ts" />
-/* SystemJS module definition */
-declare var module: NodeModule;
-interface NodeModule {
-  id: string;
-}
+// /// <reference path="../../../zlux-platform/interface/src/index.d.ts" />
+// /* SystemJS module definition */
+// declare var module: NodeModule;
+// interface NodeModule {
+//   id: string;
+// }
 
 /*
   This program and the accompanying materials are

@@ -54,19 +54,7 @@ import { MatButtonModule } from '@angular/material/button';
         TagComponent,
         OverwriteDatasetComponent,
     ],
-    providers: [HttpService],
-    entryComponents: [
-        OpenProjectComponent,
-        OpenDatasetComponent,
-        OpenFolderComponent,
-        DeleteFileComponent,
-        NewFileComponent,
-        SaveToComponent,
-        ConfirmAction,
-        LanguageServerComponent,
-        TagComponent,
-        OverwriteDatasetComponent,
-    ]
+    providers: [HttpService]
 })
 export class DialogModule { }
 

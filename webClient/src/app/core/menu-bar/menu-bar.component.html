@@ -1,45 +1,57 @@
 
-<!-- 
-  This program and the accompanying materials are
-  made available under the terms of the Eclipse Public License v2.0 which accompanies
-  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
-  SPDX-License-Identifier: EPL-2.0
-  
-  Copyright Contributors to the Zowe Project.
+<!--
+This program and the accompanying materials are
+made available under the terms of the Eclipse Public License v2.0 which accompanies
+this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+SPDX-License-Identifier: EPL-2.0
+
+Copyright Contributors to the Zowe Project.
 -->
 <div class="gz-menu-bar">
   <ul class="gz-menu-list" #menubar (mouseover)="onMouseOver($event)">
-    <li role="menubar" tabindex="0" class="gz-menu-section" [ngClass]="{'active': menuActive}" 
-      *ngFor="let menu of menuList" (click)="menuActive = !menuActive" (keyup.enter)="menuActive = !menuActive"
-      (keyup.escape)="menuActive=menuActive?!menuActive:menuActive;getEditorFocus();"
-      (keyup)="moveSelection($event)">
-      {{menu.name}}
-      <div class="gz-menu-function" *ngIf="menuActive">
-        <ul>
-          <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)" *ngFor="let function of menu.children"
-            (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action);getEditorFocus();">
-            <div *ngIf="function.name !== 'group-end'" class="gz-action">
-              <mat-icon *ngIf="function.type === 'checkbox' && menuAction(function.active)" class="gz-menu-function-check">
-                  fiber_manual_record
-              </mat-icon>
-              <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
-              <span class="gz-keymap">{{ function.name !== 'group-end' ? function.keyMap : '' }}</span>
-            </div>
-            <hr *ngIf="function.name === 'group-end'" />
-          </li>
-        </ul>
-      </div>
-    </li>
+    @for (menu of menuList; track menu) {
+      <li role="menubar" tabindex="0" class="gz-menu-section" [ngClass]="{'active': menuActive}"
+        (click)="menuActive = !menuActive" (keyup.enter)="menuActive = !menuActive"
+        (keyup.escape)="menuActive=menuActive?!menuActive:menuActive;getEditorFocus();"
+        (keyup)="moveSelection($event)">
+        {{menu.name}}
+        @if (menuActive) {
+          <div class="gz-menu-function">
+            <ul>
+              @for (function of menu.children; track function) {
+                <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)"
+                  (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action);getEditorFocus();">
+                  @if (function.name !== 'group-end') {
+                    <div class="gz-action">
+                      @if (function.type === 'checkbox' && menuAction(function.active)) {
+                        <mat-icon class="gz-menu-function-check">
+                          fiber_manual_record
+                        </mat-icon>
+                      }
+                      <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
+                      <span class="gz-keymap">{{ function.name !== 'group-end' ? function.keyMap : '' }}</span>
+                    </div>
+                  }
+                  @if (function.name === 'group-end') {
+                    <hr />
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </li>
+    }
   </ul>
 </div>
 
-<!-- 
-  This program and the accompanying materials are
-  made available under the terms of the Eclipse Public License v2.0 which accompanies
-  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
-  
-  SPDX-License-Identifier: EPL-2.0
-  
-  Copyright Contributors to the Zowe Project.
+<!--
+This program and the accompanying materials are
+made available under the terms of the Eclipse Public License v2.0 which accompanies
+this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+SPDX-License-Identifier: EPL-2.0
+
+Copyright Contributors to the Zowe Project.
 -->

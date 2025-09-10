@@ -8,14 +8,12 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, ViewChild, ElementRef, Inject, Optional, OnDestroy, HostBinding } from '@angular/core';
 import { Angular2InjectionTokens, Angular2PluginWindowEvents, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { EditorControlService } from '../../shared/editor-control/editor-control.service';
 import { HttpService } from '../../shared/http/http.service';
-import { ENDPOINTS } from '../../../environments/environment';
 import { MonacoService } from './monaco/monaco.service';
 import { ProjectStructure } from '../../shared/model/editor-project';
-import { EditorService } from '../editor.service';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
@@ -30,17 +28,24 @@ const DEFAULT_TITLE = 'Editor';
   styleUrls: ['./code-editor.component.scss']
 })
 export class CodeEditorComponent implements OnInit, OnDestroy {
-  private openFileList: ProjectContext[];
-  private noOpenFile: boolean;
-  private keyBindingSub:Subscription = new Subscription();
+  public openFileList: ProjectContext[];
+  public noOpenFile: boolean;
+  public keyBindingSub: Subscription = new Subscription();
   @ViewChild('monaco')
   monacoRef: ElementRef;
 
   public showSettings: boolean = false;
-  public settingsOpen: boolean = false;
   public compareDataset: boolean = false;
 
-  public options;
+  /* IMPORTANT There are 4 sets of Monaco Editor options. Search for other occurrences the line you're reading
+  1 - saved config data (not in the code)
+  2 - master state (obtained from 1) 
+  3 - rendered Monaco options for the code viewing Editors
+  4 - rendered Monaco options for the Settings Editor 
+  
+  2 is obtained from 1. Either 3 OR 4 must exist, because sometimes 3 or 4 must be different than 2 (see hasEditorBeenOpened bug)
+  3 and 4 must both exist because we can edit our Editor settings without applying on active tabs, we have "Apply Preview" */
+  public monacoOptions; // This is set 3
   /*
     = {
     glyphMargin: true,
@@ -68,28 +73,31 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   constructor(private http: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
-    private editorService: EditorService,
     private appKeyboard: EditorKeybindingService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     private codeEditorService: CodeEditorService) {
+
+    // TODO: If I wanted to spawn opened tabs from localStorage, like "Resume opened files when reopening Editor" feature
+    //  this is where it would go (*before* App2App  and *after* closeAllFiles )
+
     if (this.windowEvents) {
-      this.windowEvents.restored.subscribe(()=> {
+      this.windowEvents.restored.subscribe(() => {
         this.focus();
       });
     }
-    this.http.get(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(),'user','monaco','editorconfig.json'))
+    this.http.get(ZoweZLUX.uriBroker.pluginConfigForScopeUri(this.pluginDefinition.getBasePlugin(), 'user', 'monaco', 'editorconfig.json'))
       .subscribe((response: any) => {
         if (response && response.contents && response.contents.config) {
-          this.options = response.contents.config;
+          this.monacoOptions = this.editorControl.sanitizeAndSetOptions(response.contents.config);
         }
       });
-    
+
     //respond to the request to open
     this.editorControl.openFileEmitter.subscribe((fileNode: ProjectStructure) => {
       this.editorControl.compareDataset = false;
-      if (this.settingsOpen && this.showSettings) {
+      if (this.showSettings) {
         this.showSettings = false;
         if (this.monacoRef) {
           (this.monacoRef as any).focus();
@@ -132,7 +140,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.previousSessionData.editorFile = this.editorFile;
 
       this.noOpenFile = true;
-      this.editorFile = undefined; 
+      this.editorFile = undefined;
       this.updateEditorTitle();
     })
 
@@ -153,9 +161,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     })
 
     this.editorControl.openSettings.subscribe(() => {
-      if (!this.settingsOpen) {
+      if (!this.showSettings) {
         this.showSettings = true;
-        this.settingsOpen = true;
         this.openFileList.push({
           type: ProjectContextType.menu,
           name: "Settings",
@@ -168,14 +175,13 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
           },
           opened: true,
           active: true, //TODO what happens to previously active file
-          changed: false        
+          changed: false
         });
       }
     });
     this.editorControl.closeSettings.subscribe(() => {
-      if (this.settingsOpen) {
+      if (this.showSettings) {
         this.showSettings = false;
-        this.settingsOpen = false;
         for (let i = 0; i < this.openFileList.length; i++) {
           if (this.openFileList[i].id == 'org.zowe.editor.settings') {
             this.openFileList.splice(i, 1);
@@ -186,21 +192,21 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_T && event.ctrlKey) {
-        this.editorControl.undoCloseFile.next();
+        this.editorControl.undoCloseFile.next('');
       }
     }));
 
     this.keyBindingSub.add(this.appKeyboard.keyupEvent.subscribe((event) => {
       if (event.which === KeyCode.PAGE_DOWN || event.which === KeyCode.PERIOD) {
         let fileContext = this.editorControl.fetchRightOfActiveFile();
-        this.selectFile(fileContext, true);      
+        this.selectFile(fileContext, true);
       } else if (event.which === KeyCode.PAGE_UP || event.which === KeyCode.COMMA) {
         let fileContext = this.editorControl.fetchLeftOfActiveFile();
-        this.selectFile(fileContext, true);      
+        this.selectFile(fileContext, true);
       } else if (event.which === KeyCode.KEY_W && !event.shiftKey) { // Separate keybinding for "close all"
         let fileContext = this.editorControl.fetchActiveFile();
         this.closeFile(fileContext);
-        setTimeout(()=> {
+        setTimeout(() => {
           this.editorControl.getFocus();
         });
       }
@@ -213,20 +219,22 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
   }
 
-  setOptions(options: any) {
-    if (typeof options == 'object') {
-      this.options = options;
+  ngOnInit() { }
+
+  setMonacoOptions(monacoOptions: any) {
+    if (typeof monacoOptions == 'object') {
+      this.monacoOptions = this.editorControl.sanitizeAndSetOptions(monacoOptions);
     }
   }
-  
-  updateEditorTitle():void {
-    if(this.noOpenFile) {
+
+  updateEditorTitle(): void {
+    if (this.noOpenFile) {
       this.setTitle();
       return;
-    } 
+    }
 
     const fileContext = this.getActiveFile();
-    if(fileContext) {
+    if (fileContext) {
       this.setTitle(fileContext.name);
     } else {
       this.setTitle();
@@ -234,11 +242,11 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   getActiveFile() {
-    return this.openFileList.find(f=>f.active);
+    return this.openFileList.find(f => f.active);
   }
 
-  isAnySelected () {
-    return typeof(this.getActiveFile()) != "undefined";
+  isAnySelected() {
+    return typeof (this.getActiveFile()) != "undefined";
   }
 
   focus() {
@@ -246,8 +254,6 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       (this.monacoRef as any).focus();
     }
   }
-
-  ngOnInit() { }
 
   openFile(fileNode: ProjectStructure) {
     // get file context
@@ -272,7 +278,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
       this.editorControl.openFileHandler(fileContext);
     }
-    
+
   }
 
   private handleCloseFile(fileContext: ProjectContext) {
@@ -294,7 +300,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     } else {
       const directory = fileContext.model.path || this.editorControl.activeDirectory;
       this.monacoService.promptToSave(fileContext).then((res) => {
-        if(res !== 'Cancel'){
+        if (res !== 'Cancel') {
           this.codeEditorService.closeFile(fileContext);
         }
       });
@@ -312,7 +318,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.codeEditorService.selectFile(fileContext, broadcast);
     } else {
       this.showSettings = true;
-      this.editorControl.selectMenu.next(fileContext);
+      this.editorControl.selectSetting.next(fileContext);
     }
     this.editorFile = { context: fileContext, reload: false, line: line };
     this.updateEditorTitle();
@@ -330,12 +336,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     this.editorControl.removeActiveFromAllFiles();
     fileContext.active = true;
     this.monacoService.savePreviousFileContent(fileContext);
-    this.editorControl.enableDiffViewer.next();
+    this.editorControl.enableDiffViewer.next('');
   }
 
-  setTitle(title?:String):void {
-    let newTitle = DEFAULT_TITLE; 
-    if(title) {
+  setTitle(title?: String): void {
+    let newTitle = DEFAULT_TITLE;
+    if (title) {
       newTitle = title + ' - ' + newTitle;
     }
 
@@ -348,7 +354,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy():void {
+  ngOnDestroy(): void {
     this.keyBindingSub.unsubscribe();
   }
 }

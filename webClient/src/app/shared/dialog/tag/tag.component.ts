@@ -13,25 +13,24 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-tag',
-  templateUrl: './tag.component.html',
-  styleUrls: ['../../../../styles.scss']
+  templateUrl: './tag.component.html'
 })
 export class TagComponent {
-  private results = {
+  results = {
     encoding: '',
   };
-  
-  private options: string[];
+
+  options: string[];
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: any) {
     if (this.data.canBeISO === false) {
       this.options = ['UTF-8'];
     }
     else {
-      this.options = ['UTF-8','ISO-8859-1','IBM-1047'];
+      this.options = ['UTF-8', 'ISO-8859-1', 'IBM-1047'];
     }
   }
-  
+
   ngOnInit() {
   }
 }

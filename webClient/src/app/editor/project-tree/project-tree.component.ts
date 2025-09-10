@@ -10,7 +10,7 @@
 */
 import { Component, ViewChild, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { TreeNode } from 'angular-tree-component';
+import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
 import { OpenFolderComponent } from '../../shared/dialog/open-folder/open-folder.component';
 import { HttpService } from '../../shared/http/http.service';
@@ -22,12 +22,12 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { FileTreeComponent as ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree/src/plugin';
+import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss',  '../../../styles.scss'],
+  styleUrls: ['./project-tree.component.scss'],
 })
 export class ProjectTreeComponent {
 
@@ -63,8 +63,8 @@ export class ProjectTreeComponent {
         // convert path to adjust url. If path is start with '/' then remove it.
         let targetPath = ['/', '\\'].indexOf(node.data.path.substring(0, 1)) > -1 ? node.data.path.substring(1) : node.data.path;
         let requestUrl: string = ZoweZLUX.uriBroker.unixFileUri('contents',
-                                                                `${targetPath}/${node.data.fileName}`);
-                                                                
+          `${targetPath}/${node.data.fileName}`);
+
         return this.httpService.get(requestUrl).toPromise().then((dirList: any) => {
           let fileStructure = this.dataAdapter.convertDirectoryList(dirList);
           return fileStructure.map(f => {
@@ -92,7 +92,7 @@ export class ProjectTreeComponent {
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition) {
   }
 
-  ngOnInit(){
+  ngOnInit() {
     this.editorControl.projectNode.subscribe((nodes) => {
       this.nodes = nodes;
     });
@@ -128,12 +128,12 @@ export class ProjectTreeComponent {
             this.editorControl.initProjectContext(projectName, this.nodes);
           });
       }
-    });    
+    });
   }
 
-  ngAfterViewInit(){
+  ngAfterViewInit() {
     this.editorControl.openDirectory.subscribe(dirName => {
-      if(dirName) {
+      if (dirName) {
         if (dirName.startsWith('/')) {
           this.editorControl.activeDirectory = dirName;
           this.fileExplorer.updateDirectory(dirName);
@@ -156,24 +156,24 @@ export class ProjectTreeComponent {
           if (dirName == dsName) {
             let periodPos = dirName.lastIndexOf('.');
             if (periodPos >= 0) {
-              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName.substring(0,periodPos+1)+'**');
+              if (this.fileExplorer) this.fileExplorer.updateDSList(dirName.substring(0, periodPos + 1) + '**');
             } else {
-              if(this.fileExplorer) this.fileExplorer.updateDSList(dirName);
+              if (this.fileExplorer) this.fileExplorer.updateDSList(dirName);
             }
           } else {
             isMember = true;
             dsMemberName = this.utils.getDatasetMemberName(dirName);
-            if(this.fileExplorer) this.fileExplorer.updateDSList(dsName);
+            if (this.fileExplorer) this.fileExplorer.updateDSList(dsName);
           }
           let requestUrl = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(dsName.toUpperCase()), 'true', undefined, true);
           this.httpService.get(requestUrl)
             .subscribe((response: any) => {
               this.nodes = isMember ? this.dataAdapter.convertDatasetMemberList(response) : this.dataAdapter.convertDatasetList(response);
               this.editorControl.setProjectNode(this.nodes);
-              if(isMember){
-                this.editorControl.openBuffer('',this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x=> {this.log.debug('Dataset Member opened')});
-              } else{
-                this.editorControl.openBuffer('',this.nodes[0], selectedLines).subscribe(x=> {this.log.debug('Dataset opened')});
+              if (isMember) {
+                this.editorControl.openBuffer('', this.nodes.find(item => item.name === dsMemberName), selectedLines).subscribe(x => { this.log.debug('Dataset Member opened') });
+              } else {
+                this.editorControl.openBuffer('', this.nodes[0], selectedLines).subscribe(x => { this.log.debug('Dataset opened') });
               }
             }, e => {
               // TODO
@@ -201,7 +201,7 @@ export class ProjectTreeComponent {
     });
   }
 
-  onNodeClick($event: any){
+  onNodeClick($event: any) {
     if ($event.directory == false) {
       //let nodeData: ProjectStructure = new ProjectStructure();
       const nodeData: ProjectStructure = {
@@ -212,18 +212,18 @@ export class ProjectTreeComponent {
         isDataset: false,
         name: $event.name,
         path: $event.path.substring(0, $event.path.length - $event.name.length - 1)
-    };
-  
+      };
+
       this.editorControl.openBuffer('', nodeData).subscribe(x => {
         this.log.debug(`File loaded through File Explorer.`);
         this.editorControl.checkForAndSetReadOnlyMode(x.model);
       });
-    } else if($event.data.isDataset){
+    } else if ($event.data.isDataset) {
       let data: ProjectStructure = ($event.data as ProjectStructure);
-      if($event.type == 'file'){
+      if ($event.type == 'file') {
         this.editorControl.openBuffer('', (data)).subscribe(x => {
           this.log.debug(`Dataset loaded through File Explorer.`);
-          if(x) {
+          if (x) {
             this.editorControl.checkForAndSetReadOnlyMode(x.model);
           }
         });
@@ -231,37 +231,37 @@ export class ProjectTreeComponent {
     }
   }
 
-  onOpenInNewTab($event: any){
-    if ($event.data === 'File'){
+  onOpenInNewTab($event: any) {
+    if ($event.data === 'File') {
       const baseURI = `${window.location.origin}${window.location.pathname}`;
       const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openFile","name":"${$event.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
-    } else{
+    } else {
       const baseURI = `${window.location.origin}${window.location.pathname}`;
       const newWindow = window.open(`${baseURI}?pluginId=${this.pluginDefinition.getBasePlugin().getIdentifier()}:data:${encodeURIComponent(`{"type":"openDataset","name":"${$event.data.path}","toggleTree":true}`)}`, '_blank');
       newWindow.focus();
     }
-}
+  }
 
-onDeleteClick($event: any){
-  if($event.data === 'File'){
-    // USS File
-    for (const file of this.editorControl._openFileList.getValue()) {
-      if (file.model.fileName === $event.name && file.model.path === $event.path.substring(0,$event.path.lastIndexOf("/")) ) {
-        this.editorControl.closeFileHandler(file);
-        break;
+  onDeleteClick($event: any) {
+    if ($event.data === 'File') {
+      // USS File
+      for (const file of this.editorControl._openFileList.getValue()) {
+        if (file.model.fileName === $event.name && file.model.path === $event.path.substring(0, $event.path.lastIndexOf("/"))) {
+          this.editorControl.closeFileHandler(file);
+          break;
+        }
       }
-    }
-  } else{
-    // Dataset
-    for (const file of this.editorControl._openFileList.getValue()) {
-      if (file.model.name === $event.data.name && file.model.path === $event.data.path ) {
-        this.editorControl.closeFileHandler(file);
-        break;
+    } else {
+      // Dataset
+      for (const file of this.editorControl._openFileList.getValue()) {
+        if (file.model.name === $event.data.name && file.model.path === $event.data.path) {
+          this.editorControl.closeFileHandler(file);
+          break;
+        }
       }
     }
   }
-}
 
   onPathChanged($event: any) {
     this.editorControl.activeDirectory = $event;
@@ -301,7 +301,7 @@ onDeleteClick($event: any){
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
       this.editorControl.openBuffer('', nodeData).subscribe(x => {
-        this.log.debug(`NodeData=`,nodeData);
+        this.log.debug(`NodeData=`, nodeData);
         this.log.debug(`file loaded through project explorer.`);
       });
       // this.editorControl.openFileEmitter.emit(nodeData);
