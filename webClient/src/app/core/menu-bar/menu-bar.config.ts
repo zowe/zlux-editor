@@ -38,15 +38,15 @@ export const TEST_LANGUAGE_MENU = [{name:'TEST_REPLACE',
 export const LANGUAGE_MENUS = {
   'jcl': [
     {
-      name: 'Submit',
+      name: 'Submit (Future)',
       isDisabledString: `
       const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
       const file = context.controller.fetchActiveFile();
     if (!plugin || !file || (ZoweZLUX.uriBroker.serverRootUri('') == '/')) {
         return true;
       }
-      return false;
-      `,
+      return true;
+      ` /* CHANGEME TODO line above this comment should be "return false" once JCL submit works as intended */,
       action: {
         /*
           TODO z/osmf has a jobs api, so this makes use of it for now. 
@@ -101,7 +101,7 @@ export const LANGUAGE_MENUS = {
       name: 'group-end'
     },
     {
-      name: 'View Job',
+      name: 'View Job (Future)',
       isDisabledString: `
       const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
       const file = context.controller.fetchActiveFile();
