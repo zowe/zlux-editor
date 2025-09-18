@@ -1,11 +1,15 @@
 # Zlux Editor Changelog
 
+## `3.3.1`
+
+- Updated npm version of `zlux-angular-file-tree` to `v2.0.0-staging-474-20250915115421`
+
 ## `3.3.0`
 
-- Breaking change: Editor has been updated to Zowe V3, which includes across-the-board dependency upgrades (like Angular 18, File Tree, Prime, Rxjs, etc.) and bugfixes. This makes the base code incompatible with the Zowe V2 desktop, but a V2 Editor can be used in the V2 Desktop compatibility mode. 
+- Breaking change: Editor has been updated to Zowe V3, which includes across-the-board dependency upgrades (like Angular 18, File Tree, Prime, Rxjs, etc.) and bugfixes. This makes the base code incompatible with the Zowe V2 desktop, but a V2 Editor can be used in the V2 Desktop compatibility mode.
 
 ## `3.0.1`
- 
+
 - Bugfix: Added a few rules for JCL syntax highlighter
 - Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
 - Added the feature to copy the line content and copy URL link to open a file at a specific line
@@ -41,8 +45,9 @@
 - Added toggle bar to show and hide File Explorer.
 
 ## `2.7.0`
+
 - Added function to toggle the file explorer
-- Added calls to the function in openfile and open dataset so that when the user inputs the string with a true in the url it will hide the file explorer 
+- Added calls to the function in openfile and open dataset so that when the user inputs the string with a true in the url it will hide the file explorer
 
 ## `2.6.0`
 
