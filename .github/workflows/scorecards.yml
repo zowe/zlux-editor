@@ -78,7 +78,6 @@ jobs:
 
           if [ "$any" -eq 1 ]; then
             echo "" >> scorecard-summary.md
-            echo "See full SARIF for details." >> scorecard-summary.md
             cat scorecard-summary.md >> $GITHUB_STEP_SUMMARY
             # Print details for findings
             echo -e "$details_section" >> $GITHUB_STEP_SUMMARY
