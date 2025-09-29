@@ -1,0 +1,26 @@
+name: OSSF Scorecard Using Actions
+on:
+  push:
+    branches:
+      - 'v*.x/staging'
+  pull_request:
+    branches: 
+      - 'v*.x/staging'
+      - 'v*.x/rc'
+      - 'v*.x/master'
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+  schedule:
+    - cron:  '30 1 * * 6'
+
+permissions: read-all
+
+jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action.yml@ScoreCardFC
+        with:
+          enabled_checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
+          results_file: results.sarif
+          filtered_results_file: filteredResults.sarif
