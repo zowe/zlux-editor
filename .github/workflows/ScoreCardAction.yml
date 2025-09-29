@@ -17,7 +17,12 @@ permissions: read-all
 
 jobs:
   scorecard:
+    name: Scorecard analysis
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
     steps:
       - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
