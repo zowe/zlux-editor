@@ -50,19 +50,41 @@ jobs:
             echo "$FILTERED" > filteredResults.sarif
           fi
           
-      - name: "Generate summary table for Scorecard checks"
+      - name: "Generate Scorecard summary with findings and details"
         env:
           SCORECARD_ENABLED_CHECKS: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
         run: |
+          declare -A CHECK_DETAILS
+          CHECK_DETAILS[TokenPermissionsID]="**TokenPermissionsID**: GitHub workflow tokens have excess permissions, which could be abused if compromised. _GitHub Actions tokens use least privilege. Helps reduce blast radius if a token is compromised._"
+          CHECK_DETAILS[PinnedDependenciesID]="**PinnedDependenciesID**: Dependencies are not locked to specific versions; you could get a bad update unexpectedly. _Dependencies are pinned (fixed versions/hashes). Prevents accidental upgrades to insecure or malicious versions._"
+          CHECK_DETAILS[BranchProtectionID]="**BranchProtectionID**: Your main or important branches are not protected; someone could force-push or delete them. _Branch protection rules are enabled. Prevents accidental/malicious changes to main/release branches._"
+          CHECK_DETAILS[ContributorsID]="**ContributorsID**: Most recent contributions come from a single org/person, increasing risk of unchecked changes. _Diversity of contributors (from different orgs). Reduces risk of insider attacks, increases trust._"
+          CHECK_DETAILS[DangerousWorkflowID]="**DangerousWorkflowID**: Your workflows may allow attackers to steal secrets or run malicious code. _Dangerous GitHub Actions patterns. Prevents workflows that could leak secrets or be abused._"
+
+          # Table header
           echo "| Check ID | Findings |" > scorecard-summary.md
           echo "|----------|----------|" >> scorecard-summary.md
+
+          any=0
+          details_section=""
           for id in $(echo $SCORECARD_ENABLED_CHECKS | tr ',' ' '); do
             count=$(jq --arg id "$id" '[.runs[].results[] | select(.ruleId == $id)] | length' filteredResults.sarif)
-            echo "| $id | $count |" >> scorecard-summary.md
+            if [ "$count" -gt 0 ]; then
+              echo "| $id | $count |" >> scorecard-summary.md
+              details_section+="\n\n${CHECK_DETAILS[$id]}"
+              any=1
+            fi
           done
-          echo "" >> scorecard-summary.md
-          echo "See full SARIF for details." >> scorecard-summary.md
-          cat scorecard-summary.md >> $GITHUB_STEP_SUMMARY
+
+          if [ "$any" -eq 1 ]; then
+            echo "" >> scorecard-summary.md
+            echo "See full SARIF for details." >> scorecard-summary.md
+            cat scorecard-summary.md >> $GITHUB_STEP_SUMMARY
+            # Print details for findings
+            echo -e "$details_section" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No Scorecard findings detected for selected checks." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: "Upload artifact"
         uses: actions/upload-artifact@v4
