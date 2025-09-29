@@ -19,7 +19,7 @@ jobs:
   scorecard:
     runs-on: ubuntu-latest
     steps:
-      - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action.yml@ScoreCardFC
+      - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
           enabled_checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
           results_file: results.sarif
