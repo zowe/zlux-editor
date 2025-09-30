@@ -13,17 +13,15 @@ on:
   schedule:
     - cron:  '30 1 * * 6'
 
-permissions: read-all
-
+permissions:
+  contents: read
+  security-events: write
 jobs:
   scorecard:
     name: Scorecard analysis
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-      id-token: write
     steps:
+      - uses: actions/checkout@v4
       - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
           enabled_checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
