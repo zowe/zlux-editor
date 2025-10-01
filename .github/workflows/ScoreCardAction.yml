@@ -30,7 +30,7 @@ jobs:
           filtered_results_file: filteredResults.sarif
 
       - name: Create GitHub Issue for Scorecard Findings
-        if: github.event_name == 'schedule'
+        #if: github.event_name == 'schedule'
         uses: peter-evans/create-issue-from-file@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
