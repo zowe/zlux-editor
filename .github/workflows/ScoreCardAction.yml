@@ -29,13 +29,15 @@ jobs:
           results_file: results.sarif
           filtered_results_file: filteredResults.sarif
           
-      - name: Comment on Pull Request with Scorecard summary
-        if: github.event_name == 'pull_request'
+      - name: Comment on Issue with Scorecard summary
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: 361
           body-file: scorecard-summary.md
+          edit-mode: append
+          append-separator: newline
+          reactions-edit-mode: append
 
       - name: Create GitHub Issue for Scorecard Findings
         if: github.event_name == 'schedule'
