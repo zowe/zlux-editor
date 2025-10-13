@@ -3,7 +3,7 @@ name: Consolidated OSSF Scorecard Scan
 on:
   push:
     branches:
-      - ScoreCardSSF
+      - v3.x/staging
       
   schedule:
     - cron: '30 6 1 * *'  # Runs at 06:30 UTC on the 1st day of every month
