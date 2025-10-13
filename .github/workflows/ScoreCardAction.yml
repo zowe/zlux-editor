@@ -31,12 +31,11 @@ jobs:
           path: repo
 
       - name: Run Scorecard Composite Action
-        working-directory: repo
         uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
           enabled_checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
-          results_file: results.sarif
-          filtered_results_file: filteredResults.sarif
+          results_file: repo/results.sarif
+          filtered_results_file: repo/filteredResults.sarif
 
       - name: Upload summary artifact
         uses: actions/upload-artifact@v4
