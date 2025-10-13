@@ -1,70 +1,29 @@
-name: Consolidated OSSF Scorecard Scan
-
+name: OSSF Scorecard Using Actions
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - v3.x/staging
-  
   schedule:
-    - cron: '30 6 1 * *'  # Runs at 06:30 UTC on the 1st day of every month
+    - cron: '0 6 1 * *'  # Runs at 06:00 UTC on the 1st day of every month
 
 permissions:
   contents: read
+  security-events: write
   issues: write
-
 jobs:
   scorecard:
+    name: Scorecard analysis
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        repo:
-          - zowe/zlux-editor
-          - zowe/sample-angular-app
-          - zowe/sample-react-app
-          - zowe/zlux-app-server
-          - zowe/zlux-shared
     steps:
-      - name: Checkout ${{ matrix.repo }}
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ matrix.repo }}
-          path: repo
-
-      - name: Run Scorecard Composite Action
-        uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
+      - uses: actions/checkout@v4
+      - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
           enabled_checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
-          results_file: repo/results.sarif
-          filtered_results_file: repo/filteredResults.sarif
-
-      - name: Upload summary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scorecard-summary-${{ matrix.repo }}
-          path: repo/scorecard-summary.md
-
-  merge_and_report:
-    needs: scorecard
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all summary artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Merge all summaries
-        run: |
-          echo "# Consolidated OSSF Scorecard Results" > merged-scorecard-summary.md
-          for dir in scorecard-summary-*; do
-            repo_name=$(echo $dir | sed 's/scorecard-summary-//')
-            echo -e "\n## Results for $repo_name\n" >> merged-scorecard-summary.md
-            cat $dir/scorecard-summary.md >> merged-scorecard-summary.md
-            echo -e "\n---\n" >> merged-scorecard-summary.md
-          done
-
-      - name: Create consolidated Scorecard Issue
+          results_file: results.sarif
+          filtered_results_file: filteredResults.sarif
+ 
+      - name: Create GitHub Issue for Scorecard Findings
+        if: github.event_name == 'schedule'
         uses: peter-evans/create-issue-from-file@v4
         with:
           token: ${{ secrets.GHA_CREATE_ISSUE }}
           repository: zowe/zlux
-          title: "Consolidated OSSF Scorecard Results - ${{ github.run_id }}"
-          content-filepath: merged-scorecard-summary.md
+          title: "OSSF Scorecard Results - ${{ github.run_id }}"
+          content-filepath: scorecard-summary.md
