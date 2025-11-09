@@ -100,7 +100,7 @@ export const LANGUAGE_MENUS = {
                            let action = dispatcher.makeAction('org.zowe.editor.jcl.view', 'View JCL',
                                                               dispatcher.constants.ActionTargetMode.PluginFindAnyOrCreate,
                                                               dispatcher.constants.ActionType.Launch,'org.zowe.explorer-jes',argumentFormatter);
-                           dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobid':file.model.jobid}});
+                           dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobId':file.model.jobid}});
                          });
                      } else {
                        context.controller.snackBar.open('Warning: JCL submitted but Job ID not found.', 'Dismiss', {duration: 5000, panelClass: 'center' });
