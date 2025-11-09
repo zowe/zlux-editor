@@ -81,8 +81,8 @@ export const LANGUAGE_MENUS = {
                           "X-CSRF-ZOSMF-HEADER": "true",
                           "Accept": "application/json" }})
               .then(async (response) => {
-                    const rawStream = await response.clone().text();
-                    console.log("Response body?", rawStream)
+                    // const rawStream = await response.clone().text();
+                    // console.log("Response body?", rawStream)
                      if (!response.ok) {
                        throw new Error('Status: '+response.status+', '+response.statusText);
                      } else {
