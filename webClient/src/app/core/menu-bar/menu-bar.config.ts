@@ -65,6 +65,7 @@ export const LANGUAGE_MENUS = {
           note: content = context.editor.getValue(); because we submit editor wip content not saved-somewhere content
           note: URL hits API ML base path. As API-ML is a hard requirement for Zowe, no need for ZoweURIBroker
           but for dev, app-server only testing, prob need ZoweZLUX.uriBroker.serverRootUri('')
+          note: rawStream handling below can be used to read ReadableStream for debugging
           */
         functionString: `
         const file = context.controller.fetchActiveFile();
