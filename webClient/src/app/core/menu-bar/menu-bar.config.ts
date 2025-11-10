@@ -14,7 +14,7 @@ export const TEST_LANGUAGE_MENU = [{
   action: {
     functionString: `
                     console.log("My context=",context);
-                    context.editor.model.setValue("GOODBYE TEXT");`, params: []
+                    context.editor.setValue("GOODBYE TEXT");`, params: []
   }, keyMap: ''
 },
 {
@@ -24,7 +24,7 @@ export const TEST_LANGUAGE_MENU = [{
                     const selection = context.editor.cursor.getSelection();
                     context.log.info('selection=',selection);
                     if (selection) {
-                      context.editor.model.setValue(context.editor.model.getValueInRange(selection));
+                      context.editor.setValue(context.editor.getValueInRange(selection));
                     }`, params: []
   }, keyMap: ''
 },
@@ -47,52 +47,61 @@ export const TEST_LANGUAGE_MENU = [{
 export const LANGUAGE_MENUS = {
   'jcl': [
     {
-      name: 'Submit (Future)',
+      name: 'Submit',
       isDisabledString: `
-      const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
-      const file = context.controller.fetchActiveFile();
-    if (!plugin || !file || (ZoweZLUX.uriBroker.serverRootUri('') == '/')) {
-        return true;
-      }
-      return true;
-      ` /* CHANGEME TODO line above this comment should be "return false" once JCL submit works as intended */,
+        const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
+        const file = context.controller.fetchActiveFile();
+        if (!plugin || !file || (ZoweZLUX.uriBroker.serverRootUri('') == '/')) {
+          return true;
+        }
+        return false;
+      `,
       action: {
         /*
           TODO z/osmf has a jobs api, so this makes use of it for now. 
           But, we don't import that service into the editor, because it would make a hard requirement instead of an optional one.
           May want to have such metadata in plugindef, or perhaps this is an interface & capability to be searched up
-        */
+          
+          note: content = context.editor.getValue(); because we submit editor wip content not saved-somewhere content
+          note: URL hits API ML base path. As API-ML is a hard requirement for Zowe, no need for ZoweURIBroker
+          but for dev, app-server only testing, prob need ZoweZLUX.uriBroker.serverRootUri('')
+          note: rawStream handling below can be used to read ReadableStream for debugging
+          */
         functionString: `
         const file = context.controller.fetchActiveFile();
+        const uri = '/ibmzosmf/api/v1/zosmf/restjobs/jobs/';
+
         if (file) {
-          let content = context.editor.model.getValue();
+          let content = context.editor.getValue();
           if (content && content.length > 0) {
-            content = content.replace(/\\n/g,'\\\\n');
-            const uri = '/api/v1/jobs/string';
-            const stringJsonBody = '{ "jcl": "'+content+'"}';  
-            fetch(uri, {method: 'POST', body: stringJsonBody,
+            fetch(uri, {method: 'PUT', body: content,
                         credentials: 'include',
                         mode: 'cors',
-                        headers:{ 'Content-Type': 'application/json'}})
-              .then((response)=> {
+                        headers:{ 
+                          "Content-Type": "text/plain", 
+                          "X-CSRF-ZOSMF-HEADER": "true",
+                          "Accept": "application/json" }})
+              .then(async (response) => {
+                    // const rawStream = await response.clone().text();
+                    // console.log("Response body?", rawStream)
                      if (!response.ok) {
                        throw new Error('Status: '+response.status+', '+response.statusText);
                      } else {
                        return response.json();
                      }
-                   })
+              })
               .then((response)=> {
-                     if (response.jobId && response.owner) {
-                       file.model.jobId = response.jobId;
+                     if (response.jobid && response.owner) {
+                       file.model.jobid = response.jobid;
                        file.model.jobOwner = response.owner;
-                       let ref = context.controller.snackBar.open('JCL Submitted. ID='+response.jobId,'View in Explorer', {duration: 5000, panelClass: 'center' })
+                       let ref = context.controller.snackBar.open('JCL Submitted. ID='+response.jobid,'View in Explorer', {duration: 5000, panelClass: 'center' })
                          .onAction().subscribe(()=> {
                            const dispatcher = ZoweZLUX.dispatcher;
                            const argumentFormatter = {data: {op:'deref',source:'event',path:['data']}};
                            let action = dispatcher.makeAction('org.zowe.editor.jcl.view', 'View JCL',
                                                               dispatcher.constants.ActionTargetMode.PluginFindAnyOrCreate,
                                                               dispatcher.constants.ActionType.Launch,'org.zowe.explorer-jes',argumentFormatter);
-                           dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobId':file.model.jobId}});
+                           dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobId':file.model.jobid}});
                          });
                      } else {
                        context.controller.snackBar.open('Warning: JCL submitted but Job ID not found.', 'Dismiss', {duration: 5000, panelClass: 'center' });
@@ -110,12 +119,12 @@ export const LANGUAGE_MENUS = {
       name: 'group-end'
     },
     {
-      name: 'View Job (Future)',
+      name: 'View Job',
       isDisabledString: `
       const plugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.explorer-jes');
       const file = context.controller.fetchActiveFile();
       if (plugin && file) {
-        return !file.model.jobId;
+        return !file.model.jobid;
       } else {
         return true;
       }
@@ -129,7 +138,7 @@ export const LANGUAGE_MENUS = {
           let action = dispatcher.makeAction('org.zowe.editor.jcl.view', 'View JCL',
                                              dispatcher.constants.ActionTargetMode.PluginFindAnyOrCreate,
                                              dispatcher.constants.ActionType.Launch,'org.zowe.explorer-jes',argumentFormatter);
-          dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobId':file.model.jobId}});
+          dispatcher.invokeAction(action,{'data':{'owner':file.model.jobOwner,'prefix':'*','jobid':file.model.jobid}});
         } else {
           context.controller.snackBar.open('Cannot find open file', 'Dismiss', {duration: 3000, panelClass: 'center' });
         }
