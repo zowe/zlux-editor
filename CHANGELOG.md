@@ -3,6 +3,7 @@
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
+- Updated npm version of `zlux-angular-file-tree` to `v2.0.0-staging-474-20250915115421`
 
 ## `3.3.0`
 
