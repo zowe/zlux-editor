@@ -1,12 +1,8 @@
 # Zlux Editor Changelog
 
-## `3.5.0`
-
-- Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
-
 ## `3.4.0`
 
-- Bugfix: Non-working JCL submit has been temporarily disabled
+- Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
 
 ## `3.3.0`
 
