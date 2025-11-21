@@ -2,6 +2,9 @@ name: OSSF Scorecard Using Actions
 on:
   schedule:
     - cron: '0 6 1 * *'  # Runs at 06:00 UTC on the 1st day of every month
+  pull_request:
+    branches: [ v3.x/staging ]               
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
