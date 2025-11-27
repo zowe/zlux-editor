@@ -3,7 +3,10 @@ on:
   schedule:
     - cron: '0 6 1 * *'  # Runs at 06:00 UTC on the 1st day of every month
   pull_request:
-    branches: [ v3.x/staging ]               
+    branches: 
+      - 'v*.x/staging'
+      - 'v*.x/rc'
+      - 'v*.x/master'        
     types: [opened, synchronize, reopened]
 
 permissions:
