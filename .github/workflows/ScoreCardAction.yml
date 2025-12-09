@@ -21,7 +21,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
-          checks: TokenPermissionsID,PinnedDependenciesID,BranchProtectionID,ContributorsID,DangerousWorkflowID
           results_file: results.sarif
  
       - name: Create GitHub Issue for Scorecard Findings
