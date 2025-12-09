@@ -22,6 +22,12 @@ jobs:
       - uses: zowe/zlux-build/.github/actions/ossf-scorecard-sarif-action@ScoreCardFC
         with:
           results_file: results.sarif
+            
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scorecard-sarif
+          path: results.sarif
+          retention-days: 7
  
       - name: Create GitHub Issue for Scorecard Findings
         uses: peter-evans/create-issue-from-file@v4
