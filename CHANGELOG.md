@@ -1,5 +1,10 @@
 # Zlux Editor Changelog
 
+## `3.4.0`
+
+- Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
+- Updated npm version of `zlux-angular-file-tree` to `v2.0.0-staging-474-20250915115421`
+
 ## `3.3.0`
 
 - Breaking change: Editor has been updated to Zowe V3, which includes across-the-board dependency upgrades (like Angular 18, File Tree, Prime, Rxjs, etc.) and bugfixes. This makes the base code incompatible with the Zowe V2 desktop, but a V2 Editor can be used in the V2 Desktop compatibility mode. 
