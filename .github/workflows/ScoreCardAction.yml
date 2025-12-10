@@ -36,3 +36,4 @@ jobs:
           repository: zowe/zlux
           title: "OSSF Scorecard Results - ${{ github.run_id }}"
           content-filepath: scorecard-summary.md
+
