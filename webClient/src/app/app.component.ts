@@ -134,6 +134,12 @@ export class AppComponent {
       case 'openDSList':
         this.editorControl.loadDirectory(data.name);
         break;
+      case 'newFile':
+        this.editorControl.createFile(data.name || undefined);
+        if (data.directory) {
+          this.editorControl.loadDirectory(data.directory);
+        }
+        break;
       default:
         this.log.warn(`Unknown command (${data.type}) given in launch metadata.`);
     }

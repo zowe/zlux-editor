@@ -579,6 +579,8 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
      * to the server.
      */
     var encodedFileContents = new Buffer(_activeFile.model.contents).toString('base64');
+    const wasTempFile = _activeFile.temp;
+    const originalName = _activeFile.name;
     
     /* Send the HTTP PUT request to the server
      * to save the file.
@@ -599,6 +601,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
           _activeFile.model.encoding = this.getIntEncoding(results.encoding);
           _activeFile.model.path = results.directory;
           _activeFile.temp = false;
+          if (wasTempFile) {
+            window.dispatchEvent(new CustomEvent('desktop-new-file-saved', {
+              detail: { originalName: originalName, filePath: results.directory + '/' + results.fileName }
+            }));
+          }
         }
         /* This will probably need to be changed
         * for the sake of accessibility.
