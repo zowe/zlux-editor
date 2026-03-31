@@ -83,7 +83,19 @@ var config = {
       threshold: 50000,
       minRatio: 0.8
     })
-    , new MonacoWebpackPlugin({publicPath: pubPath})
+    , new MonacoWebpackPlugin({
+      publicPath: pubPath,
+      customLanguages: [
+        {
+          label: 'yaml',
+          entry: ['monaco-yaml', 'vs/basic-languages/yaml/yaml.contribution'],
+          worker: {
+            id: 'monaco-yaml/yamlWorker',
+            entry: 'monaco-yaml/lib/esm/yaml.worker',
+          },
+        },
+      ],
+    })
   ]
 };
 
