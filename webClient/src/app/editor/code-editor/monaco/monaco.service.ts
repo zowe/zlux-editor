@@ -22,9 +22,10 @@ import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-act
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
+import { LimitsService } from '../../../shared/limits.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
-import { of, Subject, Observable } from 'rxjs';
+import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
 import { HttpHeaders } from '@angular/common/http';
 import * as _ from 'lodash';
@@ -46,7 +47,8 @@ export class MonacoService implements OnDestroy {
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
-    private snackBar: SnackBarService
+    private snackBar: SnackBarService,
+    private limitsService: LimitsService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -110,12 +112,40 @@ export class MonacoService implements OnDestroy {
       headers: headers,
       responseType: 'text',
     }
-    return of({}).pipe(
+
+    const maxSize = this.limitsService.limits.maxFileSize;
+    const maxSizeLabel = this.limitsService.getFormattedMaxSize();
+
+    // For USS files, do a metadata pre-check to avoid downloading oversized files
+    const preflight$ = fileNode.model.isDataset
+      ? of(true)
+      : (() => {
+          const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
+            filePath + '/' + fileNode.model.fileName);
+          return this.http.get(metadataUrl).pipe(
+            switchMap((metadata: any) => {
+              const fileSize = metadata && metadata.size != null ? metadata.size : 0;
+              if (fileSize > maxSize) {
+                this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
+                return throwError({ _fileTooLarge: true, status: 413,
+                  message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+              }
+              return of(true);
+            })
+          );
+        })();
+
+    return preflight$.pipe(
       tap(() => this.loadingStatusChanged.next('loading')),
       switchMap(() => this.http.get(requestUrl, options)),
       map((res: any) => {
         if (fileNode.model.isDataset) {
-          return this.dataAdapter.convertDatasetContent(res);
+          const result = this.dataAdapter.convertDatasetContent(res);
+          if (result.contents && result.contents.length > maxSize) {
+            throw { _fileTooLarge: true, status: 413,
+              message: `Dataset "${fileNode.name}" content is too large (${(result.contents.length / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` };
+          }
+          return result;
         } else {
           return this.dataAdapter.convertFileContent(res);
         }
@@ -150,7 +180,10 @@ export class MonacoService implements OnDestroy {
       },
       error: (err) => {
         this.log.warn(`${fileNode.name} could not be refreshed, status: `, err.status);
-        if (err.status === 403) {
+        if (err._fileTooLarge) {
+          this.snackBar.open(err.message,
+            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        } else if (err.status === 403) {
           this.snackBar.open(`${fileNode.name} could not be refreshed due to permissions.`,
             'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
         } else if (err.status === 404) {
@@ -216,7 +249,10 @@ export class MonacoService implements OnDestroy {
         error: (err) => {
           this.editorControl.closeFileHandler(fileNode);
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
-          if (err.status === 403) {
+          if (err._fileTooLarge) {
+            this.snackBar.open(err.message,
+              'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+          } else if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else if (err.status === 404) {

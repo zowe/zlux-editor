@@ -1,0 +1,6 @@
+{
+  "_metadataVersion": "1.1",
+  "_objectType": "org.zowe.editor.limits",
+  "maxFileSize": 50000000,
+  "folderMaxCount": 200
+}
