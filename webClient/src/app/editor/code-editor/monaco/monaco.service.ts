@@ -27,7 +27,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
 import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
@@ -44,6 +44,7 @@ export class MonacoService implements OnDestroy {
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private http: HttpService,
+    private httpClient: HttpClient,
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
@@ -119,15 +120,20 @@ export class MonacoService implements OnDestroy {
     // Pre-check to avoid downloading oversized files/datasets
     let preflight$;
     if (fileNode.model.isDataset) {
-      // For datasets, estimate size using 3390 DASD geometry from space allocation metadata.
-      // The metadata provides space type (CYL/TRK/MB/KB/BYTE) and primary allocation amount,
-      // which lets us compute an estimated byte size before downloading the content.
-      const attrs = fileNode.model.datasetAttrs;
-      const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
-      if (estimatedSize > 0 && estimatedSize > maxSize) {
-        this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
-        preflight$ = throwError({ _fileTooLarge: true, status: 413,
-          message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+      // For sequential datasets (not PDS members), estimate size via 3390 DASD geometry.
+      // PDS members share the parent PDS allocation so DASD math would over-estimate;
+      // they are protected by the streaming download abort below instead.
+      const isPdsMember = fileNode.model.path && fileNode.model.path.indexOf('(') !== -1;
+      if (!isPdsMember) {
+        const attrs = fileNode.model.datasetAttrs;
+        const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
+        if (estimatedSize > 0 && estimatedSize > maxSize) {
+          this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
+          preflight$ = throwError({ _fileTooLarge: true, status: 413,
+            message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+        } else {
+          preflight$ = of(true);
+        }
       } else {
         preflight$ = of(true);
       }
@@ -150,21 +156,66 @@ export class MonacoService implements OnDestroy {
 
     return preflight$.pipe(
       tap(() => this.loadingStatusChanged.next('loading')),
-      switchMap(() => this.http.get(requestUrl, options)),
+      switchMap(() => this.getSizeLimitedResponse(requestUrl, options, maxSize)),
       map((res: any) => {
         if (fileNode.model.isDataset) {
-          const result = this.dataAdapter.convertDatasetContent(res);
-          if (result.contents && result.contents.length > maxSize) {
-            throw { _fileTooLarge: true, status: 413,
-              message: `Dataset "${fileNode.name}" content is too large (${(result.contents.length / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` };
-          }
-          return result;
+          return this.dataAdapter.convertDatasetContent(res);
         } else {
           return this.dataAdapter.convertFileContent(res);
         }
       }),
       finalize(() => this.loadingStatusChanged.next('complete'))
     );
+  }
+
+  /**
+   * Fetches a URL while monitoring download progress. If the downloaded bytes
+   * exceed maxSize, the request is cancelled immediately. This breaks the server's
+   * socket so it stops streaming and doing CPU-intensive JSON conversion work.
+   * Prevents the jsonConvertAndWriteBuffer() errors from burning server CPU.
+   */
+  private getSizeLimitedResponse(url: string, options: any, maxSize: number): Observable<any> {
+    const maxSizeLabel = this.limitsService.getFormattedMaxSize();
+
+    return new Observable((observer) => {
+      const sub = this.httpClient.get(url, {
+        headers: options.headers,
+        responseType: 'text',
+        reportProgress: true,
+        observe: 'events'
+      }).subscribe({
+        next: (event: HttpEvent<string>) => {
+          if (event.type === HttpEventType.ResponseHeader) {
+            // Check Content-Length header if the server provides it
+            const contentLength = parseInt(event.headers.get('Content-Length') || '0', 10);
+            if (contentLength > maxSize) {
+              this.log.warn(`Response Content-Length ${contentLength} exceeds limit ${maxSize}, aborting download`);
+              sub.unsubscribe(); // Cancels the XMLHttpRequest, breaking the server's socket
+              observer.error({ _fileTooLarge: true, status: 413,
+                message: `Content is too large (${(contentLength / 1000000).toFixed(1)}MB from Content-Length). Maximum allowed size is ${maxSizeLabel}.` });
+            }
+          } else if (event.type === HttpEventType.DownloadProgress) {
+            // Monitor streaming progress and abort if accumulated bytes exceed limit
+            if (event.loaded > maxSize) {
+              this.log.warn(`Download progress ${event.loaded} bytes exceeds limit ${maxSize}, aborting`);
+              sub.unsubscribe();
+              observer.error({ _fileTooLarge: true, status: 413,
+                message: `Download exceeded maximum allowed size of ${maxSizeLabel}. Transfer was cancelled to protect server resources.` });
+            }
+          } else if (event.type === HttpEventType.Response) {
+            // Full response received within limits
+            observer.next(event.body);
+            observer.complete();
+          }
+        },
+        error: (err) => {
+          observer.error(err);
+        }
+      });
+
+      // If the outer observable is unsubscribed, cancel the HTTP request too
+      return () => sub.unsubscribe();
+    });
   }
 
   refreshFile(fileNode: ProjectContext, reload: boolean, line?: number) {
