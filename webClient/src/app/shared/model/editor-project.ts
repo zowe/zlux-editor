@@ -32,7 +32,10 @@ export interface DatasetAttributes {
   dsorg?: DatasetOrganization,
   members?: Array<any>,
   recfm?: RecordFormat,
-  volser?: string
+  volser?: string,
+  space?: string,
+  prime?: number,
+  secnd?: number
 }
 
 export interface RecordFormat {

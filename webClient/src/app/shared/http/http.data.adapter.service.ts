@@ -63,7 +63,10 @@ export class DataAdapterService {
           csiEntryType: entry.csiEntryType,
           dsorg: entry.dsorg,
           recfm: entry.recfm,
-          volser: entry.volser
+          volser: entry.volser,
+          space: entry.space,
+          prime: entry.prime,
+          secnd: entry.secnd
         }
       };
     });
@@ -85,7 +88,10 @@ export class DataAdapterService {
           csiEntryType: parent.csiEntryType,
           dsorg: parent.dsorg,
           recfm: parent.recfm,
-          volser: parent.volser
+          volser: parent.volser,
+          space: parent.space,
+          prime: parent.prime,
+          secnd: parent.secnd
         }
       };
     });

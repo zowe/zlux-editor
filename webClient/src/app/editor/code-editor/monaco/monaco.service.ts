@@ -116,24 +116,37 @@ export class MonacoService implements OnDestroy {
     const maxSize = this.limitsService.limits.maxFileSize;
     const maxSizeLabel = this.limitsService.getFormattedMaxSize();
 
-    // For USS files, do a metadata pre-check to avoid downloading oversized files
-    const preflight$ = fileNode.model.isDataset
-      ? of(true)
-      : (() => {
-          const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
-            filePath + '/' + fileNode.model.fileName);
-          return this.http.get(metadataUrl).pipe(
-            switchMap((metadata: any) => {
-              const fileSize = metadata && metadata.size != null ? metadata.size : 0;
-              if (fileSize > maxSize) {
-                this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
-                return throwError({ _fileTooLarge: true, status: 413,
-                  message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
-              }
-              return of(true);
-            })
-          );
-        })();
+    // Pre-check to avoid downloading oversized files/datasets
+    let preflight$;
+    if (fileNode.model.isDataset) {
+      // For datasets, estimate size using 3390 DASD geometry from space allocation metadata.
+      // The metadata provides space type (CYL/TRK/MB/KB/BYTE) and primary allocation amount,
+      // which lets us compute an estimated byte size before downloading the content.
+      const attrs = fileNode.model.datasetAttrs;
+      const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
+      if (estimatedSize > 0 && estimatedSize > maxSize) {
+        this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
+        preflight$ = throwError({ _fileTooLarge: true, status: 413,
+          message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+      } else {
+        preflight$ = of(true);
+      }
+    } else {
+      // For USS files, do a metadata pre-check to avoid downloading oversized files
+      const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
+        filePath + '/' + fileNode.model.fileName);
+      preflight$ = this.http.get(metadataUrl).pipe(
+        switchMap((metadata: any) => {
+          const fileSize = metadata && metadata.size != null ? metadata.size : 0;
+          if (fileSize > maxSize) {
+            this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
+            return throwError({ _fileTooLarge: true, status: 413,
+              message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+          }
+          return of(true);
+        })
+      );
+    }
 
     return preflight$.pipe(
       tap(() => this.loadingStatusChanged.next('loading')),

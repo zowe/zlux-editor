@@ -9,6 +9,7 @@
 */
 import { Injectable, Inject } from '@angular/core';
 import { HttpService } from './http/http.service';
+import { DatasetAttributes } from './model/editor-project';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { BehaviorSubject } from 'rxjs';
 
@@ -80,6 +81,42 @@ export class LimitsService {
       return `${(bytes / 1000000).toFixed(0)}MB`;
     }
     return `${(bytes / 1000).toFixed(0)}KB`;
+  }
+
+  /**
+   * Estimates dataset size in bytes using 3390 CKD DASD geometry.
+   * 3390: 56,664 bytes/track, 15 tracks/cylinder, 849,960 bytes/cylinder.
+   * The metadata response provides `space` (unit type) and `prime` (primary allocation).
+   * Returns estimated bytes, or -1 if estimation is not possible.
+   */
+  estimateDatasetSize(attrs: DatasetAttributes): number {
+    // Constants from IBM 3390 DASD geometry
+    // https://www.ibm.com/docs/en/zos/2.1.0?topic=devices-direct-access-storage
+    const BYTES_PER_TRACK = 56664;
+    const TRACKS_PER_CYLINDER = 15;
+    const BYTES_PER_CYLINDER = BYTES_PER_TRACK * TRACKS_PER_CYLINDER; // 849,960
+
+    if (!attrs || attrs.prime == null || attrs.prime <= 0 || !attrs.space) {
+      return -1;
+    }
+
+    const prime = attrs.prime;
+    const space = attrs.space.toUpperCase();
+
+    switch (space) {
+      case 'CYL':
+        return prime * BYTES_PER_CYLINDER;
+      case 'TRK':
+        return prime * BYTES_PER_TRACK;
+      case 'MB':
+        return prime * 1048576;
+      case 'KB':
+        return prime * 1024;
+      case 'BYTE':
+        return prime;
+      default:
+        return -1;
+    }
   }
 }
 
