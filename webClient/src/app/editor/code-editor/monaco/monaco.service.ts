@@ -322,6 +322,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
+      this.editorControl.openFileHandler(fileNode);
       this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: fileNode.changed ? fileNode.model.contents : '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
@@ -335,6 +336,8 @@ export class MonacoService implements OnDestroy {
     } else {
       this.getFileRequestObservable(fileNode, reload, line).subscribe({
         next: (response: any) => {
+          // Preflight passed (and user confirmed if oversized) — now add the tab
+          this.editorControl.openFileHandler(fileNode);
           //network load or switched to currently open file
           const resJson = response;
           this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, true).subscribe({
@@ -357,7 +360,6 @@ export class MonacoService implements OnDestroy {
           });
         },
         error: (err) => {
-          this.editorControl.closeFileHandler(fileNode);
           if (err._userCancelled) {
             return; // User cancelled from the large file warning dialog
           }
