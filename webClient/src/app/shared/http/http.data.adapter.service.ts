@@ -67,7 +67,8 @@ export class DataAdapterService {
           volser: entry.volser,
           space: entry.space,
           prime: entry.prime,
-          secnd: entry.secnd
+          secnd: entry.secnd,
+          totalBlockSize: entry.dsorg ? entry.dsorg.totalBlockSize : undefined
         }
       };
     });
@@ -92,7 +93,8 @@ export class DataAdapterService {
           volser: parent.volser,
           space: parent.space,
           prime: parent.prime,
-          secnd: parent.secnd
+          secnd: parent.secnd,
+          totalBlockSize: parent.dsorg ? parent.dsorg.totalBlockSize : undefined
         }
       };
     });

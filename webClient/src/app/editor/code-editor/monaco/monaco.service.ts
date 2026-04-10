@@ -128,21 +128,22 @@ export class MonacoService implements OnDestroy {
         // PDS members share the parent PDS allocation so DASD math would over-estimate;
         // they are protected by the streaming download abort below instead.
         preflight$ = of(true);
-      } else if (org === 'PS' || org === 'PS-E' || org === 'DA') {
-        // Sequential or Direct Access datasets: estimate size via 3390 DASD geometry.
+      } else if (org === 'vsam') {
+        // VSAM datasets have different allocation semantics (CI/CA sizes, key ranges);
+        // space/prime don't map to data size the same way. Rely on streaming abort.
+        this.log.debug(`Dataset ${fileNode.name} is VSAM, skipping DASD size estimation`);
+        preflight$ = of(true);
+      } else {
+        // Sequential, partitioned (whole PDS), HFS, DA, and other non-VSAM datasets:
+        // estimate size via 3390 DASD geometry using space/prime allocation.
         const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
         if (estimatedSize > 0 && estimatedSize > maxSize) {
-          this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
+          this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (org=${org}, space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
           preflight$ = throwError({ _fileTooLarge: true,
             message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
         } else {
           preflight$ = of(true);
         }
-      } else {
-        // Other organizations (PO without member, VSAM, etc.): skip DASD preflight.
-        // The streaming download abort (getSizeLimitedResponse) still protects against oversized responses.
-        this.log.debug(`Dataset ${fileNode.name} has organization="${org}", skipping DASD size estimation`);
-        preflight$ = of(true);
       }
     } else {
       // For USS files, check size from the directory listing first (already on the model).
@@ -178,10 +179,14 @@ export class MonacoService implements OnDestroy {
       tap(() => this.loadingStatusChanged.next('loading')),
       switchMap(() => this.getSizeLimitedResponse(requestUrl, options, maxSize)),
       map((res: any) => {
-        if (fileNode.model.isDataset) {
-          return this.dataAdapter.convertDatasetContent(res);
-        } else {
-          return this.dataAdapter.convertFileContent(res);
+        try {
+          if (fileNode.model.isDataset) {
+            return this.dataAdapter.convertDatasetContent(res);
+          } else {
+            return this.dataAdapter.convertFileContent(res);
+          }
+        } catch (e) {
+          throw { status: 0, _body: `Failed to parse server response for ${fileNode.name}: ${e.message || e}` };
         }
       }),
       finalize(() => this.loadingStatusChanged.next('complete'))
@@ -229,6 +234,17 @@ export class MonacoService implements OnDestroy {
           }
         },
         error: (err) => {
+          // Normalize HttpErrorResponse so downstream error handlers can use
+          // the same properties (status, _body) they expect from HttpService.
+          if (err && err.status != null && err._body === undefined) {
+            let body = '';
+            if (typeof err.error === 'string' && err.error) {
+              body = err.error;
+            } else if (err.error && typeof err.error === 'object') {
+              body = err.error.message || err.error.error || '';
+            }
+            err._body = body || err.statusText || `Server returned status ${err.status}`;
+          }
           observer.error(err);
         }
       });

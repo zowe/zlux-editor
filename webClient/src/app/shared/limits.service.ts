@@ -114,6 +114,10 @@ export class LimitsService {
         return prime * 1024;
       case 'BYTE':
         return prime;
+      case 'BLK': {
+        const blockSize = attrs.totalBlockSize;
+        return blockSize > 0 ? prime * blockSize : -1;
+      }
       default:
         return -1;
     }

@@ -36,7 +36,8 @@ export interface DatasetAttributes {
   volser?: string,
   space?: string,
   prime?: number,
-  secnd?: number
+  secnd?: number,
+  totalBlockSize?: number
 }
 
 export interface RecordFormat {
