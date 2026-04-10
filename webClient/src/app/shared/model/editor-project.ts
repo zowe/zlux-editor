@@ -22,6 +22,7 @@ export interface ProjectStructure {
     fileName?: string;
     isDataset: boolean;
     encoding?: number;
+    size?: number;
     datasetAttrs?: DatasetAttributes;
     etag?: string;
 }

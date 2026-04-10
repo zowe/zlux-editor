@@ -120,38 +120,58 @@ export class MonacoService implements OnDestroy {
     // Pre-check to avoid downloading oversized files/datasets
     let preflight$;
     if (fileNode.model.isDataset) {
-      // For sequential datasets (not PDS members), estimate size via 3390 DASD geometry.
-      // PDS members share the parent PDS allocation so DASD math would over-estimate;
-      // they are protected by the streaming download abort below instead.
       const isPdsMember = fileNode.model.path && fileNode.model.path.indexOf('(') !== -1;
-      if (!isPdsMember) {
-        const attrs = fileNode.model.datasetAttrs;
+      const attrs = fileNode.model.datasetAttrs;
+      const org = attrs && attrs.dsorg ? attrs.dsorg.organization : '';
+
+      if (isPdsMember) {
+        // PDS members share the parent PDS allocation so DASD math would over-estimate;
+        // they are protected by the streaming download abort below instead.
+        preflight$ = of(true);
+      } else if (org === 'PS' || org === 'PS-E' || org === 'DA') {
+        // Sequential or Direct Access datasets: estimate size via 3390 DASD geometry.
         const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
         if (estimatedSize > 0 && estimatedSize > maxSize) {
           this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
-          preflight$ = throwError({ _fileTooLarge: true, status: 413,
+          preflight$ = throwError({ _fileTooLarge: true,
             message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
         } else {
           preflight$ = of(true);
         }
       } else {
+        // Other organizations (PO without member, VSAM, etc.): skip DASD preflight.
+        // The streaming download abort (getSizeLimitedResponse) still protects against oversized responses.
+        this.log.debug(`Dataset ${fileNode.name} has organization="${org}", skipping DASD size estimation`);
         preflight$ = of(true);
       }
     } else {
-      // For USS files, do a metadata pre-check to avoid downloading oversized files
-      const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
-        filePath + '/' + fileNode.model.fileName);
-      preflight$ = this.http.get(metadataUrl).pipe(
-        switchMap((metadata: any) => {
-          const fileSize = metadata && metadata.size != null ? metadata.size : 0;
-          if (fileSize > maxSize) {
-            this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
-            return throwError({ _fileTooLarge: true, status: 413,
-              message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
-          }
-          return of(true);
-        })
-      );
+      // For USS files, check size from the directory listing first (already on the model).
+      // Fall back to a metadata API call only if size is not available (e.g. file opened
+      // outside of a directory listing, or listing did not include size).
+      const knownSize = fileNode.model.size;
+      if (knownSize != null && knownSize > 0) {
+        if (knownSize > maxSize) {
+          this.log.warn(`File ${fileNode.name} size ${knownSize} (from directory listing) exceeds limit ${maxSize}`);
+          preflight$ = throwError({ _fileTooLarge: true,
+            message: `File "${fileNode.name}" is too large (${(knownSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+        } else {
+          preflight$ = of(true);
+        }
+      } else {
+        const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
+          filePath + '/' + fileNode.model.fileName);
+        preflight$ = this.http.get(metadataUrl).pipe(
+          switchMap((metadata: any) => {
+            const fileSize = metadata && metadata.size != null ? metadata.size : 0;
+            if (fileSize > maxSize) {
+              this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
+              return throwError({ _fileTooLarge: true,
+                message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+            }
+            return of(true);
+          })
+        );
+      }
     }
 
     return preflight$.pipe(
@@ -191,7 +211,7 @@ export class MonacoService implements OnDestroy {
             if (contentLength > maxSize) {
               this.log.warn(`Response Content-Length ${contentLength} exceeds limit ${maxSize}, aborting download`);
               sub.unsubscribe(); // Cancels the XMLHttpRequest, breaking the server's socket
-              observer.error({ _fileTooLarge: true, status: 413,
+              observer.error({ _fileTooLarge: true,
                 message: `Content is too large (${(contentLength / 1000000).toFixed(1)}MB from Content-Length). Maximum allowed size is ${maxSizeLabel}.` });
             }
           } else if (event.type === HttpEventType.DownloadProgress) {
@@ -199,7 +219,7 @@ export class MonacoService implements OnDestroy {
             if (event.loaded > maxSize) {
               this.log.warn(`Download progress ${event.loaded} bytes exceeds limit ${maxSize}, aborting`);
               sub.unsubscribe();
-              observer.error({ _fileTooLarge: true, status: 413,
+              observer.error({ _fileTooLarge: true,
                 message: `Download exceeded maximum allowed size of ${maxSizeLabel}. Transfer was cancelled to protect server resources.` });
             }
           } else if (event.type === HttpEventType.Response) {

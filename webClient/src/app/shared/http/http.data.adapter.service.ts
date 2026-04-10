@@ -42,7 +42,8 @@ export class DataAdapterService {
         path: eFilePath,
         fileName: eFileName,
         isDataset: false,
-        encoding: eEncoding
+        encoding: eEncoding,
+        size: entry.size
       };
     });
   }
