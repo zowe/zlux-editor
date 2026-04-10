@@ -20,8 +20,8 @@
   <p><b>Warning: </b>{{data.warningMessage}}</p>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-flat-button class="right" color="primary" (click)="onConfirm()">Yes</button>
-  <button mat-button class="right" (click)="onDismiss()">No</button>
+  <button mat-flat-button class="right" color="primary" (click)="onConfirm()">{{data.confirmLabel || 'Yes'}}</button>
+  <button mat-button class="right" (click)="onDismiss()">{{data.dismissLabel || 'No'}}</button>
 </mat-dialog-actions>
 
 <!-- 

@@ -24,7 +24,7 @@ import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 import { LimitsService } from '../../../shared/limits.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { finalize, map, switchMap, tap } from 'rxjs/operators';
+import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
 import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
@@ -117,8 +117,10 @@ export class MonacoService implements OnDestroy {
     const maxSize = this.limitsService.limits.maxFileSize;
     const maxSizeLabel = this.limitsService.getFormattedMaxSize();
 
-    // Pre-check to avoid downloading oversized files/datasets
-    let preflight$;
+    // Pre-check to avoid downloading oversized files/datasets.
+    // If the file exceeds the limit, prompt the user with a warning dialog.
+    // If they choose to override, download without a size cap.
+    let preflight$: Observable<boolean>;
     if (fileNode.model.isDataset) {
       const isPdsMember = fileNode.model.path && fileNode.model.path.indexOf('(') !== -1;
       const attrs = fileNode.model.datasetAttrs;
@@ -127,22 +129,22 @@ export class MonacoService implements OnDestroy {
       if (isPdsMember) {
         // PDS members share the parent PDS allocation so DASD math would over-estimate;
         // they are protected by the streaming download abort below instead.
-        preflight$ = of(true);
+        preflight$ = of(false);
       } else if (org === 'vsam') {
         // VSAM datasets have different allocation semantics (CI/CA sizes, key ranges);
         // space/prime don't map to data size the same way. Rely on streaming abort.
         this.log.debug(`Dataset ${fileNode.name} is VSAM, skipping DASD size estimation`);
-        preflight$ = of(true);
+        preflight$ = of(false);
       } else {
         // Sequential, partitioned (whole PDS), HFS, DA, and other non-VSAM datasets:
         // estimate size via 3390 DASD geometry using space/prime allocation.
         const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
         if (estimatedSize > 0 && estimatedSize > maxSize) {
           this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (org=${org}, space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
-          preflight$ = throwError({ _fileTooLarge: true,
-            message: `Dataset "${fileNode.name}" is too large (estimated ${(estimatedSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+          preflight$ = this.confirmLargeFileOpen(fileNode.name,
+            `has an estimated size of ${(estimatedSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
         } else {
-          preflight$ = of(true);
+          preflight$ = of(false);
         }
       }
     } else {
@@ -153,10 +155,10 @@ export class MonacoService implements OnDestroy {
       if (knownSize != null && knownSize > 0) {
         if (knownSize > maxSize) {
           this.log.warn(`File ${fileNode.name} size ${knownSize} (from directory listing) exceeds limit ${maxSize}`);
-          preflight$ = throwError({ _fileTooLarge: true,
-            message: `File "${fileNode.name}" is too large (${(knownSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+          preflight$ = this.confirmLargeFileOpen(fileNode.name,
+            `is ${(knownSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
         } else {
-          preflight$ = of(true);
+          preflight$ = of(false);
         }
       } else {
         const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
@@ -166,18 +168,23 @@ export class MonacoService implements OnDestroy {
             const fileSize = metadata && metadata.size != null ? metadata.size : 0;
             if (fileSize > maxSize) {
               this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
-              return throwError({ _fileTooLarge: true,
-                message: `File "${fileNode.name}" is too large (${(fileSize / 1000000).toFixed(1)}MB). Maximum allowed size is ${maxSizeLabel}.` });
+              return this.confirmLargeFileOpen(fileNode.name,
+                `is ${(fileSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
             }
-            return of(true);
+            return of(false);
           })
         );
       }
     }
 
+    // preflight$ emits true if the user overrode the size limit, false if within limits.
+    // If the user cancelled, the observable errors with _fileTooLarge + _userCancelled.
     return preflight$.pipe(
       tap(() => this.loadingStatusChanged.next('loading')),
-      switchMap(() => this.getSizeLimitedResponse(requestUrl, options, maxSize)),
+      switchMap((userOverride: boolean) => {
+        const effectiveMaxSize = userOverride ? Number.MAX_SAFE_INTEGER : maxSize;
+        return this.getSizeLimitedResponse(requestUrl, options, effectiveMaxSize);
+      }),
       map((res: any) => {
         try {
           if (fileNode.model.isDataset) {
@@ -279,6 +286,9 @@ export class MonacoService implements OnDestroy {
         });
       },
       error: (err) => {
+        if (err._userCancelled) {
+          return; // User cancelled from the large file warning dialog
+        }
         this.log.warn(`${fileNode.name} could not be refreshed, status: `, err.status);
         if (err._fileTooLarge) {
           this.snackBar.open(err.message,
@@ -348,6 +358,9 @@ export class MonacoService implements OnDestroy {
         },
         error: (err) => {
           this.editorControl.closeFileHandler(fileNode);
+          if (err._userCancelled) {
+            return; // User cancelled from the large file warning dialog
+          }
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
           if (err._fileTooLarge) {
             this.snackBar.open(err.message,
@@ -539,6 +552,35 @@ export class MonacoService implements OnDestroy {
       }
     });
     return dialogRef.afterClosed();
+  }
+
+  /**
+   * Shows a warning dialog for oversized files/datasets.
+   * Returns an Observable that emits true if the user overrides, or throws _fileTooLarge if cancelled.
+   */
+  private confirmLargeFileOpen(fileName: string, sizeDescription: string, maxSizeLabel: string): Observable<boolean> {
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      maxWidth: '480px',
+      data: {
+        title: 'Large File Warning',
+        warningMessage: `"${fileName}" ${sizeDescription} which exceeds the ${maxSizeLabel} limit. `
+          + `Opening very large files in the editor may cause high memory usage or CPU load. `
+          + `We recommend downloading the file and viewing it on your desktop instead.`,
+        confirmLabel: 'Open Anyway',
+        dismissLabel: 'Cancel'
+      }
+    });
+    return dialogRef.afterClosed().pipe(
+      take(1),
+      switchMap((confirmed: boolean) => {
+        if (confirmed) {
+          this.log.info(`User chose to override size limit for ${fileName}`);
+          return of(true);
+        }
+        return throwError({ _fileTooLarge: true, _userCancelled: true,
+          message: `Opening "${fileName}" was cancelled.` });
+      })
+    );
   }
 
   preSaveCheck(fileContext?: ProjectContext): boolean {
