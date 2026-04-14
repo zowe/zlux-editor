@@ -29,9 +29,23 @@ import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
 import { debounceTime } from 'rxjs/operators';
 import { UtilsService } from '../../../shared/utils.service';
+import { ProjectStructure } from '../../../shared/model/editor-project';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmAction, DialogData } from '../../../shared/dialog/confirm-action/confirm-action-component';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
-@Component({
+// Matches absolute Unix-style paths, e.g. /u/user/file.txt or /etc/zowe/server.yaml
+const PATH_PATTERN = '\\/[a-zA-Z0-9._\\-@+#$~]+(?:\\/[a-zA-Z0-9._\\-@+#$~]+)*';
+// Matches MVS dataset notation: DSNAME=A.B or DSNAME=A.B(MEMBER)
+const DATASET_DSNAME_PATTERN =
+  'DSNAME=([A-Z@#$][A-Z0-9@#$-]{0,7}(?:\\.[A-Z@#$][A-Z0-9@#$-]{0,7})+(?:\\([A-Z@#$][A-Z0-9@#$-]{0,7}\\))?)';
+
+// Matches z/OS UNIX dataset path notation: //\'A.B\' or //\'A.B(MEMBER)\'
+const DATASET_SLASH_PATTERN =
+  "//'([A-Z@#$][A-Z0-9@#$-]{0,7}(?:\\.[A-Z@#$][A-Z0-9@#$-]{0,7})+(?:\\([A-Z@#$][A-Z0-9@#$-]{0,7}\\))?)'";
+
+// Matches http:// or https:// URLs
+const URL_PATTERN = 'https?://[^\\s<>{}\\[\\]]+';@Component({
   selector: 'app-monaco',
   templateUrl: './monaco.component.html',
   styleUrls: ['./monaco.component.scss']
@@ -50,6 +64,9 @@ export class MonacoComponent implements OnInit, OnChanges {
       }
 
       this.editor.updateOptions(options);
+      if (this.editor.getModel()) {
+        this.updatePathDecorations(this.editor);
+      }
     } else {
       this.log.debug("Editor options passed prior to editor init. Cached.");
     }
@@ -64,7 +81,10 @@ export class MonacoComponent implements OnInit, OnChanges {
   public showEditor: boolean;
   public showDiffViewer: boolean;
   private keyBindingSub: Subscription = new Subscription();
-  private diffEditor: monaco.editor.IStandaloneDiffEditor | null ;
+  private diffEditor: monaco.editor.IStandaloneDiffEditor | null;
+  private pathLinkDecorationIds: string[] = [];
+  private pathContentChangeDisposable: any = null;
+  private pathDecorateTimeout: any = null;
 
   constructor(
     private monacoService: MonacoService,
@@ -72,6 +92,7 @@ export class MonacoComponent implements OnInit, OnChanges {
     private languageService: LanguageServerService,
     private appKeyboard: EditorKeybindingService,
     public snackBar: SnackBarService,
+    private dialog: MatDialog,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) {
@@ -176,6 +197,7 @@ export class MonacoComponent implements OnInit, OnChanges {
   onMonacoInit(editor) {
     this.editorControl.editor.next(editor);
     this.keyBinds(editor);
+    this.setupPathLinkSupport(editor);
     this.viewportEvents.resized
       .pipe(debounceTime(100) as any)
       .subscribe(()=> {
@@ -194,6 +216,195 @@ export class MonacoComponent implements OnInit, OnChanges {
 
   this.connectToLanguageServer();
   */
+  }
+
+  private setupPathLinkSupport(editor: any): void {
+    this.updatePathDecorations(editor);
+
+    const subscribeContentChanges = () => {
+      if (this.pathContentChangeDisposable) {
+        this.pathContentChangeDisposable.dispose();
+      }
+      this.pathContentChangeDisposable = editor.getModel()?.onDidChangeContent(() => {
+        clearTimeout(this.pathDecorateTimeout);
+        this.pathDecorateTimeout = setTimeout(() => this.updatePathDecorations(editor), 300);
+      });
+    };
+
+    subscribeContentChanges();
+
+    // Re-decorate whenever a different file model is loaded into this editor instance
+    editor.onDidChangeModel(() => {
+      this.pathLinkDecorationIds = [];
+      subscribeContentChanges();
+      this.updatePathDecorations(editor);
+    });
+
+    // Handle Ctrl/Cmd+Click to open recognized strings in the editor
+    editor.onMouseDown((e: any) => {
+      if (!e.event.ctrlKey && !e.event.metaKey) { return; }
+      const position = e.target.position;
+      if (!position) { return; }
+      const model = editor.getModel();
+      if (!model) { return; }
+
+      const options = this._monacoOptions || {};
+      const line = model.getLineContent(position.lineNumber);
+
+      // Check URLs first — must run before path pattern since URLs contain paths
+      if (options.clickLinksUrl !== false) {
+        const urlRegex = new RegExp(URL_PATTERN, 'g');
+        let match: RegExpExecArray | null;
+        while ((match = urlRegex.exec(line)) !== null) {
+          if (position.column >= match.index + 1 && position.column <= match.index + match[0].length + 1) {
+            e.event.preventDefault();
+            this.handleUrlClick(match[0]);
+            return;
+          }
+        }
+      }
+
+      // Check dataset patterns: //'DS.NAME' and DSNAME=DS.NAME
+      if (options.clickLinksDataset !== false) {
+        const dsSlashRegex = new RegExp(DATASET_SLASH_PATTERN, 'g');
+        let match: RegExpExecArray | null;
+        while ((match = dsSlashRegex.exec(line)) !== null) {
+          if (position.column >= match.index + 1 && position.column <= match.index + match[0].length + 1) {
+            e.event.preventDefault();
+            // Strip the //'' wrapper to extract the dataset name
+            this.handleDatasetClick(match[0].substring(3, match[0].length - 1));
+            return;
+          }
+        }
+        const dsnameRegex = new RegExp(DATASET_DSNAME_PATTERN, 'g');
+        while ((match = dsnameRegex.exec(line)) !== null) {
+          if (position.column >= match.index + 1 && position.column <= match.index + match[0].length + 1) {
+            e.event.preventDefault();
+            // Strip the 'DSNAME=' prefix to extract the dataset name
+            this.handleDatasetClick(match[0].substring('DSNAME='.length));
+            return;
+          }
+        }
+      }
+
+      // Check Unix-style file/directory paths
+      if (options.clickLinksFilePath !== false) {
+        const pathRegex = new RegExp(PATH_PATTERN, 'g');
+        let match: RegExpExecArray | null;
+        while ((match = pathRegex.exec(line)) !== null) {
+          if (position.column >= match.index + 1 && position.column <= match.index + match[0].length + 1) {
+            e.event.preventDefault();
+            this.handleFilePathClick(match[0]);
+            return;
+          }
+        }
+      }
+    });
+  }
+
+  private updatePathDecorations(editor: any): void {
+    const model = editor.getModel();
+    if (!model) { return; }
+
+    const options = this._monacoOptions || {};
+    const enableFilePath = options.clickLinksFilePath !== false;
+    const enableDataset = options.clickLinksDataset !== false;
+    const enableUrl = options.clickLinksUrl !== false;
+
+    const newDecorations: monaco.editor.IModelDeltaDecoration[] = [];
+    const lineCount = model.getLineCount();
+
+    // Each tuple: [patternString, enabled]
+    const patterns: [string, boolean][] = [
+      [PATH_PATTERN, enableFilePath],
+      [DATASET_DSNAME_PATTERN, enableDataset],
+      [DATASET_SLASH_PATTERN, enableDataset],
+      [URL_PATTERN, enableUrl]
+    ];
+
+    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+      const line = model.getLineContent(lineNumber);
+      for (const [patternStr, enabled] of patterns) {
+        if (!enabled) { continue; }
+        const regex = new RegExp(patternStr, 'g');
+        let match: RegExpExecArray | null;
+        while ((match = regex.exec(line)) !== null) {
+          newDecorations.push({
+            range: new monaco.Range(lineNumber, match.index + 1, lineNumber, match.index + match[0].length + 1),
+            options: {
+              inlineClassName: 'path-link',
+              hoverMessage: { value: 'Ctrl+Click to open' }
+            }
+          });
+        }
+      }
+    }
+
+    this.pathLinkDecorationIds = editor.deltaDecorations(this.pathLinkDecorationIds, newDecorations);
+  }
+
+  // Checks if a Unix path is a file or directory before acting
+  private handleFilePathClick(path: string): void {
+    this.editorControl.getFileMetadata(path).subscribe({
+      next: (response: any) => {
+        if (response && response.directory === true) {
+          const dialogRef = this.dialog.open(ConfirmAction, {
+            data: <DialogData>{
+              title: 'Open Folder',
+              warningMessage: `Navigate the file explorer to folder: ${path}?`
+            }
+          });
+          dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+            if (confirmed) {
+              this.editorControl.openDirectory.next(path);
+            }
+          });
+        } else {
+          this.openPathInEditor(path);
+        }
+      },
+      error: () => {
+        // Metadata unavailable: attempt to open as a file
+        this.openPathInEditor(path);
+      }
+    });
+  }
+
+  private handleDatasetClick(datasetName: string): void {
+    this.log.debug(`Opening dataset from ctrl+click: ${datasetName}`);
+    this.editorControl.openDataset.next({ datasetName: datasetName.toUpperCase() });
+  }
+
+  private handleUrlClick(url: string): void {
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      data: <DialogData>{
+        title: 'Open URL',
+        warningMessage: `Open "${url}" in a new browser tab?`
+      }
+    });
+    dialogRef.afterClosed().subscribe((confirmed: boolean) => {
+      if (confirmed) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    });
+  }
+
+  private openPathInEditor(path: string): void {
+    const lastSlash = path.lastIndexOf('/');
+    const fileName = lastSlash >= 0 ? path.substring(lastSlash + 1) : path;
+    const directory = lastSlash > 0 ? path.substring(0, lastSlash) : '/';
+
+    const fileNode: ProjectStructure = {
+      id: path,
+      name: fileName,
+      fileName: fileName,
+      path: directory,
+      hasChildren: false,
+      isDataset: false
+    };
+
+    this.log.debug(`Opening file path from ctrl+click: ${path}`);
+    this.editorControl.openFileEmitter.emit(fileNode);
   }
 
   keyBinds(editor: any) {
