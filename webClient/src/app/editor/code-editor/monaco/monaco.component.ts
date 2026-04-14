@@ -34,8 +34,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { ConfirmAction, DialogData } from '../../../shared/dialog/confirm-action/confirm-action-component';
 const ReconnectingWebSocket = require('reconnecting-websocket');
 
-// Matches absolute Unix-style paths, e.g. /u/user/file.txt or /etc/zowe/server.yaml
-const PATH_PATTERN = '\\/[a-zA-Z0-9._\\-@+#$~]+(?:\\/[a-zA-Z0-9._\\-@+#$~]+)*';
+// Matches absolute Unix-style paths, e.g. /u/user/file.txt or /etc/zowe/server.yaml.
+// The negative lookbehind prevents matching path segments inside URIs (e.g. safkeyring://host/path)
+// by requiring that the leading / is not preceded by an alphanumeric, path, or URI character.
+const PATH_PATTERN = '(?<![a-zA-Z0-9._\\-@+#$~:/])\\/[a-zA-Z0-9._\\-@+#$~]+(?:\\/[a-zA-Z0-9._\\-@+#$~]+)*';
 // Matches MVS dataset notation: DSNAME=A.B or DSNAME=A.B(MEMBER)
 const DATASET_DSNAME_PATTERN =
   'DSNAME=([A-Z@#$][A-Z0-9@#$-]{0,7}(?:\\.[A-Z@#$][A-Z0-9@#$-]{0,7})+(?:\\([A-Z@#$][A-Z0-9@#$-]{0,7}\\))?)';
@@ -251,14 +253,17 @@ export class MonacoComponent implements OnInit, OnChanges {
       const options = this._monacoOptions || {};
       const line = model.getLineContent(position.lineNumber);
 
-      // Check URLs first — must run before path pattern since URLs contain paths
-      if (options.clickLinksUrl !== false) {
-        const urlRegex = new RegExp(URL_PATTERN, 'g');
+      // Always intercept URL clicks to prevent Monaco's built-in link opener from firing,
+      // regardless of the clickLinksUrl setting. Only show the confirmation dialog when enabled.
+      const urlRegex = new RegExp(URL_PATTERN, 'g');
+      {
         let match: RegExpExecArray | null;
         while ((match = urlRegex.exec(line)) !== null) {
           if (position.column >= match.index + 1 && position.column <= match.index + match[0].length + 1) {
             e.event.preventDefault();
-            this.handleUrlClick(match[0]);
+            if (options.clickLinksUrl !== false) {
+              this.handleUrlClick(match[0]);
+            }
             return;
           }
         }
