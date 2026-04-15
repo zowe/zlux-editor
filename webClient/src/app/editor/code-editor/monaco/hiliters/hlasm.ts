@@ -481,7 +481,7 @@ export const HLASM_HILITE = {
       [/[=,().*+\-\/]/, 'hlasm-operator'],
 
       // Ordinary symbols and keywords (plain identifier)
-      [/[A-Z$#@][A-Z0-9$#@_]*/, ''],
+      [/[A-Z$#@][A-Z0-9$#_@]*/, ''],
     ],
   }
 };
