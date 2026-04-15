@@ -128,6 +128,36 @@ export class ZoweYamlService {
       // The Zowe schemas are draft 2019-09 and use "$anchor" instead. Add a draft-07
       // compatible "$id" alongside every "$anchor" so both draft variants resolve.
       const commonSchema = commonSchemaRaw ? addDraft07Ids(commonSchemaRaw) : null;
+
+      // ── DEBUG: verify addDraft07Ids ran and the patched schema looks correct ──
+      console.log('[ZoweYaml] commonSchemaRaw loaded:', !!commonSchemaRaw, '| zoweSchema loaded:', !!zoweSchema);
+      if (commonSchema) {
+        const rawStr = JSON.stringify(commonSchema);
+        const anchorCount = (rawStr.match(/"\$anchor"/g) || []).length;
+        const idPoundCount = (rawStr.match(/"\$id"\s*:\s*"#/g) || []).length;
+        console.log('[ZoweYaml] commonSchema $anchor nodes:', anchorCount, '| draft-07 $id="#..." nodes:', idPoundCount);
+        // Show a sample patched definition
+        const defs: any = (commonSchema as any).$defs || (commonSchema as any).definitions || {};
+        const topLevelKeys = Object.keys(commonSchema as any).filter(k => !k.startsWith('$'));
+        console.log('[ZoweYaml] commonSchema top-level keys:', Object.keys(commonSchema as any).join(', '));
+        const firstDefKey = Object.keys(defs)[0];
+        if (firstDefKey) {
+          const n = (defs as any)[firstDefKey];
+          console.log('[ZoweYaml] sample $defs entry "' + firstDefKey + '":', JSON.stringify({ $anchor: n.$anchor, $id: n.$id }));
+        } else {
+          console.warn('[ZoweYaml] commonSchema has no $defs or definitions — anchors may be elsewhere');
+          // Show any node that has $anchor
+          const anchorMatch = rawStr.match(/"(\w+)"\s*:\s*\{[^}]*"\$anchor"\s*:\s*"([^"]+)"/);
+          if (anchorMatch) console.log('[ZoweYaml] first $anchor found at path key "' + anchorMatch[1] + '" with value "' + anchorMatch[2] + '"');
+        }
+      }
+      if (zoweSchema) {
+        const src = JSON.stringify(zoweSchema);
+        const refMatch = src.match(/"\$ref"\s*:\s*"([^"]+)"/);
+        if (refMatch) console.log('[ZoweYaml] first $ref in zoweSchema:', refMatch[1]);
+      }
+      // ── END DEBUG ──
+
       const yamlInstance = getMonacoYamlInstance();
       if (!yamlInstance) {
         console.warn('[ZoweYaml] activateForModel: monaco-yaml instance not initialized');
