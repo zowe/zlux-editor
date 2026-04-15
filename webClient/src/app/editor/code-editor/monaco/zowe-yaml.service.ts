@@ -122,7 +122,12 @@ export class ZoweYamlService {
     Promise.all([
       this.fetchSchema(toUnixUri(commonSchemaPath), commonSchemaPath),
       this.fetchSchema(toUnixUri(zoweSchemaPath), zoweSchemaPath),
-    ]).then(([commonSchema, zoweSchema]) => {
+    ]).then(([commonSchemaRaw, zoweSchema]) => {
+      // vscode-json-languageservice (used inside monaco-yaml) implements JSON Schema
+      // draft-07, which resolves plain-name fragments like #zoweIpv4 via "$id": "#name".
+      // The Zowe schemas are draft 2019-09 and use "$anchor" instead. Add a draft-07
+      // compatible "$id" alongside every "$anchor" so both draft variants resolve.
+      const commonSchema = commonSchemaRaw ? addDraft07Ids(commonSchemaRaw) : null;
       const yamlInstance = getMonacoYamlInstance();
       if (!yamlInstance) {
         console.warn('[ZoweYaml] activateForModel: monaco-yaml instance not initialized');
@@ -161,7 +166,7 @@ export class ZoweYamlService {
         : [this.mainSchemaEntry];
 
       yamlInstance.update({ schemas }).then(() => {
-        console.log('[ZoweYaml] schemas registered, fileMatch:', this.mainSchemaEntry.fileMatch);
+        console.log('[ZoweYaml] schemas registered, fileMatch:', this.mainSchemaEntry?.fileMatch);
       }).catch((err: any) => {
         console.error('[ZoweYaml] Failed to register schemas with monaco-yaml', err);
       });
@@ -248,4 +253,30 @@ export class ZoweYamlService {
       });
     });
   }
+}
+
+/**
+ * Walks a JSON Schema object and, for every node that has a "$anchor" property,
+ * adds a sibling "$id": "#anchorName" so that vscode-json-languageservice
+ * (draft-07) can resolve plain-name fragment refs like #zoweIpv4.
+ *
+ * The Zowe schemas are written against JSON Schema 2019-09 which uses $anchor
+ * for named identifiers, while draft-07 uses "$id": "#name" for the same purpose.
+ * This function makes the schema compatible with both draft variants.
+ */
+function addDraft07Ids(schema: any): any {
+  if (!schema || typeof schema !== 'object') {
+    return schema;
+  }
+  if (Array.isArray(schema)) {
+    return schema.map(addDraft07Ids);
+  }
+  const result: any = {};
+  for (const key of Object.keys(schema)) {
+    result[key] = addDraft07Ids(schema[key]);
+  }
+  if (typeof result['$anchor'] === 'string' && !result['$id']) {
+    result['$id'] = `#${result['$anchor']}`;
+  }
+  return result;
 }
