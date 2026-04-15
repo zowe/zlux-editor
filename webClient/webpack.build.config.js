@@ -104,9 +104,9 @@ const config = {
     }),
     new MonacoWebpackPlugin({
       publicPath: pubPath,
-      // Override the built-in YAML worker with the one from monaco-yaml, which provides
-      // full JSON-Schema-aware hover, validation, and completion for YAML files.
-      languages: ['yaml'],
+      // Do NOT include 'yaml' in languages — the customLanguages entry below already
+      // covers it with monaco-yaml's worker. Including it in both places registers
+      // the YAML language twice and breaks the monaco-yaml worker setup.
       customLanguages: [
         {
           label: 'yaml',
