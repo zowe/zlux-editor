@@ -265,18 +265,22 @@ export class MonacoService implements OnDestroy {
               }
               // sync language to context
               fileNode.model.language = fileLang;
+              // Parse as a proper Monaco Uri so the YAML worker receives a structured
+              // URI object rather than a raw string when Monaco serializes model data.
+              // Without this, monaco-yaml's fileMatch patterns never match.
+              const modelUri = monaco.Uri.parse(this.generateUri(fileNode.model));
               const model = {
                 value: file['contents'],
                 language: fileLang, // Replace fileLang here to test other languages
-                uri: this.generateUri(fileNode.model),
+                uri: modelUri,
               };
               this.editorControl.setThemeForLanguage(fileLang);
-              const duplicate: boolean = this.fileDuplicateChecker(model.uri);
+              const duplicate: boolean = this.fileDuplicateChecker(modelUri);
               let newModel;
               if (!duplicate) {
-                newModel = editorCore.createModel(model.value, model.language, model.uri);
+                newModel = editorCore.createModel(model.value, model.language, modelUri);
               } else {
-                newModel = editorCore.getModel(model.uri);
+                newModel = editorCore.getModel(modelUri);
               }
               // Activate hover help and validation for Zowe YAML configurations.
               // The file's language stays as 'yaml' so Monaco's built-in highlighting
@@ -576,10 +580,11 @@ export class MonacoService implements OnDestroy {
     }
   }
 
-  fileDuplicateChecker(uri: string): boolean {
+  fileDuplicateChecker(uri: any): boolean {
+    const uriStr: string = typeof uri === 'string' ? uri : uri.toString();
     const models = this.editorControl.editorCore.getValue().editor.getModels();
     for (const model of models) {
-      if (model.uri === uri) {
+      if (model.uri.toString() === uriStr) {
         return true;
       }
     }

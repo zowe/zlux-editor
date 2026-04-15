@@ -302,6 +302,9 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   private resetLanguageSelectionMenu() {
     this.languageSelectionMenu.children = this.monaco.languages.getLanguages()
       .filter(lang => !_.isEmpty(lang.aliases))
+      // configureMonacoYaml re-registers 'yaml', causing a duplicate entry.
+      // Deduplicate by language id, keeping the first occurrence.
+      .filter((lang, idx, arr) => arr.findIndex(l => l.id === lang.id) === idx)
       .sort((lang1, lang2) => {
         let name1 = lang1?.aliases[0]?.toLowerCase();
         let name2 = lang2?.aliases[0]?.toLowerCase();

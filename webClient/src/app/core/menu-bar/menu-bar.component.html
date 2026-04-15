@@ -41,8 +41,8 @@ Copyright Contributors to the Zowe Project.
                         @for (subItem of getSubmenuChildren(function); track subItem) {
                           <li type="menuitem" tabindex="-1" class="gz-menu-function-item"
                               [ngClass]="getMenuItemStyle(subItem)"
-                              (click)="menuAction(subItem.action); $event.stopPropagation()"
-                              (keyup.enter)="menuAction(subItem.action); $event.stopPropagation(); getEditorFocus()">
+                              (click)="menuAction(subItem.action); menuActive = false; $event.stopPropagation()"
+                              (keyup.enter)="menuAction(subItem.action); menuActive = false; $event.stopPropagation(); getEditorFocus()">
                             <div class="gz-action">
                               <span>{{ menuLabel(subItem) }}</span>
                               <span class="gz-keymap">{{ subItem.keyMap }}</span>
