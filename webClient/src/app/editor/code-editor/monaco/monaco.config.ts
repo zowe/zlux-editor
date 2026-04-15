@@ -27,6 +27,8 @@ import {
   extractDeclarationText,
   getHoveredKeyword,
   getHoveredRefName,
+  getItemNameAtPosition,
+  findAllAttlsReferences,
 } from './hiliters/attls';
 
 
@@ -494,6 +496,7 @@ export class MonacoConfig {
               contents: [
                 { value: '**' + declaration.typeName + '** `' + declaration.itemName + '`' },
                 { value: '```attls\n' + declarationText + '\n```' },
+                { value: '*Ctrl+Click or F12 on the reference name to jump to this declaration.*' },
               ],
             };
           }
@@ -509,6 +512,62 @@ export class MonacoConfig {
         }
 
         return null;
+      },
+    });
+
+    // Definition provider: enables Ctrl+Click and F12 (Go to Definition) on
+    // AT-TLS reference values, navigating directly to the referenced item's
+    // declaration line within the same model.
+    monaco.languages.registerDefinitionProvider('attls', {
+      provideDefinition(
+        model: monaco.editor.ITextModel,
+        position: monaco.Position
+      ): monaco.languages.Definition | null {
+        const lineText = model.getLineContent(position.lineNumber);
+        const refName = getHoveredRefName(lineText, position.column);
+        if (!refName) return null;
+
+        const allLines = model.getValue().split('\n');
+        const declarations = parseAttlsDeclarations(allLines);
+        const declaration = declarations.get(refName);
+        if (!declaration) return null;
+
+        return {
+          uri: model.uri,
+          range: new monaco.Range(
+            declaration.startLine, 1, declaration.startLine, 1
+          ),
+        };
+      },
+    });
+
+    // Reference provider: enables Shift+F12 (Find All References) and
+    // right-click → Peek References on both declaration names and reference
+    // values within the same AT-TLS policy file.
+    monaco.languages.registerReferenceProvider('attls', {
+      provideReferences(
+        model: monaco.editor.ITextModel,
+        position: monaco.Position,
+        context: monaco.languages.ReferenceContext
+      ): monaco.languages.Location[] {
+        const lineText = model.getLineContent(position.lineNumber);
+        const itemName = getItemNameAtPosition(lineText, position.column);
+        if (!itemName) return [];
+
+        const allLines = model.getValue().split('\n');
+        const refs = findAllAttlsReferences(allLines, itemName);
+
+        return refs
+          .filter(ref => context.includeDeclaration || !ref.isDeclaration)
+          .map(ref => ({
+            uri: model.uri,
+            range: new monaco.Range(
+              ref.line + 1,                      // 0-based -> 1-based
+              ref.col + 1,                       // 0-based -> 1-based
+              ref.line + 1,
+              ref.col + itemName.length + 1      // exclusive end column (1-based)
+            ),
+          }));
       },
     });
 

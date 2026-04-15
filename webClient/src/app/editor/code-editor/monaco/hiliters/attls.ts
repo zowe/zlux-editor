@@ -175,6 +175,76 @@ export function getHoveredKeyword(lineText: string, column: number): string | nu
 }
 
 // ---------------------------------------------------------------------------
+// Reference-finding utilities
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the AT-TLS item name under the cursor, whether the cursor sits on a
+ * declaration name (non-indented "TypeKeyword  name" line) or a reference
+ * value (indented "SomeKeyRef  name" line).  Returns null otherwise.
+ *
+ * `column` is 1-based (Monaco's position.column is already 1-based).
+ */
+export function getItemNameAtPosition(lineText: string, column: number): string | null {
+  // Is the cursor on a reference value?
+  const refName = getHoveredRefName(lineText, column);
+  if (refName) return refName;
+
+  // Is the cursor on the name token of a declaration line?
+  const declMatch = /^([A-Za-z]\w*)\s+(\S+)\s*$/.exec(lineText);
+  if (declMatch) {
+    const itemName = declMatch[2];
+    const itemNameStart = lineText.indexOf(itemName, declMatch[1].length); // 0-based
+    const col0 = column - 1; // 0-based
+    if (col0 >= itemNameStart && col0 < itemNameStart + itemName.length) {
+      return itemName;
+    }
+  }
+
+  return null;
+}
+
+/** A single occurrence of an AT-TLS item name found by findAllAttlsReferences. */
+export interface AttlsReference {
+  /** 0-based line number. */
+  line: number;
+  /** 0-based column of the first character of the item name. */
+  col: number;
+  /** True when this occurrence is the item's declaration line. */
+  isDeclaration: boolean;
+}
+
+/**
+ * Scans `lines` (the full file split on '\n') and returns the locations of
+ * every occurrence of `itemName` as either a declaration name or a reference
+ * value.  Results are in document order.
+ */
+export function findAllAttlsReferences(lines: string[], itemName: string): AttlsReference[] {
+  const results: AttlsReference[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Declaration: non-indented  TypeKeyword  itemName  (exact match)
+    const declMatch = /^([A-Za-z]\w*)\s+(\S+)\s*$/.exec(line);
+    if (declMatch && declMatch[2] === itemName) {
+      const col = line.indexOf(itemName, declMatch[1].length);
+      results.push({ line: i, col, isDeclaration: true });
+      continue;
+    }
+
+    // Reference: indented  SomeTypeRef  itemName  (exact match)
+    const refMatch = /^(\s+[\w.]+Ref)([ \t]+)(\S+)/.exec(line);
+    if (refMatch && refMatch[3] === itemName) {
+      const col = refMatch[1].length + refMatch[2].length; // 0-based start of value
+      results.push({ line: i, col, isDeclaration: false });
+    }
+  }
+
+  return results;
+}
+
+// ---------------------------------------------------------------------------
 // Keyword documentation
 // ---------------------------------------------------------------------------
 // Brief descriptions shown in hover popups for AT-TLS policy keywords.
