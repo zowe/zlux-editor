@@ -19,7 +19,7 @@ import { BPXPRM_HILITE } from './hiliters/bpxprm';
 import { CEEDUMP_HILITE, CEE_MESSAGES, CEEDUMP_HOVER_DOCS, CEE_RUNOPTS } from './hiliters/ceedump';
 import { HLASM_HILITE, HLASM_DIRECTIVES, HLASM_MACRO_INSTS, HLASM_INSTRUCTIONS } from './hiliters/hlasm';
 import { IEASYS_HILITE } from './hiliters/ieasys';
-import { JCL_HILITE } from './hiliters/jcl';
+import { JCL_HILITE, JCL_HOVER_DOCS } from './hiliters/jcl';
 import { REXX_HILITE } from './hiliters/rexx';
 
 
@@ -557,6 +557,26 @@ export class MonacoConfig {
 
     monaco.editor.defineTheme('hlasm-dark', HLASM_DARK);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
+
+    monaco.languages.registerHoverProvider('jcl', {
+      provideHover: (model, position) => {
+        const word = model.getWordAtPosition(position);
+        if (!word) { return null; }
+        const token = word.word.toUpperCase();
+        if (JCL_HOVER_DOCS[token]) {
+          return { contents: [{ value: JCL_HOVER_DOCS[token] }] };
+        }
+        // Also check the line for parameter sub-keywords (RECFM=, LRECL=, etc.)
+        const line = model.getLineContent(position.lineNumber).toUpperCase();
+        // Match paramname= context around cursor column
+        const col = position.column - 1;
+        const paramMatch = line.slice(0, col + token.length).match(/([A-Z]+)=?$/);
+        if (paramMatch && JCL_HOVER_DOCS[paramMatch[1]]) {
+          return { contents: [{ value: JCL_HOVER_DOCS[paramMatch[1]] }] };
+        }
+        return null;
+      }
+    });
     monaco.languages.setMonarchTokensProvider('rexx', <any>REXX_HILITE);
 
     monaco.languages.registerHoverProvider('ceedump', {
