@@ -397,12 +397,25 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     if (language) {
       let menuChildren = this.languagesMenu[language];
       if (menuChildren) {
-        let readableLanguage = this.getReadableLangName(language)
-        menus.push({
-          name: readableLanguage,
-          children: menuChildren
-        });
-        this.currentLang = readableLanguage;
+        let readableLanguage = this.getReadableLangName(language);
+        // The yaml entry in LANGUAGE_MENUS is the Zowe YAML menu.
+        // Only show it — labelled 'Zowe' — when the active file has zoweInfo.
+        // For plain yaml files there is no language-specific toolbar.
+        if (language === 'yaml') {
+          const file = this.editorControl.fetchActiveFile();
+          if (file && (file.model as any).zoweInfo) {
+            readableLanguage = 'Zowe';
+          } else {
+            menuChildren = null;
+          }
+        }
+        if (menuChildren) {
+          menus.push({
+            name: readableLanguage,
+            children: menuChildren
+          });
+          this.currentLang = readableLanguage;
+        }
       }
     }
     if (menus.length > 0) {

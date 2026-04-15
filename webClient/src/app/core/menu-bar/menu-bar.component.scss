@@ -101,6 +101,13 @@ $line-height: 32px;
           top: $line-height;
           max-height: calc(90% - 45px);
           overflow-y: auto;
+          // When the dropdown contains items with flyout submenus, disable
+          // overflow clipping so the submenu panel can extend beyond the
+          // dropdown's bounds. :has() is supported in all modern browsers.
+          &:has(.gz-has-submenu) {
+            overflow: visible;
+            max-height: none;
+          }
         }
       }
       .gz-menu-section.active:focus-within {
@@ -112,6 +119,10 @@ $line-height: 32px;
           top: $line-height;
           max-height: calc(90% - 45px);
           overflow-y: auto;
+          &:has(.gz-has-submenu) {
+            overflow: visible;
+            max-height: none;
+          }
         }
       }
     }
