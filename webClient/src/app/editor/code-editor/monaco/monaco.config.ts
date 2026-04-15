@@ -17,7 +17,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { BPXPRM_HILITE } from './hiliters/bpxprm';
 import { CEEDUMP_HILITE, CEE_MESSAGES, CEEDUMP_HOVER_DOCS, CEE_RUNOPTS } from './hiliters/ceedump';
-import { HLASM_HILITE } from './hiliters/hlasm';
+import { HLASM_HILITE, HLASM_DIRECTIVES, HLASM_MACRO_INSTS, HLASM_INSTRUCTIONS } from './hiliters/hlasm';
 import { IEASYS_HILITE } from './hiliters/ieasys';
 import { JCL_HILITE } from './hiliters/jcl';
 import { REXX_HILITE } from './hiliters/rexx';
@@ -113,6 +113,26 @@ export const CEEDUMP_DARK: Theme = {
     { token: 'cee-separator',     foreground: '666666' },                              // Dark gray
     // Runtime option names in the RPTOPTS section
     { token: 'cee-runopt',        foreground: 'd4a017', fontStyle: 'bold underline' }, // Amber bold underline
+  ]
+};
+
+export const HLASM_DARK: Theme = {
+  base: 'vs-dark',
+  inherit: true,
+  colors: {},
+  rules: [
+    { token: 'hlasm-comment',    foreground: '20e5e6' },                              // Cyan (ISPF comment color)
+    { token: 'hlasm-label',      foreground: 'fffd23', fontStyle: 'bold' },          // Yellow bold
+    { token: 'hlasm-directive',  foreground: '50eb24', fontStyle: 'bold underline' }, // Green bold underline
+    { token: 'hlasm-macro-inst', foreground: 'eb9b34', fontStyle: 'bold underline' }, // Orange bold underline
+    { token: 'hlasm-keyword',    foreground: '50eb24', fontStyle: 'bold' },          // Green bold
+    { token: 'hlasm-register',   foreground: '00ffff', fontStyle: 'underline' },     // Cyan underline
+    { token: 'hlasm-string',     foreground: 'fdfdfd' },                              // White
+    { token: 'hlasm-number',     foreground: 'ff8c00' },                              // Orange
+    { token: 'hlasm-operator',   foreground: 'eb2424' },                              // Red
+    { token: 'hlasm-variable',   foreground: 'd4a017', fontStyle: 'italic' },        // Amber italic
+    { token: 'hlasm-seq',        foreground: 'a0a0ff' },                              // Light purple
+    { token: 'hlasm-cont',       foreground: 'ff4444', fontStyle: 'bold' },          // Red bold
   ]
 };
 
@@ -479,6 +499,63 @@ export class MonacoConfig {
     monaco.languages.setMonarchTokensProvider('ceedump', <any>CEEDUMP_HILITE);
     monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
     monaco.languages.setMonarchTokensProvider('ieasys', <any>IEASYS_HILITE);
+
+    monaco.languages.registerHoverProvider('hlasm', {
+      provideHover: (model, position) => {
+        const word = model.getWordAtPosition(position);
+        if (!word) { return null; }
+        const token = word.word.toUpperCase();
+
+        // Assembler directives
+        if (HLASM_DIRECTIVES[token]) {
+          return { contents: [{ value: HLASM_DIRECTIVES[token] }] };
+        }
+
+        // Conditional-assembly / macro instructions
+        if (HLASM_MACRO_INSTS[token]) {
+          return { contents: [{ value: HLASM_MACRO_INSTS[token] }] };
+        }
+
+        // Machine instructions
+        if (HLASM_INSTRUCTIONS[token]) {
+          return { contents: [{ value: HLASM_INSTRUCTIONS[token] }] };
+        }
+
+        // Register names R0–R15
+        const regMatch = token.match(/^R([0-9]|1[0-5])$/);
+        if (regMatch) {
+          const num = parseInt(regMatch[1], 10);
+          const regDesc: Record<number, string> = {
+            0:  'General-purpose register 0. Subroutine return value; also used as a branch mask in BCR.',
+            1:  'General-purpose register 1. Parameter list pointer on entry to a routine; first arg in CALL linkage.',
+            2:  'General-purpose register 2. Second argument or work register.',
+            3:  'General-purpose register 3. Third argument or work register.',
+            4:  'General-purpose register 4. Fourth argument or base register.',
+            5:  'General-purpose register 5. Base register or work register.',
+            6:  'General-purpose register 6. Base register or work register.',
+            7:  'General-purpose register 7. Work register.',
+            8:  'General-purpose register 8. Work register.',
+            9:  'General-purpose register 9. Work register.',
+            10: 'General-purpose register 10. Work register.',
+            11: 'General-purpose register 11. Base register for the Program Unit (PU base).',
+            12: 'General-purpose register 12. Base register for the Load Module (common anchor area).',
+            13: 'General-purpose register 13. Save area / DSA pointer — holds the address of the 18-fullword register save area (or LE DSA).',
+            14: 'General-purpose register 14. Return address — the caller stores the return address here before branching.',
+            15: 'General-purpose register 15. Entry point register — on entry to a subroutine, contains the load address of the called routine; also the return code.',
+          };
+          return {
+            contents: [
+              { value: `**R${num} — General Purpose Register ${num}**` },
+              { value: regDesc[num] || 'General purpose register.' }
+            ]
+          };
+        }
+
+        return null;
+      }
+    });
+
+    monaco.editor.defineTheme('hlasm-dark', HLASM_DARK);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
     monaco.languages.setMonarchTokensProvider('rexx', <any>REXX_HILITE);
 
