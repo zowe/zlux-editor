@@ -28,6 +28,7 @@ import { of, Subject, Observable } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
 import { HttpHeaders } from '@angular/common/http';
 import * as _ from 'lodash';
+import { ZoweYamlService } from './zowe-yaml.service';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
 
@@ -46,7 +47,8 @@ export class MonacoService implements OnDestroy {
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
-    private snackBar: SnackBarService
+    private snackBar: SnackBarService,
+    private zoweYamlService: ZoweYamlService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -275,6 +277,15 @@ export class MonacoService implements OnDestroy {
                 newModel = editorCore.createModel(model.value, model.language, model.uri);
               } else {
                 newModel = editorCore.getModel(model.uri);
+              }
+              // Activate hover help and validation for Zowe YAML configurations.
+              // The file's language stays as 'yaml' so Monaco's built-in highlighting
+              // is preserved; we only layer our additional providers on top.
+              if (this.zoweYamlService.isZoweYaml(file['contents'])) {
+                const zoweInfo = this.zoweYamlService.extractZoweYamlInfo(file['contents']);
+                if (zoweInfo) {
+                  this.zoweYamlService.activateForModel(newModel, zoweInfo);
+                }
               }
               if (!makeActiveModel) {
                 newModel.setValue(fileNode.model.contents);

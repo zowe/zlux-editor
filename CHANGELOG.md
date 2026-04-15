@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `3.5.0`
+
+- Enhancement: Added Zowe YAML mode. When a YAML file is opened that contains a top-level `zowe:` key with a `runtimeDirectory:` value, the editor automatically activates Zowe mode. This mode loads the JSON schemas from `<runtimeDirectory>/schemas/` on z/OS to provide hover documentation for configuration keys and inline validation (including required-field checks and port-range validation). Right-clicking a Zowe YAML tab also reveals an "Open Zowe Server" sub-menu that lists each configured component with its port as a clickable link using `zowe.externalDomains[0]` as the hostname.
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.

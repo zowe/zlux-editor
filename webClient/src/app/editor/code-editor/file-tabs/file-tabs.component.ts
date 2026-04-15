@@ -13,8 +13,10 @@ import {
   Directive, HostListener, Inject, ViewChild, AfterViewChecked
 } from '@angular/core';
 import { ProjectContext } from '../../../shared/model/project-context';
+import { ProjectStructure } from '../../../shared/model/editor-project';
 import { EditorControlService } from '../../../shared/editor-control/editor-control.service';
-import { Angular2InjectionTokens, Angular2PluginViewportEvents } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginViewportEvents, ContextMenuItem } from 'pluginlib/inject-resources';
+import { ZoweYamlService } from '../monaco/zowe-yaml.service';
 // import { PerfectScrollbarComponent } from 'ngx-perfect-scrollbar';
 
 @Component({
@@ -46,6 +48,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
 
   constructor(
     private editorControl: EditorControlService,
+    private zoweYamlService: ZoweYamlService,
     @Inject(Angular2InjectionTokens.VIEWPORT_EVENTS) private viewportEvents: Angular2PluginViewportEvents) { }
 
   ngOnInit() {
@@ -77,7 +80,7 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
   }
 
   onRightClickTab(event: any, item: ProjectContext) {
-    this.viewportEvents.spawnContextMenu(event.clientX, event.clientY, [
+    const menuItems: ContextMenuItem[] = [
       {
         text: 'Close',
         action: () => this.remove.next(item)
@@ -90,7 +93,66 @@ export class FileTabsComponent implements OnInit, AfterViewChecked {
         text: "Compare Contents (Diff)",
         action: () => this.compareContents.next(item)
       }
-    ], true)
+    ];
+
+    // When the file is recognized as a Zowe YAML configuration, add Zowe-specific
+    // items: open the example YAML, open key directories, and open configured servers.
+    if (item.model.contents && this.zoweYamlService.isZoweYaml(item.model.contents)) {
+      const info = this.zoweYamlService.extractZoweYamlInfo(item.model.contents);
+      if (info) {
+        // "Show example YAML" — opens <runtimeDirectory>/example-zowe.yaml in the editor
+        menuItems.push({
+          text: 'Show example YAML',
+          action: () => {
+            const runtimeDir = info.runtimeDirectory.replace(/\/$/, '');
+            const fileNode: ProjectStructure = {
+              id: `${runtimeDir}/example-zowe.yaml`,
+              name: 'example-zowe.yaml',
+              fileName: 'example-zowe.yaml',
+              path: runtimeDir,
+              hasChildren: false,
+              isDataset: false,
+            };
+            this.editorControl.openFileEmitter.emit(fileNode);
+          },
+        });
+
+        // "Open Directory..." — submenu to navigate runtime, logs, and extensions
+        const dirChildren: ContextMenuItem[] = [
+          {
+            text: 'Runtime',
+            action: () => this.editorControl.openDirectory.next(info.runtimeDirectory),
+          },
+        ];
+        if (info.logDirectory) {
+          dirChildren.push({
+            text: 'Logs',
+            action: () => this.editorControl.openDirectory.next(info.logDirectory),
+          });
+        }
+        if (info.extensionDirectory) {
+          dirChildren.push({
+            text: 'Extensions',
+            action: () => this.editorControl.openDirectory.next(info.extensionDirectory),
+          });
+        }
+        menuItems.push({ text: 'Open Directory...', children: dirChildren });
+
+        // "Open Zowe Server" — submenu for each configured server
+        const serverLinks = this.zoweYamlService.buildServerLinksForContext(item);
+        if (serverLinks.length > 0) {
+          menuItems.push({
+            text: 'Open Zowe Server',
+            children: serverLinks.map(link => ({
+              text: link.name,
+              action: () => window.open(link.url, '_blank'),
+            })),
+          });
+        }
+      }
+    }
+
+    this.viewportEvents.spawnContextMenu(event.clientX, event.clientY, menuItems, true)
     event.stopImmediatePropagation();
     event.preventDefault();
   }

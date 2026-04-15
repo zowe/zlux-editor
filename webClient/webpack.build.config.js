@@ -102,7 +102,22 @@ const config = {
       threshold: 500000,
       minRatio: 0.8
     }),
-    new MonacoWebpackPlugin({ publicPath: pubPath }),
+    new MonacoWebpackPlugin({
+      publicPath: pubPath,
+      // Override the built-in YAML worker with the one from monaco-yaml, which provides
+      // full JSON-Schema-aware hover, validation, and completion for YAML files.
+      languages: ['yaml'],
+      customLanguages: [
+        {
+          label: 'yaml',
+          entry: 'monaco-yaml',
+          worker: {
+            id: 'monaco-yaml/yamlWorker',
+            entry: 'monaco-yaml/yaml.worker'
+          }
+        }
+      ]
+    }),
     new AotPlugin({
       tsConfigPath: './tsconfig.json',
       entryModule: './webClient/src/app/app.module.ts#AppModule'

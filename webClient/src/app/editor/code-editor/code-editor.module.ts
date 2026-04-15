@@ -17,6 +17,7 @@ import { MonacoSettingsComponent } from './monaco-settings/monaco-settings.compo
 import { MonacoService } from './monaco/monaco.service';
 import { CodeEditorComponent } from './code-editor.component';
 import { FileTabsComponent, MouseMiddleClickDirective } from './file-tabs/file-tabs.component';
+import { ZoweYamlService } from './monaco/zowe-yaml.service';
 // import { NgScrollbarModule } from 'ngx-scrollbar';
 
 import { CodeEditorService } from './code-editor.service';
@@ -40,7 +41,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatCheckboxModule,
     // NgScrollbarModule
   ],
-  providers: [MonacoService, CodeEditorService],
+  providers: [MonacoService, CodeEditorService, ZoweYamlService],
   exports: [CodeEditorComponent],
   declarations: [
     CodeEditorComponent,
