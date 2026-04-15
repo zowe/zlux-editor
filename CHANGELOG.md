@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `3.5.0`
+
+- Enhancement: Added AT-TLS (Application Transparent Transport Layer Security) language mode for IBM z/OS Policy Agent files. Files containing `TTLSRule` declarations are automatically detected and syntax-highlighted. Hovering over a cross-reference value (any property ending in `Ref`) displays the full declaration block of the referenced item, making it easier to understand the complete meaning of a rule without manual searching.
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.

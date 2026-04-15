@@ -1260,6 +1260,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       // TODO: Once we expand editor themes, we can think about how we handle languages like JCL
       // for ex. maybe have ispf, ispf-dark, and ispf-black that groups multiple commonly used languages
       // in ISPF that we decide to create syntax highlighting for,
+      case 'attls': {
+        monaco.editor.setTheme('attls-dark');
+        break;
+      }
       case 'jcl': { 
         monaco.editor.setTheme('jcl-dark');
         break; 
@@ -1341,6 +1345,22 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                   results.push(lang?.id);
                   break;
                 }
+              }
+            }
+          }
+          // Content-based detection: languages may opt in by setting contentDetect=true
+          // alongside a firstLine regex string.  When active, the firstLine pattern is
+          // tested against the full file content (multiline) rather than just the first
+          // line, allowing detection of files whose opening lines are comments.
+          for (let lang of languages) {
+            if ((lang as any)?.contentDetect && lang?.firstLine && buffer.model?.contents) {
+              try {
+                const contentRegex = new RegExp(lang.firstLine, 'm');
+                if (contentRegex.test(buffer.model.contents)) {
+                  results.push(lang.id);
+                }
+              } catch (_e) {
+                // Skip languages whose firstLine is not a valid regex
               }
             }
           }

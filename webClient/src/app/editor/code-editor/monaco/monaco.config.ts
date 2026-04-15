@@ -20,7 +20,26 @@ import { HLASM_HILITE } from './hiliters/hlasm';
 import { IEASYS_HILITE } from './hiliters/ieasys';
 import { JCL_HILITE } from './hiliters/jcl';
 import { REXX_HILITE } from './hiliters/rexx';
+import {
+  ATTLS_HILITE,
+  ATTLS_KEYWORD_DOCS,
+  parseAttlsDeclarations,
+  extractDeclarationText,
+  getHoveredKeyword,
+  getHoveredRefName,
+} from './hiliters/attls';
 
+
+// contentDetect: true opts this language in for content-based detection in
+// getRecommendedHighlightingModesForBuffer (multiline firstLine matching).
+const ATTLS_LANG = {
+  id: 'attls',
+  firstLine: '^TTLSRule\\b',
+  filenamePatterns: [],
+  aliases: ['ATTLS', 'AT-TLS', 'attls'],
+  mimetypes: ['application/attls'],
+  contentDetect: true,
+};
 
 const BPXPRM_LANG = {  
   id: 'bpxprm',
@@ -67,6 +86,24 @@ export type Theme = monaco.editor.IStandaloneThemeData;
 // TODO: (See zlux-editor\webClient\src\app\shared\editor-control --- setThemeForLanguage())
 // We should think about how to handle themes. Preserving ISPF colors would be nice
 // and we can avoid messing with a user's preferred theme by uniquely naming tokens.
+export const ATTLS_DARK: Theme = {
+  base: 'vs-dark',
+  inherit: true,
+  colors: {},
+  rules: [
+    { token: 'attls-comment',     foreground: '6a9955' },  // muted green
+    { token: 'attls-type',        foreground: '4ec9b0' },  // teal  (declaration keyword)
+    { token: 'attls-nested-type', foreground: '4ec9b0' },  // teal  (nested block keyword)
+    { token: 'attls-name',        foreground: 'ce9178' },  // orange (declared item name)
+    { token: 'attls-key',         foreground: '9cdcfe' },  // light blue (property key)
+    { token: 'attls-ref-key',     foreground: 'c586c0' },  // purple (reference property key)
+    { token: 'attls-ref-value',   foreground: 'f7c948', fontStyle: 'underline' }, // gold+underline
+    { token: 'attls-value',       foreground: 'ce9178' },  // orange (property value)
+    { token: 'attls-brace',       foreground: '569cd6' },  // blue
+    { token: 'attls-default',     foreground: 'd4d4d4' },  // light gray
+  ],
+};
+
 export const JCL_DARK: Theme = {
   base: 'vs-dark',
   inherit: true,
@@ -419,22 +456,61 @@ export class MonacoConfig {
   onLoad() {
     let self = this;
     // This step only happens once per editor load, not once per file load. It happens before language menu is generated
+    monaco.languages.register(ATTLS_LANG as any);
     monaco.languages.register(BPXPRM_LANG);
     monaco.languages.register(HLASM_LANG);
     monaco.languages.register(IEASYS_LANG);
     monaco.languages.register(JCL_LANG);
     monaco.languages.register(REXX_LANG);
 
+    monaco.languages.setMonarchTokensProvider('attls', <any>ATTLS_HILITE);
     monaco.languages.setMonarchTokensProvider('bpxprm', <any>BPXPRM_HILITE);
     monaco.languages.setMonarchTokensProvider('hlasm', <any>HLASM_HILITE);
     monaco.languages.setMonarchTokensProvider('ieasys', <any>IEASYS_HILITE);
     monaco.languages.setMonarchTokensProvider('jcl', <any>JCL_HILITE);
     monaco.languages.setMonarchTokensProvider('rexx', <any>REXX_HILITE);
 
-
-
+    monaco.editor.defineTheme('attls-dark', ATTLS_DARK);
     monaco.editor.defineTheme('jcl-dark', JCL_DARK);
     monaco.editor.defineTheme('rexx-dark', REXX_DARK);
+
+    // Hover provider for AT-TLS files.
+    // Priority 1: when hovering over a reference value (e.g. the name after
+    //   TTLSConnectionActionRef), show the full declaration block for that item.
+    // Priority 2: when hovering over a keyword, show a brief description.
+    monaco.languages.registerHoverProvider('attls', {
+      provideHover(model: monaco.editor.ITextModel, position: monaco.Position) {
+        const lineText = model.getLineContent(position.lineNumber);
+
+        // --- Ref-value hover ---
+        const refName = getHoveredRefName(lineText, position.column);
+        if (refName) {
+          const allLines = model.getValue().split('\n');
+          const declarations = parseAttlsDeclarations(allLines);
+          const declaration = declarations.get(refName);
+          if (declaration) {
+            const declarationText = extractDeclarationText(allLines, declaration);
+            return {
+              contents: [
+                { value: '**' + declaration.typeName + '** `' + declaration.itemName + '`' },
+                { value: '```attls\n' + declarationText + '\n```' },
+              ],
+            };
+          }
+        }
+
+        // --- Keyword hover ---
+        const keyword = getHoveredKeyword(lineText, position.column);
+        if (keyword) {
+          const doc = ATTLS_KEYWORD_DOCS.get(keyword);
+          if (doc) {
+            return { contents: [{ value: doc }] };
+          }
+        }
+
+        return null;
+      },
+    });
 
     // set monaco after all done
     this.subscription = EditorServiceInstance.subscribe((editorService) => {
