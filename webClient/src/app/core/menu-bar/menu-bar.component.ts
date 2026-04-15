@@ -40,6 +40,10 @@ function initMenu(menuItems) {
     if (!menuItem.isDisabled && menuItem.isDisabledString) {
       menuItem.isDisabled = new Function('context', menuItem.isDisabledString);
     }
+    // Recurse so that submenu children also get their strings compiled.
+    if (Array.isArray(menuItem.children) && menuItem.children.length > 0) {
+      initMenu(menuItem.children);
+    }
   });
   return menuItems;
 }
@@ -278,6 +282,9 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     if (menuItem.name === 'group-end') {
       style.push('group-line');
     }
+    if (Array.isArray(menuItem.children) && menuItem.children.length > 0) {
+      style.push('gz-has-submenu');
+    }
     const editor = this.editorControl.editor.getValue();
     if (editor) {
       if (menuItem.isDisabled
@@ -331,6 +338,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     return languageId;
   }
 
+  hasSubmenu(menuItem: any): boolean {
+    return Array.isArray(menuItem.children) && menuItem.children.length > 0;
+  }
+
+  getSubmenuChildren(menuItem: any): any[] {
+    return menuItem.children || [];
+  }
+
   removeLanguageMenu() {
     const removeSelectionMenu = this.fileCount === 0;
     for (let i = 0; i < this.menuList.length; i++) {
@@ -355,6 +370,30 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     }
 
     this.removeLanguageMenu();
+
+    // For yaml, populate the Open Zowe Server submenu from the active file's
+    // zoweInfo (stored on file.model by monaco.service when the file is opened).
+    if (language === 'yaml' && this.languagesMenu['yaml']) {
+      const file = this.editorControl.fetchActiveFile();
+      const info = file && (file.model as any).zoweInfo;
+      const serverItem = this.languagesMenu['yaml'].find((item: any) => item.name === 'Open Zowe Server');
+      if (serverItem) {
+        const domain = info && info.externalDomains && info.externalDomains[0];
+        serverItem.children = domain
+          ? info.components
+              .filter((c: any) => c.port)
+              .map((c: any) => ({
+                name: `${c.name} (port ${c.port})`,
+                action: {
+                  func: () => window.open(`https://${domain}:${c.port}/`, '_blank'),
+                  params: []
+                },
+                keyMap: ''
+              }))
+          : [];
+      }
+    }
+
     if (language) {
       let menuChildren = this.languagesMenu[language];
       if (menuChildren) {

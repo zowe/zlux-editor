@@ -45,6 +45,109 @@ export const TEST_LANGUAGE_MENU = [{
 ]
 
 export const LANGUAGE_MENUS = {
+  'yaml': [
+    {
+      name: 'Show example YAML',
+      isDisabledString: `
+        const file = context.controller.fetchActiveFile();
+        return !(file && file.model.zoweInfo);
+      `,
+      action: {
+        functionString: `
+          const file = context.controller.fetchActiveFile();
+          const info = file && file.model.zoweInfo;
+          if (info) {
+            const runtimeDir = info.runtimeDirectory.replace(/\\/$/, '');
+            context.controller.openFileEmitter.emit({
+              id: runtimeDir + '/example-zowe.yaml',
+              name: 'example-zowe.yaml',
+              fileName: 'example-zowe.yaml',
+              path: runtimeDir,
+              hasChildren: false,
+              isDataset: false
+            });
+          }
+        `,
+        params: []
+      },
+      keyMap: ''
+    },
+    {
+      name: 'group-end'
+    },
+    {
+      // Sub-menu flyout for the three key Zowe directories.
+      // Items are greyed out via isDisabledString when the directory is not configured.
+      name: 'Open Directory...',
+      isDisabledString: `
+        const file = context.controller.fetchActiveFile();
+        return !(file && file.model.zoweInfo);
+      `,
+      children: [
+        {
+          name: 'Runtime',
+          action: {
+            functionString: `
+              const file = context.controller.fetchActiveFile();
+              const info = file && file.model.zoweInfo;
+              if (info) { context.controller.openDirectory.next(info.runtimeDirectory); }
+            `,
+            params: []
+          },
+          keyMap: ''
+        },
+        {
+          name: 'Logs',
+          isDisabledString: `
+            const file = context.controller.fetchActiveFile();
+            const info = file && file.model.zoweInfo;
+            return !(info && info.logDirectory);
+          `,
+          action: {
+            functionString: `
+              const file = context.controller.fetchActiveFile();
+              const info = file && file.model.zoweInfo;
+              if (info && info.logDirectory) { context.controller.openDirectory.next(info.logDirectory); }
+            `,
+            params: []
+          },
+          keyMap: ''
+        },
+        {
+          name: 'Extensions',
+          isDisabledString: `
+            const file = context.controller.fetchActiveFile();
+            const info = file && file.model.zoweInfo;
+            return !(info && info.extensionDirectory);
+          `,
+          action: {
+            functionString: `
+              const file = context.controller.fetchActiveFile();
+              const info = file && file.model.zoweInfo;
+              if (info && info.extensionDirectory) { context.controller.openDirectory.next(info.extensionDirectory); }
+            `,
+            params: []
+          },
+          keyMap: ''
+        }
+      ]
+    },
+    {
+      name: 'group-end'
+    },
+    {
+      // Children are populated dynamically in menu-bar.component showLanguageMenu
+      // from the zoweInfo stored on the active file model.
+      name: 'Open Zowe Server',
+      isDisabledString: `
+        const file = context.controller.fetchActiveFile();
+        const info = file && file.model.zoweInfo;
+        return !(info && info.externalDomains && info.externalDomains.length > 0
+                 && info.components && info.components.some(function(c) { return !!c.port; }));
+      `,
+      children: []
+    }
+  ],
   'jcl': [
     {
       name: 'Submit',

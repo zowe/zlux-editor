@@ -284,6 +284,9 @@ export class MonacoService implements OnDestroy {
               if (this.zoweYamlService.isZoweYaml(file['contents'])) {
                 const zoweInfo = this.zoweYamlService.extractZoweYamlInfo(file['contents']);
                 if (zoweInfo) {
+                  // Store on the model so menu-bar.component can read it synchronously
+                  // when showLanguageMenu('yaml') fires after initializedFile emits.
+                  (fileNode.model as any).zoweInfo = zoweInfo;
                   this.zoweYamlService.activateForModel(newModel, zoweInfo);
                 }
               }
