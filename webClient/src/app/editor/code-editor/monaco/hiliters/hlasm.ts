@@ -449,12 +449,19 @@ export const HLASM_HILITE = {
     ],
 
     operandLine: [
-      // End-of-line remark (after operands, separated by at least one space)
-      [/\s{2,}.*$/, 'hlasm-comment'],
+      // Skip whitespace between mnemonic and operands, then enter operand processing
+      [/\s+/, { token: '', next: '@operandWithComment' }],
+      // Keyword with no operands (end of line)
+      [/$/, { token: '', next: '@popall' }],
+    ],
 
-      // Continuation indicator X in column 72 (end of line)
-      [/X$/, 'hlasm-cont'],
-
+    operandWithComment: [
+      // End of line (empty or only trailing spaces) -- pop back to root
+      [/ *$/, { token: '', next: '@popall' }],
+      // Space after operand content = start of end-of-line comment
+      [/ .*$/, { token: 'hlasm-comment', next: '@popall' }],
+      // Continuation indicator X at end of line
+      [/X$/, { token: 'hlasm-cont', next: '@popall' }],
       { include: '@operandRest' },
     ],
 
