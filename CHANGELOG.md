@@ -2,8 +2,8 @@
 
 ## `3.5.0`
 
-- Enhancement: Added CEEDUMP language mode for the Monaco editor. Files named `CEEDUMP.*` are automatically detected. The mode provides syntax highlighting for section headers, register names, CEE message identifiers, memory storage dumps, and EBCDIC-decoded character columns. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis. Hovering over keywords, section headers, register names (GPR0–15, FPR, VR), and CEE message IDs shows contextual diagnostic documentation.
-
+- Enhancement: Added CEEDUMP language mode. Files named `CEEDUMP.*` are automatically detected. It provides syntax highlighting and hover-help for headers, common messages, registers and more. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis.
+  
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
