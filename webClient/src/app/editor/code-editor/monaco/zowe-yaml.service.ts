@@ -125,13 +125,14 @@ export class ZoweYamlService {
     ]).then(([commonSchema, zoweSchema]) => {
       const yamlInstance = getMonacoYamlInstance();
       if (!yamlInstance) {
-        this.log.warn('ZoweYamlService: monaco-yaml not initialized');
+        console.warn('[ZoweYaml] activateForModel: monaco-yaml instance not initialized');
         return;
       }
       if (!zoweSchema) {
-        this.log.warn('ZoweYamlService: Zowe schema unavailable; hover/validation disabled');
+        console.warn('[ZoweYaml] activateForModel: Zowe schema unavailable at', zoweSchemaPath);
         return;
       }
+      console.log('[ZoweYaml] Registering schemas for model:', monacoModel.uri.toString());
 
       const modelUri: string = monacoModel.uri.toString();
 
@@ -159,11 +160,13 @@ export class ZoweYamlService {
         ? [this.commonSchemaEntry, this.mainSchemaEntry]
         : [this.mainSchemaEntry];
 
-      yamlInstance.update({ schemas }).catch((err: any) => {
-        this.log.warn('ZoweYamlService: Failed to register schemas with monaco-yaml', err);
+      yamlInstance.update({ schemas }).then(() => {
+        console.log('[ZoweYaml] schemas registered, fileMatch:', this.mainSchemaEntry.fileMatch);
+      }).catch((err: any) => {
+        console.error('[ZoweYaml] Failed to register schemas with monaco-yaml', err);
       });
     }).catch((err: any) => {
-      this.log.warn('ZoweYamlService: Error loading schemas from z/OS', err);
+      console.error('[ZoweYaml] Error loading schemas from z/OS', err);
     });
   }
 

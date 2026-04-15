@@ -21,7 +21,7 @@ import { IEASYS_HILITE } from './hiliters/ieasys';
 import { JCL_HILITE } from './hiliters/jcl';
 import { REXX_HILITE } from './hiliters/rexx';
 import { configureMonacoYaml } from 'monaco-yaml';
-import { setMonacoYamlInstance } from './monaco-yaml-instance';
+import { setMonacoYamlInstance, getMonacoYamlInstance } from './monaco-yaml-instance';
 
 const BPXPRM_LANG = {  
   id: 'bpxprm',
@@ -435,12 +435,19 @@ export class MonacoConfig {
     // Initialize monaco-yaml once after the editor is created. This registers the yaml
     // language worker (configured in webpack via MonacoWebpackPlugin customLanguages)
     // so that ZoweYamlService can later call update() to activate per-file schemas.
-    setMonacoYamlInstance(configureMonacoYaml(monaco as any, {
-      hover: true,
-      completion: true,
-      validate: true,
-      schemas: [],
-    }));
+    if (!getMonacoYamlInstance()) {
+      try {
+        setMonacoYamlInstance(configureMonacoYaml(monaco as any, {
+          hover: true,
+          completion: true,
+          validate: true,
+          schemas: [],
+        }));
+        console.log('[ZoweYaml] configureMonacoYaml initialized successfully');
+      } catch (e) {
+        console.error('[ZoweYaml] configureMonacoYaml failed:', e);
+      }
+    }
 
     monaco.editor.defineTheme('jcl-dark', JCL_DARK);
     monaco.editor.defineTheme('rexx-dark', REXX_DARK);

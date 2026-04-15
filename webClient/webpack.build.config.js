@@ -107,10 +107,12 @@ const config = {
       // Do NOT include 'yaml' in languages — the customLanguages entry below already
       // covers it with monaco-yaml's worker. Including it in both places registers
       // the YAML language twice and breaks the monaco-yaml worker setup.
+      // Note: no 'entry' field here — we call configureMonacoYaml() explicitly in
+      // MonacoConfig.onLoad(), so loading the module as a separate webpack entry
+      // chunk would create a duplicate module instance.
       customLanguages: [
         {
           label: 'yaml',
-          entry: 'monaco-yaml',
           worker: {
             id: 'monaco-yaml/yamlWorker',
             entry: 'monaco-yaml/yaml.worker'
