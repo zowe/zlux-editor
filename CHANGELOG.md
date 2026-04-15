@@ -2,6 +2,7 @@
 
 ## `3.5.0`
 
+- Enhancement: Added PL/I language mode. Files with `.pli`, `.pl1`, and `.pli1` extensions are automatically detected. It provides syntax highlighting and hover-help.
 - Enhancement: Added CEEDUMP language mode. Files named `CEEDUMP.*` are automatically detected. It provides syntax highlighting and hover-help for headers, common messages, registers and more. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis.
 - Enhancement: HLASM language mode now has hover-help and improved syntax highlighting.
 - Enhancement: Added hover documentation to the JCL language mode. Hovering over JCL statement keywords (JOB, EXEC, DD, PROC, IF, INCLUDE, JCLLIB, etc.) and parameter names (DSN, DISP, SYSOUT, SPACE, DCB, RECFM, LRECL, CLASS, REGION, COND, etc.) now displays a brief description of the keyword's purpose and common usage. No changes to syntax highlighting or theme.
