@@ -1268,6 +1268,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
         monaco.editor.setTheme('rexx-dark');
         break; 
       }
+      case 'ceedump': {
+        monaco.editor.setTheme('ceedump-dark');
+        break;
+      }
       default: {
         if (this._defaultTheme) {
           monaco.editor.setTheme(this._defaultTheme);

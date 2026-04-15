@@ -26,7 +26,7 @@ import { REXX_HILITE } from './hiliters/rexx';
 const CEEDUMP_LANG = {
   id: 'ceedump',
   extensions: [],
-  filenamePatterns: ['^CEEDUMP\.'],
+  filenamePatterns: ['^ceedump\.'],
   aliases: ['CEEDUMP', 'ceedump'],
   mimetypes: ['application/ceedump']
 };
