@@ -422,30 +422,34 @@ export const HLASM_HILITE = {
       // ---- Full-line comment: * in column 1 ----
       [/^\*.*$/, 'hlasm-comment'],
 
-      // ---- Label in name field (cols 1-8), then transition to mnemonic ----
-      [/^([A-Z$#@][A-Z0-9$#@]*)(\s+)/, ['hlasm-label', '']],
+      // ---- Label (identifier at col 1) + whitespace -> emit label, go to opcode state ----
+      [/^([A-Z$#@][A-Z0-9$#_@]*)(\s+)/, ['hlasm-label', { token: '', next: '@opcode' }]],
 
-      // ---- No label  --  line starts with whitespace ----
-      [/^\s+/, ''],
+      // ---- Label at end of line (no mnemonic follows) ----
+      [/^[A-Z$#@][A-Z0-9$#_@]*\s*$/, 'hlasm-label'],
 
-      // Fall through into mnemonic recognition
-      { include: '@mnemonic' },
+      // ---- No label: line starts with whitespace -> skip it, go to opcode state ----
+      [/^\s+/, { token: '', next: '@opcode' }],
     ],
 
-    mnemonic: [
+    // opcode state: we are positioned at the start of the operation field.
+    // All identifiers here are operation codes. Known directives and macro-assembly
+    // instructions get their specific tokens; everything else (machine instructions,
+    // user macros, unknown ops) falls through to hlasm-keyword for consistent coloring.
+    opcode: [
       // Assembler directives
-      [/\b(ACONTROL|ADATA|AINSERT|ALIAS|AMODE|CATTR|CCW0?1?|CEJECT|CNOP|COM|COPY|CSECT|CXD|DC|DROP|DS|DSECT|DXD|EJECT|END|ENTRY|EQU|EXITCTL|EXTRN|ICTL|ISEQ|LOCTR|LTORG|MACRO|MEND|MEXIT|MHELP|MNOTE|OPSYN|ORG|POP|PRINT|PUNCH|PUSH|REPRO|RMODE|RSECT|SPACE|START|TITLE|USING|WXTRN|XATTR)\b/,
+      [/(?:ACONTROL|ADATA|AINSERT|ALIAS|AMODE|CATTR|CCW[01]?|CEJECT|CNOP|COM|COPY|CSECT|CXD|DC|DROP|DS|DSECT|DXD|EJECT|END|ENTRY|EQU|EXITCTL|EXTRN|ICTL|ISEQ|LOCTR|LTORG|MACRO|MEND|MEXIT|MHELP|MNOTE|OPSYN|ORG|POP|PRINT|PUNCH|PUSH|REPRO|RMODE|RSECT|SPACE|START|TITLE|USING|WXTRN|XATTR)(?!\w)/,
         { token: 'hlasm-directive', next: '@operandLine' }],
 
-      // Macro/conditional-assembly instructions
-      [/\b(ACTR|AEJECT|AIFB?|AGO|ANOP|AREAD|ASPACE|GBLA|GBLB|GBLC|LCLA|LCLB|LCLC|SETA[FC]?|SETB|SETC[F]?)\b/,
+      // Macro / conditional-assembly instructions
+      [/(?:ACTR|AEJECT|AIFB?|AGO|ANOP|AREAD|ASPACE|GBLA|GBLB|GBLC|LCLA|LCLB|LCLC|SETAF?|SETB|SETCF?)(?!\w)/,
         { token: 'hlasm-macro-inst', next: '@operandLine' }],
 
-      // Machine instructions (broad set)
-      [/\b(ABEND|ADBR?|AEBR?|ADB?|AEB?|AFI|AGFR?|AGHI|AGFI|AGR?|AG|AGSI|AH[IY]?|ALHHLR|ALG[FR]?|ALR?|ALY|APR?|AR?|AXBR?|BAKR|BAS[RL]?M?|BASR?|BCR?|BCT[RG]|BRAS[L]?|BRC[L]?|BXHG?|BXLEG?|B[EHLNOPRZ][ELNOPRZ]?R?|CBR?|CDBR?|CDSG?|CDSTR?|CDS|CEBR?|CEQ?|CFC|CFI|CG[FHIR]?|CGDT?R?|CGIT?|CGRT?|CGS?R?|CHI?|CHHSI|CHRL|CHSI|CIH|CIT|CLCL[U]?|CLC[LE]?|CLF[I]?|CLG[EFIR]?|CLGT|CLGTR?|CLHF|CLHHR|CLHHS|CLHHU|CLHL[R]?|CLI[Y]?|CLIH|CLIY|CLJNL?[EHLOPRZ]|CLMH?|CLR[LT]?|CLRJ|CLT|CLTJ|CLY|CMH?|CMDP?F?R?|CNOP|CPX|CR[JT]?|CRB|CRJ|CS[GY]?|CSGR?|CSST|CSX|CXBR?|CXFBR?|CDB|CGRT|CLGRT|SLLG|SLLK|DDBR?|DEBR?|DIDBR?|DIEBR?|DL[GR]?|DR?|DSGFR?|DSGR?|DSST|DXR|EDBR?|EEXTR?|ESXTR?|EX[RL]?|FLOGR|IEDTR?|IEXTR?|IC[MY]?|IIHF|IIHH|IIHL|IILF|IILH|IILL|IPTE|KDB[ER]?|KDTR?|KXBR?|KXTR?|LA[EGMY]?|LAA[LG]?|LAAG?|LACG?|LAE|LAM[H]?|LAOG?|LARL|LAXG?|LBEAR|LBR?|LCG[FR]?|LCGR|LCR?|LDE[BR]?|LDETR?|LDGR?|LDR?|LDXBR?|LDXTR?|LEDTR?|LFAS|LFHAT|LG[ABCDEFHIMRSTVX]?|LGD[TR]?|LGF[IR]?|LGFRL|LGHI|LGH[RL]?|LGII?|LGMH|LGR?|LGRP|LGSW?|LH[ILRY]?|LHHR|LHRL|LHY|LKPAI?|LLB[HLR]?|LLC[HLR]?|LLD[HLR]?|LLESG?|LLGC[HR]?|LLGF[HR]?|LLGFRL|LLGHR?|LLGTR?|LLH[HR]?|LLHRL|LLIHF|LLIHH|LLIHL|LLILF|LLILH|LLILL|LLZRGF|LM[GH]?|LMD|LNDFR?|LNG[FR]?|LNGR|LNR?|LNXBR|LPDFR?|LPG[FR]?|LPGR|LPR?|LPXBR|LR[DFGV]?|LRL|LRV[GH]?|LRVGR?|LT[GY]?|LTDBR?|LTEBR?|LTGFR?|LTGR?|LTGF?|LTR?|LTXBR?|LTXTR?|LXDBR?|LXDTR?|LXEBR?|LXETR?|LXLBR|LXSBR|M[ACG]?|MA[CDY]?|MC|MDB[IR]?|MDTR?|MEEBR?|MH[IY]?|MLG?R?|MOD[FI]?|MP|MSG[FIR]?|MS[DFIYRP]?|MVC[DKL]?|MVCP?S?|MVGHI|MVI[Y]?|MVN|MVO|MVS|MVZ|NIAI|NC|NI[Y]?|NGR?|NIHF|NIHH|NIHL|NILF|NILH|NILL|NOP[R]?|NR?|OC|OI[Y]?|OGR?|OIHF|OIHH|OIHL|OILF|OILH|OILL|OR?|PACK|PCC|PCKMO|PFD[RL]?|PFPO|PKA|PKU|PLO|POP|PR|PRNO|PTER?|QPACI?|RLL[G]?|RNSBG|ROSBG|RISBGN?|RISBHG|RISBLG|RXSBG|S[ALG]?|SAC|SACF|SCOND|SDB[IR]?|SDTR?|SEBR?|SGRK?|SFASR|SFPC|SHI?|SLAK?|SLBGR?|SLBR?|SLB|SLDA|SLDL|SLGFR?|SLGRK?|SLGR?|SLG[SY]?|SLLG|SLLK|SLL[KY]?|SLR[GK]?|SLRK|SLY?|SQDBR?|SQDR?|SQEBR?|SQXBR?|SRA[GK]?|SRAG?|SRDA|SRDL|SRLG|SRLK?|SRST[U]?|SRLU|SSAIR?|SSK|SSM|ST[ACKM]?|STCM[HY]?|STC[KY]?|STFLE?|STFPC|STG|STH[RL]?|STMG?[H]?|STRV[GH]?|SVC|SXR|SXTR?|SY?|TM[HY]?|TMHH|TMHL|TMLH|TMLL|TP|TPI|TR[?]?|TRE|TROO|TROOT|TROT|TRTE?[SU]?|TRTR?[EU]?|TRTT|TS|UNPK[U]?|VA[B]?|VC[EFK]?|VN[M]?|VSTR?|VX[E]?|WFC|WTC|XI[Y]?|XGR?|XC|XR?|ZAP|CLST|CVBG?|CVDG?|EX[RL]?|LM[GH]?|MVN|MVZ|TR|TRT[E]?[SU]?|BAKR|PR|BXHG?|BXLEG?)\b/,
-        { token: 'hlasm-keyword', next: '@operandLine' }],
+      // Fallback: any identifier is an operation code (machine instruction or user macro)
+      [/[A-Z$#@][A-Z0-9$#_@]*/, { token: 'hlasm-keyword', next: '@operandLine' }],
 
-      { include: '@operandRest' },
+      // Empty line or end of field
+      [/$/, { token: '', next: '@popall' }],
     ],
 
     operandLine: [
