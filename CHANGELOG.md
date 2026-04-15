@@ -1,5 +1,10 @@
 # Zlux Editor Changelog
 
+## `3.5.0`
+
+- Enhancement: Language selection menu now groups popular mainframe and web languages (HLASM, REXX, JCL, COBOL, Java, C, C++, JavaScript, TypeScript, Python, JSON, YAML, Plaintext) at the top, separated from the full alphabetical list.
+
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.

@@ -293,32 +293,49 @@ export class MenuBarComponent implements OnInit, OnDestroy {
   }
 
   private resetLanguageSelectionMenu() {
-    this.languageSelectionMenu.children = this.monaco.languages.getLanguages()
-      .filter(lang => !_.isEmpty(lang.aliases))
-      .sort((lang1, lang2) => {
-        let name1 = lang1?.aliases[0]?.toLowerCase();
-        let name2 = lang2?.aliases[0]?.toLowerCase();
-        if (name1 < name2) {
-          return -1;
-        } else if (name1 > name2) {
-          return 1;
-        } else {
-          return 0;
-        }
-      }).map(language => {
-        return {
-          name: language.aliases[0],
-          type: 'checkbox',
-          action: {
-            internalName: 'setEditorLanguage',
-            params: [language.id]
-          },
-          active: {
-            internalName: 'languageActiveCheck',
-            params: [language.id]
-          }
-        }
-      });
+    // Languages to feature at the top of the menu, in display order
+    const featuredLanguageIds = [
+      'hlasm', 'rexx', 'jcl', 'cobol', 'java', 'c', 'cpp',
+      'javascript', 'typescript', 'python', 'json', 'yaml', 'plaintext'
+    ];
+
+    const allLanguages = this.monaco.languages.getLanguages()
+      .filter(lang => !_.isEmpty(lang.aliases));
+
+    const toMenuItem = (language) => ({
+      name: language.aliases[0],
+      type: 'checkbox',
+      action: {
+        internalName: 'setEditorLanguage',
+        params: [language.id]
+      },
+      active: {
+        internalName: 'languageActiveCheck',
+        params: [language.id]
+      }
+    });
+
+    const alphabeticalSort = (lang1, lang2) => {
+      const name1 = lang1?.aliases[0]?.toLowerCase();
+      const name2 = lang2?.aliases[0]?.toLowerCase();
+      if (name1 < name2) { return -1; }
+      if (name1 > name2) { return 1; }
+      return 0;
+    };
+
+    const featuredLanguages = featuredLanguageIds
+      .map(id => allLanguages.find(lang => lang.id === id))
+      .filter(lang => lang != null);
+
+    const otherLanguages = allLanguages
+      .filter(lang => !featuredLanguageIds.includes(lang.id))
+      .sort(alphabeticalSort);
+
+    this.languageSelectionMenu.children = [
+      ...featuredLanguages.map(toMenuItem),
+      { name: 'group-end' },
+      ...otherLanguages.map(toMenuItem)
+    ];
   }
 
   private getReadableLangName(languageId) {
