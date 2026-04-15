@@ -45,6 +45,64 @@ export const CEE_MESSAGES: Record<string, string> = {
   CEE5728C: 'An addressing exception occurred while the runtime was accessing internal control blocks related to condition (signal/exception) handling. This usually points to heap or stack corruption that has overwritten LE runtime data.',
 };
 
+/**
+ * CEE Language Environment runtime option names with hover documentation.
+ * Keys are the option name exactly as it appears in the dump (uppercase).
+ */
+export const CEE_RUNOPTS: Record<string, string> = {
+  ABPERC: '**ABPERC** — Percentage of recoverable errors to tolerate before LE forces termination. `NONE` (default) means zero tolerance. Rarely changed; a non-zero value can mask repeated failures.',
+  ABTERMENC: '**ABTERMENC** — How LE reports termination to z/OS: as an abend code (`ABEND`, default) or a return code (`RETCODE`). Affects whether JCL COND checks on step abend will fire.',
+  ALL31: '**ALL31** — When `ON`, constrains all routines to 31-bit addressing even if compiled 64-bit. Required when mixing with 31-bit-only DLLs or system services.',
+  ANYHEAP: '**ANYHEAP** — Sizes the 31-bit heap for allocations requested with the `ANYWHERE` location qualifier. Relevant only to programs that do not use HEAP64.',
+  BELOWHEAP: '**BELOWHEAP** — Sizes the heap below the 16 MB line (24-bit addressable storage). Needed when calling VSAM, BSAM, or other interfaces that require 24-bit addresses.',
+  CBLOPTS: '**CBLOPTS** — Enables COBOL-specific LE runtime behaviors. Must match the compile-time CBLOPTS setting; a mismatch can produce unpredictable COBOL behavior.',
+  CBLPSHPOP: '**CBLPSHPOP** — Controls whether COBOL PUSH/POP ENVIRONMENT statements save and restore LE runtime options.',
+  CBLQDA: '**CBLQDA** — Enables the COBOL Qualified Data Area DSA layout required by certain LE-callable services. Rarely changed.',
+  CEEDUMP: '**CEEDUMP** — Controls CEEDUMP output file allocation: max lines per dump, SYSOUT class, and spool-release behavior. Ignored if the CEEDUMP DD is pre-allocated in JCL.',
+  CHECK: '**CHECK** — When `ON`, LE adds guard bytes around heap blocks and validates them on every free. Detects overruns and double-frees. Enable when chasing intermittent 0C4s in heap-intensive code; significant overhead.',
+  COUNTRY: '**COUNTRY** — Two-character ISO country code for LE NLS output (date/time format, numeric punctuation). Does not affect application-level globalization.',
+  DEPTHCONDLMT: '**DEPTHCONDLMT** — Maximum nesting depth for recursive condition handling. LE abends if this depth is exceeded. Default 10; `0` is unlimited (dangerous).',
+  DYNDUMP: '**DYNDUMP** — Whether LE also requests a system dump (SVCDUMP/TDUMP) alongside the CEEDUMP. `NODYNAMIC` (default) means CEEDUMP only. A full system dump requires RACF authority and is much larger.',
+  ENVAR: '**ENVAR** — Preset z/OS UNIX environment variables (e.g. `LIBPATH`, `TZ`) before `main()` runs, without modifying the shell profile.',
+  ERRCOUNT: '**ERRCOUNT** — Maximum recoverable errors before LE terminates the enclave. `0` (default) is unlimited. A non-zero value prevents infinite condition-handler retry loops.',
+  ERRUNIT: '**ERRUNIT** — Fortran logical unit number for LE error messages. Ignored for non-Fortran programs.',
+  FILEHIST: '**FILEHIST** — Enables file open/close event tracking. The history is included in the CEEDUMP. Useful for diagnosing file-not-found or already-open errors in COBOL and Fortran I/O.',
+  FILETAG: '**FILETAG** — Controls automatic EBCDIC↔code-page conversion for tagged HFS/zFS files. If a program reads files as garbage, verify this option and the file\'s tag are consistent.',
+  HEAP: '**HEAP** — Sizes the primary 31-bit heap (below the 2 GB bar). If the job abends with out-of-storage, increase the initial size and growth increment here.',
+  HEAP64: '**HEAP64** — Sizes the primary 64-bit heap (above the 2 GB bar). The default allocation area for 64-bit programs. If `malloc` returns NULL or a 0C4 follows a large allocation, increase these values.',
+  HEAPCHK: '**HEAPCHK** — Activates heap boundary-tag checking on every allocation and free. Identifies heap overruns and use-after-free bugs. High overhead; test environments only.',
+  HEAPPOOLS: '**HEAPPOOLS** — Configures fixed-size pool buckets for the 31-bit heap. Reduces fragmentation for programs that allocate many small same-size objects. Disable when debugging heap corruption — pools can delay the fault.',
+  HEAPPOOLS64: '**HEAPPOOLS64** — 64-bit equivalent of HEAPPOOLS. Same behavior but covers the above-the-bar heap.',
+  HEAPZONES: '**HEAPZONES** — Partitions the heap into isolated zones. A corrupted or exhausted zone can be identified without contaminating others.',
+  INFOMSGFILTER: '**INFOMSGFILTER** — Suppresses repeated LE informational messages that match the filter. Does not suppress warnings or errors.',
+  IOHEAP64: '**IOHEAP64** — Sizes the heap used by LE buffered I/O internally (stdio buffers, record management). Kept separate from the application heap. Increase if the program abends with a storage exception during heavy I/O.',
+  LIBHEAP64: '**LIBHEAP64** — Sizes the heap reserved exclusively for LE runtime internals (thread control blocks, condition handler chains). Corruption here indicates an LE runtime bug rather than application code.',
+  LIBSTACK: '**LIBSTACK** — Sizes the stack used by LE runtime routines running on behalf of the application. Rarely needs changing unless LE internal routines overflow.',
+  MSGFILE: '**MSGFILE** — Redirects LE message output to a named DD instead of SYSOUT.',
+  NATLANG: '**NATLANG** — National language for LE message text. `ENU` = US English. Changing requires the corresponding NLS catalog to be installed.',
+  NOTEST: '**NOTEST / TEST** — Controls z/OS Debugger (Debug Tool) entry. `NOTEST(ALL,...)` disables all debug entry points. Use `TEST(...)` to enable interactive debugging; requires the debugger and a `TEST`/`DEBUG` compile.',
+  OCSTATUS: '**OCSTATUS** — When `ON`, LE reports open files and sockets at abnormal termination. Useful for diagnosing resource leaks that survive a crash.',
+  PAGEFRAMESIZE: '**PAGEFRAMESIZE** — Preferred page frame size for 31-bit regions (`4K`, `1M`). Large pages reduce TLB pressure for large working sets but require system authorization.',
+  PAGEFRAMESIZE64: '**PAGEFRAMESIZE64** — Preferred page frame size for 64-bit regions. Large pages can improve throughput for programs with large heaps or code footprints.',
+  PLITASKCOUNT: '**PLITASKCOUNT** — Maximum concurrent PL/I TASK/ATTACH tasks. PL/I only.',
+  POSIX: '**POSIX** — When `ON`, establishes a z/OS UNIX POSIX process (`sigaction`, `pthread_create`, `fork`, etc.). Required for C/C++ programs using UNIX APIs. `OFF` runs as a traditional MVS batch job.',
+  PROFILE: '**PROFILE** — When `ON`, LE reads runtime options from a data set at startup. Allows changing options without relinking or modifying the PARM string.',
+  RPTOPTS: '**RPTOPTS** — When `ON`, LE prints the effective runtime option settings at job termination — the list you see at the bottom of this file. Essential for confirming which options were actually active during the crash.',
+  RPTSTG: '**RPTSTG** — When `ON`, LE prints heap and stack storage usage statistics at termination. Use to right-size HEAP/STACK options or detect storage leaks.',
+  STACK: '**STACK** — Sizes the call stack (DSA chain) for 31-bit programs. A 0C4 near GPR13-relative addressing often means the stack overflowed; increase the max here.',
+  STACK64: '**STACK64** — Sizes the call stack for 64-bit programs. Recursive algorithms and large local arrays may require a larger max. Stack overflow corrupts the DSA chain and produces garbled tracebacks.',
+  STORAGE: '**STORAGE** — Fill patterns written to storage on allocation and free. `NONE` (default) disables all filling. Setting patterns (e.g. `F4` on alloc, `FE` on free) is the fastest way to expose uninitialized-memory and use-after-free bugs.',
+  TERMTHDACT: '**TERMTHDACT** — What LE does when a thread terminates abnormally:\n- `UADUMP` — write a full CEEDUMP (produces this file)\n- `TRACE` — condensed traceback to SYSOUT only\n- `QUIET` — suppress all output\n- `DUMP` — CEEDUMP plus a system dump\n\nIf no CEEDUMP exists for a crash, this was likely `TRACE` or `QUIET`.',
+  THREADHEAP: '**THREADHEAP** — Per-thread private heap size. Increases reduce contention on the shared enclave heap in heavily multi-threaded programs.',
+  THREADSTACK: '**THREADSTACK** — Controls whether each 31-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`).',
+  THREADSTACK64: '**THREADSTACK64** — Controls whether each 64-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`). A tight max causes stack overflow in recursive or array-heavy threads.',
+  TRACE: '**TRACE** — LE internal trace collection. `OFF` by default. Produces very large output; enable only at IBM support\'s request.',
+  TRAP: '**TRAP** — Whether LE intercepts hardware program checks. `ON` (default) catches program checks, invokes condition handlers, and produces this CEEDUMP. `OFF` bypasses LE entirely — crashes produce system dumps but no CEEDUMPs.',
+  UPSI: '**UPSI** — Sets the 8-bit User Program Switch Indicator byte used by COBOL and Fortran programs. Rarely relevant to crashes.',
+  VCTRSAVE: '**VCTRSAVE** — Whether vector registers VR0–VR31 are saved across LE-managed calls. `YES` required if SIMD code runs on multiple threads simultaneously.',
+  XUFLOW: '**XUFLOW** — Fortran only. `ON` raises an LE condition on floating-point underflow instead of silently returning zero. Useful for detecting precision loss in numerical code.',
+};
+
 /** Terms with hover documentation for the CEEDUMP language. */
 export const CEEDUMP_HOVER_DOCS: Record<string, string> = {
   ASID: '**Address Space IDentifier (ASID)**\n\nA 16-bit number that z/OS uses to tag each address space. Two addresses with different ASIDs refer to completely separate virtual memory, even if the numeric values are identical. Cross-memory storage accesses require authorization; unauthorized references produce a 0C4 protection exception.',
@@ -100,6 +158,7 @@ export const CEEDUMP_HOVER_DOCS: Record<string, string> = {
  *   cee-compile-attr   — compile attribute tokens (C/C++, POSIX…)
  *   cee-condition      — condition message text lines
  *   cee-separator      — --- separator lines and page headers
+ *   cee-runopt         — runtime option names in the RPTOPTS section (hoverable)
  */
 export const CEEDUMP_HILITE = {
   defaultToken: 'default',
@@ -164,11 +223,16 @@ export const CEEDUMP_HILITE = {
       // ---- Inaccessible storage notice ----
       [/Inaccessible storage\./, 'cee-separator'],
 
+      // ---- Runtime option lines (RPTOPTS section at bottom of dump) ----
+      // Format: "   <source-label>   OPTIONNAME(...)" — source label is gray, option name is highlighted
+      [/^(\s+(?:IBM-supplied default|Invocation command|Application|Installation default)\s+)([A-Z][A-Z0-9]*)/,
+        ['cee-separator', 'cee-runopt']],
+
       // ---- Memory dump lines: AMODE 64 base address (16 hex chars, offset up to 6 hex) ----
-      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/,
         ['cee-offset', '', 'cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
       // ---- Memory dump lines: AMODE 31 base address (8 hex chars) ----
-      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/,
         ['cee-offset', '', 'cee-mem-byte1', 'cee-mem-lower3']],
       // ---- EBCDIC decoded columns ----
       [/\|([^|]*)\|/, { token: 'cee-ascii' }],
@@ -177,28 +241,28 @@ export const CEEDUMP_HILITE = {
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
 
+      // ---- CEE message IDs that appear mid-line (before hex rules to avoid false coloring CEEnnnC/E) ----
+      [/CEE[0-9]+[ISCEW](?![0-9A-Za-z_])/, 'cee-message-id'],
+
       // ---- 64-bit hex addresses without underscore (AMODE 64: exactly 16 consecutive hex chars) ----
-      // Must appear before the 8-char rule; \b ensures the match spans exactly 16 chars
-      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+      // Must appear before the 8-char rule; lookahead prevents partial match of longer runs
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
 
       // ---- Wildcard/inaccessible address markers ----
       [/\*{8}/, 'cee-wildcard'],
 
-      // ---- 32-bit hex values (exactly 8 hex chars bounded by non-hex) ----
-      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/, ['cee-mem-byte1', 'cee-mem-lower3']],
+      // ---- 32-bit hex values (8 hex chars not followed by more hex) ----
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem-byte1', 'cee-mem-lower3']],
 
       // ---- Hoverable diagnostic terms (underlined via theme, hover provider handles tooltips) ----
-      [/\b(DSA|CIB|NAB|BKC|FWC|PNAB)\b/, 'cee-term'],
+      [/(ASID|PID|DSA|CIB|NAB|BKC|FWC|PNAB|PSW|ILC|GPR[0-9]+|FPR[0-9]+|VR[0-9]+)(?!\w)/, 'cee-term'],
 
       // ---- Status keywords appearing in traceback rows ----
       [/\b(Call|Exception|Error|Not Run)\b/, 'cee-keyword'],
 
       // ---- Compile attribute tokens ----
       [/\b(CEL|C\/C\+\+|COBOL|FORTRAN|PLI|LIBRARY|POSIX|EBCDIC|IEEE|HFP|XPLINK|Non-XPLINK)\b/, 'cee-compile-attr'],
-
-      // ---- CEE message IDs that appear mid-line ----
-      [/\bCEE[0-9]+[ISCEW]\b/, 'cee-message-id'],
     ],
 
     // After the "CEE3DMP Vx Rx.x:" prefix, rest of the banner is title+page info
@@ -214,12 +278,12 @@ export const CEEDUMP_HILITE = {
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
       // 64-bit register value without underscore (AMODE 64)
-      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
       // Wildcard high-order bytes
       [/\*{8}/, 'cee-wildcard'],
       // 32-bit register value
-      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/, ['cee-mem-byte1', 'cee-mem-lower3']],
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem-byte1', 'cee-mem-lower3']],
       // Next register label on the same line (including FPC)
       [/(GPR[0-9]+\.{3,5}|FPR[0-9]+\.{3,5}|FPC\.{3,6}|VR[0-9]+\.{3,6}|PSW\.\.\.\.\.|PM\.\.\.\.\.\.\.|ILC\.\.\.\.\.)/, 'cee-register'],
       // End of line
@@ -244,14 +308,20 @@ export const CEEDUMP_HILITE = {
 
     // Condition information sub-line: includes CEE message ID + description
     conditionInfo: [
-      [/\bCEE[0-9]+[ISCEW]\b/, 'cee-message-id'],
+      [/CEE[0-9]+[ISCEW](?![0-9A-Za-z_])/, 'cee-message-id'],
+      [/(ASID|PID|DSA|CIB|NAB|BKC|FWC|PNAB|PSW|ILC|GPR[0-9]+|FPR[0-9]+|VR[0-9]+)(?!\w)/, 'cee-term'],
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem-byte1', 'cee-mem-lower3']],
       [/$/, { token: '', next: '@pop' }],
       [/./, 'cee-condition'],
     ],
 
     // Plain condition/description text to end of line
     conditionText: [
-      [/\bCEE[0-9]+[ISCEW]\b/, 'cee-message-id'],
+      [/CEE[0-9]+[ISCEW](?![0-9A-Za-z_])/, 'cee-message-id'],
+      [/(ASID|PID|DSA|CIB|NAB|BKC|FWC|PNAB|PSW|ILC|GPR[0-9]+|FPR[0-9]+|VR[0-9]+)(?!\w)/, 'cee-term'],
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})(?![0-9A-Fa-f])/, ['cee-mem-byte1', 'cee-mem-lower3']],
       [/$/, { token: '', next: '@pop' }],
       [/./, 'cee-condition'],
     ],

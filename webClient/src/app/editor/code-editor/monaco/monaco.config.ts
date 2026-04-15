@@ -16,7 +16,7 @@ import { Subscription } from 'rxjs';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { BPXPRM_HILITE } from './hiliters/bpxprm';
-import { CEEDUMP_HILITE, CEE_MESSAGES, CEEDUMP_HOVER_DOCS } from './hiliters/ceedump';
+import { CEEDUMP_HILITE, CEE_MESSAGES, CEEDUMP_HOVER_DOCS, CEE_RUNOPTS } from './hiliters/ceedump';
 import { HLASM_HILITE } from './hiliters/hlasm';
 import { IEASYS_HILITE } from './hiliters/ieasys';
 import { JCL_HILITE } from './hiliters/jcl';
@@ -111,6 +111,8 @@ export const CEEDUMP_DARK: Theme = {
     { token: 'cee-compile-attr',  foreground: 'a0a0ff' },                              // Light purple
     { token: 'cee-condition',     foreground: 'fdfdfd' },                              // White (condition text)
     { token: 'cee-separator',     foreground: '666666' },                              // Dark gray
+    // Runtime option names in the RPTOPTS section
+    { token: 'cee-runopt',        foreground: 'd4a017', fontStyle: 'bold underline' }, // Amber bold underline
   ]
 };
 
@@ -517,6 +519,13 @@ export class MonacoConfig {
         if (CEEDUMP_HOVER_DOCS[token]) {
           return {
             contents: [{ value: CEEDUMP_HOVER_DOCS[token] }]
+          };
+        }
+
+        // Check for runtime option names
+        if (CEE_RUNOPTS[token]) {
+          return {
+            contents: [{ value: CEE_RUNOPTS[token] }]
           };
         }
 
