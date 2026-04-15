@@ -20,6 +20,7 @@ import { CEEDUMP_HILITE, CEE_MESSAGES, CEEDUMP_HOVER_DOCS, CEE_RUNOPTS } from '.
 import { HLASM_HILITE, HLASM_DIRECTIVES, HLASM_MACRO_INSTS, HLASM_INSTRUCTIONS } from './hiliters/hlasm';
 import { IEASYS_HILITE } from './hiliters/ieasys';
 import { JCL_HILITE, JCL_HOVER_DOCS } from './hiliters/jcl';
+import { PLI_HILITE, PLI_HOVER_DOCS } from './hiliters/pli';
 import { REXX_HILITE } from './hiliters/rexx';
 
 
@@ -61,6 +62,14 @@ const JCL_LANG = {
   filenamePatterns: ['\\.jcl\\.','\\.jcl','\\.cntl','\\.cntl\\.'],
   aliases: ['JCL', 'jcl'],
   mimetypes: ['application/jcl']
+};
+
+const PLI_LANG = {
+  id: 'pli',
+  extensions: ['.pli', '.pl1', '.pli1'],
+  filenamePatterns: ['\\.pli$', '\\.pl1$', '\\.pli1$'],
+  aliases: ['PL/I', 'PLI', 'pli', 'pl1'],
+  mimetypes: ['application/pli']
 };
 
 const REXX_LANG = {  
@@ -154,6 +163,22 @@ export const JCL_DARK: Theme = {
     { token: 'jcl-default', foreground: '50eb24' }, // Green
 	]
 }
+
+export const PLI_DARK: Theme = {
+  base: 'vs-dark',
+  inherit: true,
+  colors: {},
+  rules: [
+    { token: 'pli-comment',      foreground: '20e5e6' },                              // Cyan
+    { token: 'pli-keyword',      foreground: 'fffd23', fontStyle: 'bold' },          // Yellow bold
+    { token: 'pli-attribute',    foreground: '75abff' },                              // Light blue
+    { token: 'pli-builtin',      foreground: '50eb24', fontStyle: 'bold' },          // Green bold
+    { token: 'pli-preprocessor', foreground: 'd4a017', fontStyle: 'bold underline' }, // Amber bold underline
+    { token: 'pli-string',       foreground: 'fdfdfd' },                              // White
+    { token: 'pli-number',       foreground: 'ff8c00' },                              // Orange
+    { token: 'pli-operator',     foreground: 'eb2424' },                              // Red
+  ]
+};
 
 export const REXX_DARK: Theme = {
   base: 'vs-dark',
@@ -493,6 +518,7 @@ export class MonacoConfig {
     monaco.languages.register(HLASM_LANG);
     monaco.languages.register(IEASYS_LANG);
     monaco.languages.register(JCL_LANG);
+    monaco.languages.register(PLI_LANG);
     monaco.languages.register(REXX_LANG);
 
     monaco.languages.setMonarchTokensProvider('bpxprm', <any>BPXPRM_HILITE);
@@ -577,6 +603,29 @@ export class MonacoConfig {
         return null;
       }
     });
+    monaco.languages.setMonarchTokensProvider('pli', <any>PLI_HILITE);
+
+    monaco.languages.registerHoverProvider('pli', {
+      provideHover: (model, position) => {
+        const word = model.getWordAtPosition(position);
+        if (!word) { return null; }
+        const token = word.word.toUpperCase();
+        if (PLI_HOVER_DOCS[token]) {
+          return { contents: [{ value: PLI_HOVER_DOCS[token] }] };
+        }
+        // Check for % prefixed preprocessor directives
+        const line = model.getLineContent(position.lineNumber);
+        const col = position.column - 1;
+        const ppMatch = line.slice(0, col + token.length).match(/(%[A-Z][A-Z0-9]*)$/i);
+        if (ppMatch && PLI_HOVER_DOCS[ppMatch[1].toUpperCase()]) {
+          return { contents: [{ value: PLI_HOVER_DOCS[ppMatch[1].toUpperCase()] }] };
+        }
+        return null;
+      }
+    });
+
+    monaco.editor.defineTheme('pli-dark', PLI_DARK);
+
     monaco.languages.setMonarchTokensProvider('rexx', <any>REXX_HILITE);
 
     monaco.languages.registerHoverProvider('ceedump', {
