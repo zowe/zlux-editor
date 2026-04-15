@@ -21,7 +21,8 @@ Copyright Contributors to the Zowe Project.
             <ul>
               @for (function of menu.children; track function) {
                 <li type="{{function.name === 'group-end'?'':'menuitem'}}" tabindex="-1" class="gz-menu-function-item" [ngClass]="getMenuItemStyle(function)"
-                  (click)="menuAction(function.action)" (keyup.enter)="menuAction(function.action);getEditorFocus();">
+                  (click)="hasSubmenu(function) ? $event.stopPropagation() : menuAction(function.action)"
+                  (keyup.enter)="hasSubmenu(function) ? null : (menuAction(function.action) || getEditorFocus())">
                   @if (function.name !== 'group-end') {
                     <div class="gz-action">
                       @if (function.type === 'checkbox' && menuAction(function.active)) {
@@ -29,9 +30,27 @@ Copyright Contributors to the Zowe Project.
                           fiber_manual_record
                         </mat-icon>
                       }
-                      <span>{{ function.name !== 'group-end' ? menuLabel(function) : '' }}</span>
-                      <span class="gz-keymap">{{ function.name !== 'group-end' ? function.keyMap : '' }}</span>
+                      <span>{{ menuLabel(function) }}</span>
+                      <span class="gz-keymap">{{ function.keyMap }}</span>
+                      @if (hasSubmenu(function)) {
+                        <span class="gz-submenu-arrow">&#9658;</span>
+                      }
                     </div>
+                    @if (hasSubmenu(function)) {
+                      <ul class="gz-submenu">
+                        @for (subItem of getSubmenuChildren(function); track subItem) {
+                          <li type="menuitem" tabindex="-1" class="gz-menu-function-item"
+                              [ngClass]="getMenuItemStyle(subItem)"
+                              (click)="menuAction(subItem.action); menuActive = false; $event.stopPropagation()"
+                              (keyup.enter)="menuAction(subItem.action); menuActive = false; $event.stopPropagation(); getEditorFocus()">
+                            <div class="gz-action">
+                              <span>{{ menuLabel(subItem) }}</span>
+                              <span class="gz-keymap">{{ subItem.keyMap }}</span>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    }
                   }
                   @if (function.name === 'group-end') {
                     <hr />

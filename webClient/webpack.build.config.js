@@ -102,7 +102,24 @@ const config = {
       threshold: 500000,
       minRatio: 0.8
     }),
-    new MonacoWebpackPlugin({ publicPath: pubPath }),
+    new MonacoWebpackPlugin({
+      publicPath: pubPath,
+      // Do NOT include 'yaml' in languages — the customLanguages entry below already
+      // covers it with monaco-yaml's worker. Including it in both places registers
+      // the YAML language twice and breaks the monaco-yaml worker setup.
+      // Note: no 'entry' field here — we call configureMonacoYaml() explicitly in
+      // MonacoConfig.onLoad(), so loading the module as a separate webpack entry
+      // chunk would create a duplicate module instance.
+      customLanguages: [
+        {
+          label: 'yaml',
+          worker: {
+            id: 'monaco-yaml/yamlWorker',
+            entry: 'monaco-yaml/yaml.worker'
+          }
+        }
+      ]
+    }),
     new AotPlugin({
       tsConfigPath: './tsconfig.json',
       entryModule: './webClient/src/app/app.module.ts#AppModule'

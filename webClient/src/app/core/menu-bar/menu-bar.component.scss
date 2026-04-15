@@ -49,6 +49,7 @@ $line-height: 32px;
           .gz-menu-function-item {
             font-size: 14px;
             padding: 5px 20px;
+            position: relative;
           }
           .gz-menu-function-item.group-line {
             padding: 0;
@@ -66,6 +67,29 @@ $line-height: 32px;
           .gz-menu-function-item:focus {
             background-color: #e0e0e0;
           }
+          .gz-menu-function-item.gz-has-submenu {
+            .gz-submenu-arrow {
+              margin-left: auto;
+              padding-left: 8px;
+              font-size: 10px;
+            }
+            .gz-submenu {
+              display: none;
+              position: absolute;
+              left: 100%;
+              top: 0;
+              background-color: #f5f5f5;
+              min-width: 220px;
+              list-style: none;
+              padding: 0;
+              z-index: 4;
+              box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            }
+            &:hover > .gz-submenu,
+            &:focus-within > .gz-submenu {
+              display: block;
+            }
+          }
         }
       }
       .gz-menu-section.active:focus {
@@ -77,6 +101,13 @@ $line-height: 32px;
           top: $line-height;
           max-height: calc(90% - 45px);
           overflow-y: auto;
+          // When the dropdown contains items with flyout submenus, disable
+          // overflow clipping so the submenu panel can extend beyond the
+          // dropdown's bounds. :has() is supported in all modern browsers.
+          &:has(.gz-has-submenu) {
+            overflow: visible;
+            max-height: none;
+          }
         }
       }
       .gz-menu-section.active:focus-within {
@@ -88,6 +119,10 @@ $line-height: 32px;
           top: $line-height;
           max-height: calc(90% - 45px);
           overflow-y: auto;
+          &:has(.gz-has-submenu) {
+            overflow: visible;
+            max-height: none;
+          }
         }
       }
     }
