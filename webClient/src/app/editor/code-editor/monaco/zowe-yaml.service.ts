@@ -123,40 +123,15 @@ export class ZoweYamlService {
       this.fetchSchema(toUnixUri(commonSchemaPath), commonSchemaPath),
       this.fetchSchema(toUnixUri(zoweSchemaPath), zoweSchemaPath),
     ]).then(([commonSchemaRaw, zoweSchema]) => {
-      // vscode-json-languageservice (used inside monaco-yaml) implements JSON Schema
-      // draft-07, which resolves plain-name fragments like #zoweIpv4 via "$id": "#name".
-      // The Zowe schemas are draft 2019-09 and use "$anchor" instead. Add a draft-07
-      // compatible "$id" alongside every "$anchor" so both draft variants resolve.
-      const commonSchema = commonSchemaRaw ? addDraft07Ids(commonSchemaRaw) : null;
-
-      // ── DEBUG: verify addDraft07Ids ran and the patched schema looks correct ──
-      console.log('[ZoweYaml] commonSchemaRaw loaded:', !!commonSchemaRaw, '| zoweSchema loaded:', !!zoweSchema);
-      if (commonSchema) {
-        const rawStr = JSON.stringify(commonSchema);
-        const anchorCount = (rawStr.match(/"\$anchor"/g) || []).length;
-        const idPoundCount = (rawStr.match(/"\$id"\s*:\s*"#/g) || []).length;
-        console.log('[ZoweYaml] commonSchema $anchor nodes:', anchorCount, '| draft-07 $id="#..." nodes:', idPoundCount);
-        // Show a sample patched definition
-        const defs: any = (commonSchema as any).$defs || (commonSchema as any).definitions || {};
-        const topLevelKeys = Object.keys(commonSchema as any).filter(k => !k.startsWith('$'));
-        console.log('[ZoweYaml] commonSchema top-level keys:', Object.keys(commonSchema as any).join(', '));
-        const firstDefKey = Object.keys(defs)[0];
-        if (firstDefKey) {
-          const n = (defs as any)[firstDefKey];
-          console.log('[ZoweYaml] sample $defs entry "' + firstDefKey + '":', JSON.stringify({ $anchor: n.$anchor, $id: n.$id }));
-        } else {
-          console.warn('[ZoweYaml] commonSchema has no $defs or definitions — anchors may be elsewhere');
-          // Show any node that has $anchor
-          const anchorMatch = rawStr.match(/"(\w+)"\s*:\s*\{[^}]*"\$anchor"\s*:\s*"([^"]+)"/);
-          if (anchorMatch) console.log('[ZoweYaml] first $anchor found at path key "' + anchorMatch[1] + '" with value "' + anchorMatch[2] + '"');
-        }
-      }
-      if (zoweSchema) {
-        const src = JSON.stringify(zoweSchema);
-        const refMatch = src.match(/"\$ref"\s*:\s*"([^"]+)"/);
-        if (refMatch) console.log('[ZoweYaml] first $ref in zoweSchema:', refMatch[1]);
-      }
-      // ── END DEBUG ──
+      // vscode-json-languageservice (inside monaco-yaml) is draft-07 and resolves
+      // cross-schema $ref fragments only via JSON Pointer (e.g. #/$defs/key).
+      // Zowe schemas are 2019-09 and use plain-name $anchor fragments.
+      // Build a map of anchorName → JSON pointer path from the common schema, then
+      // rewrite all matching $refs in the main zowe schema to pointer form.
+      const anchorMap = commonSchemaRaw ? buildAnchorMap(commonSchemaRaw) : new Map<string, string>();
+      const patchedZoweSchema = (zoweSchema && anchorMap.size > 0)
+        ? patchZoweSchemaRefs(zoweSchema, anchorMap, ZOWE_SCHEMA_COMMON_URI)
+        : zoweSchema;
 
       const yamlInstance = getMonacoYamlInstance();
       if (!yamlInstance) {
@@ -175,7 +150,7 @@ export class ZoweYamlService {
       // to a file, but its URI allows monaco-yaml to resolve cross-schema $refs.
       this.commonSchemaEntry = {
         uri: ZOWE_SCHEMA_COMMON_URI,
-        schema: commonSchema as any,
+        schema: commonSchemaRaw as any,
         fileMatch: [],
       };
 
@@ -185,13 +160,13 @@ export class ZoweYamlService {
         : [];
       this.mainSchemaEntry = {
         uri: ZOWE_SCHEMA_BASE_URI,
-        schema: zoweSchema as any,
+        schema: patchedZoweSchema as any,
         fileMatch: existingFileMatch.includes(modelUri)
           ? existingFileMatch
           : [...existingFileMatch, modelUri],
       };
 
-      const schemas: SchemasSettings[] = commonSchema
+      const schemas: SchemasSettings[] = commonSchemaRaw
         ? [this.commonSchemaEntry, this.mainSchemaEntry]
         : [this.mainSchemaEntry];
 
@@ -286,27 +261,71 @@ export class ZoweYamlService {
 }
 
 /**
- * Walks a JSON Schema object and, for every node that has a "$anchor" property,
- * adds a sibling "$id": "#anchorName" so that vscode-json-languageservice
- * (draft-07) can resolve plain-name fragment refs like #zoweIpv4.
- *
- * The Zowe schemas are written against JSON Schema 2019-09 which uses $anchor
- * for named identifiers, while draft-07 uses "$id": "#name" for the same purpose.
- * This function makes the schema compatible with both draft variants.
+ * Walks a JSON Schema object and records every $anchor value alongside its
+ * JSON Pointer path within the document (e.g. "zoweIpv4" → "/$defs/ipv4").
+ * Used to rewrite cross-schema $refs from plain-name fragment form to JSON
+ * Pointer form that vscode-json-languageservice (draft-07) can navigate.
  */
-function addDraft07Ids(schema: any): any {
-  if (!schema || typeof schema !== 'object') {
-    return schema;
-  }
+function buildAnchorMap(
+  schema: any,
+  path = '',
+  map: Map<string, string> = new Map(),
+): Map<string, string> {
+  if (!schema || typeof schema !== 'object') return map;
   if (Array.isArray(schema)) {
-    return schema.map(addDraft07Ids);
+    schema.forEach((item: any, i: number) => buildAnchorMap(item, `${path}/${i}`, map));
+    return map;
+  }
+  if (typeof schema.$anchor === 'string') {
+    map.set(schema.$anchor, path);
+  }
+  for (const key of Object.keys(schema)) {
+    buildAnchorMap(schema[key], `${path}/${key.replace(/~/g, '~0').replace(/\//g, '~1')}`, map);
+  }
+  return map;
+}
+
+/**
+ * Deep-clones a JSON Schema object, rewriting any $ref that uses a plain-name
+ * fragment pointing into the common Zowe schema to JSON Pointer form so that
+ * vscode-json-languageservice can resolve it.
+ *
+ * Example: "/schemas/v2/server-common#zoweIpv4"
+ *       → "https://zowe.org/schemas/v2/server-common#/$defs/ipv4"
+ */
+function patchZoweSchemaRefs(
+  schema: any,
+  anchorMap: Map<string, string>,
+  commonSchemaUri: string,
+): any {
+  if (!schema || typeof schema !== 'object') return schema;
+  if (Array.isArray(schema)) {
+    return schema.map((s: any) => patchZoweSchemaRefs(s, anchorMap, commonSchemaUri));
   }
   const result: any = {};
   for (const key of Object.keys(schema)) {
-    result[key] = addDraft07Ids(schema[key]);
-  }
-  if (typeof result['$anchor'] === 'string' && !result['$id']) {
-    result['$id'] = `#${result['$anchor']}`;
+    if (key === '$ref' && typeof schema[key] === 'string') {
+      result[key] = rewriteAnchorRef(schema[key], anchorMap, commonSchemaUri);
+    } else {
+      result[key] = patchZoweSchemaRefs(schema[key], anchorMap, commonSchemaUri);
+    }
   }
   return result;
+}
+
+function rewriteAnchorRef(
+  ref: string,
+  anchorMap: Map<string, string>,
+  commonSchemaUri: string,
+): string {
+  const hashIdx = ref.indexOf('#');
+  if (hashIdx < 0) return ref;
+  const fragment = ref.substring(hashIdx + 1);
+  // Only rewrite plain-name fragments (JSON Pointers start with /)
+  if (!fragment || fragment.startsWith('/')) return ref;
+  if (!anchorMap.has(fragment)) return ref;
+  // Only rewrite refs that point to the common schema (by path segment or full URI)
+  const basePart = ref.substring(0, hashIdx);
+  if (basePart !== '' && !basePart.includes('server-common')) return ref;
+  return `${commonSchemaUri}#${anchorMap.get(fragment)}`;
 }
