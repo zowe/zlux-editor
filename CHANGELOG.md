@@ -1,5 +1,8 @@
 # Zlux Editor Changelog
 
+## `3.5.0`
+- Bugfix: Fixed duplicate language entries appearing in the editor toolbar language list when opening the editor multiple times in the same browser window.
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
