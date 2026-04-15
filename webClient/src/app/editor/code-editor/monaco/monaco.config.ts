@@ -82,33 +82,35 @@ export const CEEDUMP_DARK: Theme = {
   colors: {},
   rules: [
     // Banner and metadata
-    { token: 'cee-header',        foreground: 'fffd23', fontStyle: 'bold' },  // Yellow bold
-    { token: 'cee-page-info',     foreground: '888888' },                     // Gray
+    { token: 'cee-header',        foreground: 'fffd23', fontStyle: 'bold' },          // Yellow bold
+    { token: 'cee-page-info',     foreground: '888888' },                              // Gray
     // CEE message identifiers
-    { token: 'cee-message-id',    foreground: 'ff8c00', fontStyle: 'bold' },  // Orange bold
+    { token: 'cee-message-id',    foreground: 'ff8c00', fontStyle: 'bold underline' }, // Orange bold underline
     // Section headers
-    { token: 'cee-section',       foreground: '50eb24', fontStyle: 'bold' },  // Green bold
-    { token: 'cee-sub-section',   foreground: '50eb24' },                     // Green
+    { token: 'cee-section',       foreground: '50eb24', fontStyle: 'bold underline' }, // Green bold underline
+    { token: 'cee-sub-section',   foreground: '50eb24', fontStyle: 'underline' },      // Green underline
     // Labels and register names
-    { token: 'cee-label',         foreground: '20e5e6' },                     // Cyan
-    { token: 'cee-register',      foreground: '20e5e6', fontStyle: 'bold' },  // Cyan bold
+    { token: 'cee-label',         foreground: '20e5e6', fontStyle: 'underline' },      // Cyan underline
+    { token: 'cee-register',      foreground: '20e5e6', fontStyle: 'bold underline' }, // Cyan bold underline
+    // Hoverable inline terms (DSA, CIB, NAB, BKC, FWC, PNAB)
+    { token: 'cee-term',          foreground: '20e5e6', fontStyle: 'underline' },      // Cyan underline
     // Offsets (+000000 / -0020)
-    { token: 'cee-offset',        foreground: '888888' },                     // Gray
+    { token: 'cee-offset',        foreground: '888888' },                              // Gray
     // 32-bit hex address coloring
-    { token: 'cee-mem-byte1',     foreground: '00ffff' },                     // Cyan (first byte)
-    { token: 'cee-mem-lower3',    foreground: '00aaaa' },                     // Dark cyan (lower 3 bytes)
+    { token: 'cee-mem-byte1',     foreground: '00ffff' },                              // Cyan (first byte)
+    { token: 'cee-mem-lower3',    foreground: '00aaaa' },                              // Dark cyan (lower 3 bytes)
     // 64-bit hex address coloring
-    { token: 'cee-mem64-byte1',   foreground: '00ff00' },                     // Bright green (high byte)
-    { token: 'cee-mem64-high32',  foreground: '00aa00' },                     // Medium green (high word remainder)
-    { token: 'cee-mem64-midbt',   foreground: '00ffff' },                     // Cyan (middle byte)
-    { token: 'cee-mem64-lower3',  foreground: '00aaaa' },                     // Dark cyan (lower 3 bytes)
+    { token: 'cee-mem64-byte1',   foreground: '00ff00' },                              // Bright green (high byte)
+    { token: 'cee-mem64-high32',  foreground: '00aa00' },                              // Medium green (high word remainder)
+    { token: 'cee-mem64-midbt',   foreground: '00ffff' },                              // Cyan (middle byte)
+    { token: 'cee-mem64-lower3',  foreground: '00aaaa' },                              // Dark cyan (lower 3 bytes)
     // Miscellaneous
-    { token: 'cee-wildcard',      foreground: 'ff4444' },                     // Red (inaccessible ****)
-    { token: 'cee-ascii',         foreground: 'b0b0b0', fontStyle: 'italic' }, // Gray italic (EBCDIC decode)
-    { token: 'cee-keyword',       foreground: 'eb2424', fontStyle: 'bold' },  // Red bold (Call, Exception)
-    { token: 'cee-compile-attr',  foreground: 'a0a0ff' },                     // Light purple
-    { token: 'cee-condition',     foreground: 'fdfdfd' },                     // White (condition text)
-    { token: 'cee-separator',     foreground: '666666' },                     // Dark gray
+    { token: 'cee-wildcard',      foreground: 'ff4444' },                              // Red (inaccessible ****)
+    { token: 'cee-ascii',         foreground: 'b0b0b0', fontStyle: 'italic' },         // Gray italic (EBCDIC decode)
+    { token: 'cee-keyword',       foreground: 'eb2424', fontStyle: 'bold' },           // Red bold (Call, Exception)
+    { token: 'cee-compile-attr',  foreground: 'a0a0ff' },                              // Light purple
+    { token: 'cee-condition',     foreground: 'fdfdfd' },                              // White (condition text)
+    { token: 'cee-separator',     foreground: '666666' },                              // Dark gray
   ]
 };
 

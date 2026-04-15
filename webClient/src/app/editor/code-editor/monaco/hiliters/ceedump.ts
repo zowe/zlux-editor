@@ -145,8 +145,9 @@ export const CEEDUMP_HILITE = {
       [/^\s+(Current Condition:|Original Condition:|Location:|PSW:|ILC\.\.\.\.\.|Interruption Code\.\.\.\.\.)/, { token: 'cee-sub-section', next: '@conditionText' }],
 
       // ---- "Storage dump near condition…" lines ----
-      [/^\s+(Storage dump near condition, beginning at location:)\s*/, { token: 'cee-sub-section', next: '@hexValue' }],
-      [/^\s+(Storage around\s+)(GPR[0-9]+|FPR[0-9]+|VR[0-9]+)/, ['cee-sub-section', 'cee-register']],
+      // AMODE 31 uses "location: XXXXXXXX"; AMODE 64 uses "location(XXXXXXXXXXXXXXXX)"
+      [/^\s+(Storage dump near condition, beginning at location[:(])/, 'cee-sub-section'],
+      [/^\s+(Storage around\s+)(GPR[0-9]+|FPR[0-9]+|FPC|VR[0-9]+)/, ['cee-sub-section', 'cee-register']],
 
       // ---- DSA/CIB named frames ----
       [/^\s+(DSA for|CIB for|DSA frame:)/, { token: 'cee-sub-section', next: '@conditionText' }],
@@ -154,8 +155,8 @@ export const CEEDUMP_HILITE = {
       // ---- Traceback column-header line: "DSA   Entry   E   Offset..." ----
       [/^\s+DSA\s+Entry\s+E\s+Offset/, 'cee-separator'],
 
-      // ---- Register lines: GPRn..... or FPRn..... or VRn...... or PSW or PM or ILC ----
-      [/(GPR[0-9]+\.{3,5}|FPR[0-9]+\.{3,5}|VR[0-9]+\.{3,6}|PSW\.\.\.\.\.|PM\.\.\.\.\.\.|ILC\.\.\.\.\.)/, { token: 'cee-register', next: '@registerValues' }],
+      // ---- Register lines: GPRn..... or FPRn..... or FPC...... or VRn...... or PSW/PM/ILC ----
+      [/(GPR[0-9]+\.{3,5}|FPR[0-9]+\.{3,5}|FPC\.{3,6}|VR[0-9]+\.{3,6}|PSW\.\.\.\.\.|PM\.\.\.\.\.\.\.|ILC\.\.\.\.\.)/, { token: 'cee-register', next: '@registerValues' }],
 
       // ---- Same-as-above sentinel ----
       [/\s+same as above\s*$/, 'cee-separator'],
@@ -163,15 +164,22 @@ export const CEEDUMP_HILITE = {
       // ---- Inaccessible storage notice ----
       [/Inaccessible storage\./, 'cee-separator'],
 
-      // ---- Memory dump line (offset address  hexgroups  |ascii|) ----
-      // Match the leading offset (+XXXX / -XXXX) then address
-      [/([+-][0-9A-Fa-f]{4,5})(\s+)([0-9A-Fa-f]{8})/, ['cee-offset', '', 'cee-mem-byte1']],
-      // Run hex parsing and |ascii| from those lines
+      // ---- Memory dump lines: AMODE 64 base address (16 hex chars, offset up to 6 hex) ----
+      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+        ['cee-offset', '', 'cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
+      // ---- Memory dump lines: AMODE 31 base address (8 hex chars) ----
+      [/([+-][0-9A-Fa-f]{4,6})(\s+)([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
+        ['cee-offset', '', 'cee-mem-byte1', 'cee-mem-lower3']],
+      // ---- EBCDIC decoded columns ----
       [/\|([^|]*)\|/, { token: 'cee-ascii' }],
 
-      // ---- 64-bit address with underscore separator ----
-      // e.g. 00000000_265ED088  →  [byte1][high32]_[midbt][lower3]
+      // ---- 64-bit address with underscore separator (AMODE 64 register lines) ----
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
+        ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
+
+      // ---- 64-bit hex addresses without underscore (AMODE 64: exactly 16 consecutive hex chars) ----
+      // Must appear before the 8-char rule; \b ensures the match spans exactly 16 chars
+      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
 
       // ---- Wildcard/inaccessible address markers ----
@@ -179,6 +187,9 @@ export const CEEDUMP_HILITE = {
 
       // ---- 32-bit hex values (exactly 8 hex chars bounded by non-hex) ----
       [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/, ['cee-mem-byte1', 'cee-mem-lower3']],
+
+      // ---- Hoverable diagnostic terms (underlined via theme, hover provider handles tooltips) ----
+      [/\b(DSA|CIB|NAB|BKC|FWC|PNAB)\b/, 'cee-term'],
 
       // ---- Status keywords appearing in traceback rows ----
       [/\b(Call|Exception|Error|Not Run)\b/, 'cee-keyword'],
@@ -199,15 +210,18 @@ export const CEEDUMP_HILITE = {
 
     // After a register name label, parse register value(s) on the same line
     registerValues: [
-      // 64-bit register value with underscore
+      // 64-bit register value with underscore separator
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
+        ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
+      // 64-bit register value without underscore (AMODE 64)
+      [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', 'cee-mem64-lower3']],
       // Wildcard high-order bytes
       [/\*{8}/, 'cee-wildcard'],
       // 32-bit register value
       [/\b([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})\b/, ['cee-mem-byte1', 'cee-mem-lower3']],
-      // Next register label on the same line
-      [/(GPR[0-9]+\.{3,5}|FPR[0-9]+\.{3,5}|VR[0-9]+\.{3,6}|PSW\.\.\.\.\.|PM\.\.\.\.\.\.|ILC\.\.\.\.\.)/, 'cee-register'],
+      // Next register label on the same line (including FPC)
+      [/(GPR[0-9]+\.{3,5}|FPR[0-9]+\.{3,5}|FPC\.{3,6}|VR[0-9]+\.{3,6}|PSW\.\.\.\.\.|PM\.\.\.\.\.\.\.|ILC\.\.\.\.\.)/, 'cee-register'],
       // End of line
       [/$/, { token: '', next: '@pop' }],
       [/./, ''],
@@ -215,8 +229,13 @@ export const CEEDUMP_HILITE = {
 
     // Emit a single 64-bit or 32-bit hex token then return
     hexValue: [
+      // 64-bit with underscore
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})_([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
         ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', { token: 'cee-mem64-lower3', next: '@pop' }]],
+      // 64-bit without underscore (AMODE 64)
+      [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
+        ['cee-mem64-byte1', 'cee-mem64-high32', 'cee-mem64-midbt', { token: 'cee-mem64-lower3', next: '@pop' }]],
+      // 32-bit
       [/([0-9A-Fa-f]{2})([0-9A-Fa-f]{6})/,
         ['cee-mem-byte1', { token: 'cee-mem-lower3', next: '@pop' }]],
       [/$/, { token: '', next: '@pop' }],
