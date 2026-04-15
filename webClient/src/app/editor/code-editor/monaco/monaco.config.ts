@@ -496,7 +496,7 @@ export class MonacoConfig {
               contents: [
                 { value: '**' + declaration.typeName + '** `' + declaration.itemName + '`' },
                 { value: '```attls\n' + declarationText + '\n```' },
-                { value: '*Ctrl+Click or F12 on the reference name to jump to this declaration.*' },
+                { value: '*Ctrl+Click on the reference name to jump to this declaration.*' },
               ],
             };
           }

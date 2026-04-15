@@ -1348,20 +1348,15 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
               }
             }
           }
-          // Content-based detection: languages may opt in by setting contentDetect=true
-          // alongside a firstLine regex string.  When active, the firstLine pattern is
-          // tested against the full file content (multiline) rather than just the first
-          // line, allowing detection of files whose opening lines are comments.
-          for (let lang of languages) {
-            if ((lang as any)?.contentDetect && lang?.firstLine && buffer.model?.contents) {
-              try {
-                const contentRegex = new RegExp(lang.firstLine, 'm');
-                if (contentRegex.test(buffer.model.contents)) {
-                  results.push(lang.id);
-                }
-              } catch (_e) {
-                // Skip languages whose firstLine is not a valid regex
-              }
+          // Content-based detection for languages that cannot be identified by filename
+          // or extension alone (e.g. AT-TLS policy files have no fixed extension).
+          // Test the full file contents so that files beginning with comment lines are
+          // also detected correctly.
+          if (buffer.model?.contents) {
+            const content = buffer.model.contents;
+            // AT-TLS policy files declare TTLSRule blocks starting at column 0.
+            if (!results.includes('attls') && /^TTLSRule\b/m.test(content)) {
+              results.push('attls');
             }
           }
           obs.next(results);
