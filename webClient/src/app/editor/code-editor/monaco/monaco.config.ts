@@ -761,10 +761,7 @@ export class MonacoConfig {
       ): monaco.languages.RenameLocation | null {
         const lineText = model.getLineContent(position.lineNumber);
         const itemName = getItemNameAtPosition(lineText, position.column);
-        if (!itemName) {
-          // Return a sentinel that signals "not renameable" to Monaco
-          return { range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column), text: '', rejectReason: 'This element cannot be renamed.' };
-        }
+        if (!itemName) return null;
         // Find where the token starts on this line (search near the cursor)
         const col0 = lineText.indexOf(itemName, Math.max(0, position.column - itemName.length - 1));
         return {
