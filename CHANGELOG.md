@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `3.5.0`
+
+- Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.
