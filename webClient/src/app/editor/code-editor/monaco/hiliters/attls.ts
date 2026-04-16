@@ -175,6 +175,28 @@ export function getHoveredKeyword(lineText: string, column: number): string | nu
 }
 
 // ---------------------------------------------------------------------------
+// Ref-key → declaration type mapping
+// ---------------------------------------------------------------------------
+
+// Explicit overrides for Ref keys that don’t follow the simple “strip Ref” rule.
+const REF_KEY_TO_TYPE: {[key: string]: string} = {
+  LocalPortRangeRef:  'PortRange',
+  RemotePortRangeRef: 'PortRange',
+  PortRangeRef:       'PortRange',
+};
+
+/**
+ * Returns the declaration typeName that a `*Ref` property key resolves to,
+ * e.g. `TTLSConnectionActionRef` → `TTLSConnectionAction`.
+ * Returns null if `refKey` does not end with “Ref”.
+ */
+export function getDeclarationTypeForRefKey(refKey: string): string | null {
+  if (REF_KEY_TO_TYPE[refKey]) return REF_KEY_TO_TYPE[refKey];
+  if (refKey.endsWith('Ref')) return refKey.slice(0, -3);
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Reference-finding utilities
 // ---------------------------------------------------------------------------
 
@@ -242,6 +264,156 @@ export function findAllAttlsReferences(lines: string[], itemName: string): Attls
   }
 
   return results;
+}
+
+// ---------------------------------------------------------------------------
+// Diagnostics utilities
+// ---------------------------------------------------------------------------
+
+/** A declaration occurrence — may be one of several duplicates. */
+export interface AttlsDeclarationOccurrence {
+  typeName: string;
+  itemName: string;
+  /** 0-based line of the header line ("TypeKeyword  ItemName"). */
+  line: number;
+  /** 0-based column where itemName starts in that line. */
+  col: number;
+}
+
+/** A `*Ref  value` usage found on an indented property line. */
+export interface AttlsRefUsage {
+  /** The keyword ending in "Ref", e.g. "TTLSConnectionActionRef". */
+  refKey: string;
+  /** The referenced item name. */
+  refValue: string;
+  /** 0-based line number. */
+  line: number;
+  /** 0-based column where refValue starts. */
+  col: number;
+}
+
+/**
+ * Returns every well-formed declaration occurrence in `lines` (including
+ * duplicates), in document order.
+ */
+export function scanAttlsDeclarationOccurrences(lines: string[]): AttlsDeclarationOccurrence[] {
+  const results: AttlsDeclarationOccurrence[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const declMatch = /^([A-Za-z]\w*)\s+(\S+)\s*$/.exec(line);
+    if (!declMatch) continue;
+
+    let braceIndex = i + 1;
+    while (braceIndex < lines.length && lines[braceIndex].trim() === '') braceIndex++;
+    if (braceIndex >= lines.length || lines[braceIndex].trim() !== '{') continue;
+
+    const typeName = declMatch[1];
+    const itemName = declMatch[2];
+    const col = line.indexOf(itemName, declMatch[1].length);
+    results.push({ typeName, itemName, line: i, col });
+  }
+
+  return results;
+}
+
+/**
+ * Returns every `*Ref  value` usage in `lines`, excluding well-known literal
+ * values (`ALL`, `On`, `Off`, bare numbers) that are never item names.
+ */
+export function scanAttlsRefUsages(lines: string[]): AttlsRefUsage[] {
+  const results: AttlsRefUsage[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const refMatch = /^(\s+)([\w.]+Ref)([ \t]+)(\S+)/.exec(line);
+    if (!refMatch) continue;
+
+    const refValue = refMatch[4];
+    if (/^(ALL|On|Off)$/i.test(refValue) || /^\d[\d-]*$/.test(refValue)) continue;
+
+    const col = refMatch[1].length + refMatch[2].length + refMatch[3].length;
+    results.push({ refKey: refMatch[2], refValue, line: i, col });
+  }
+
+  return results;
+}
+
+// Declaration types that are top-level entry points, never referenced by
+// other declarations. These are exempt from "unused" warnings.
+const UNREFERENCED_ROOT_TYPES = new Set(['TTLSRule']);
+
+/** A diagnostic entry produced by `computeAttlsDiagnostics`. */
+export interface AttlsDiagnosticItem {
+  /** 0-based line number. */
+  line: number;
+  /** 0-based start column (inclusive). */
+  colStart: number;
+  /** 0-based end column (exclusive). */
+  colEnd: number;
+  message: string;
+  severity: 'error' | 'warning';
+}
+
+/**
+ * Analyses `lines` and returns diagnostics covering:
+ * - Error   — a `*Ref` value that names an item not declared in this file.
+ * - Error   — the same item name declared more than once.
+ * - Warning — a declaration never referenced (excluding TTLSRule).
+ */
+export function computeAttlsDiagnostics(lines: string[]): AttlsDiagnosticItem[] {
+  const diagnostics: AttlsDiagnosticItem[] = [];
+
+  const occurrences = scanAttlsDeclarationOccurrences(lines);
+  const refs        = scanAttlsRefUsages(lines);
+
+  const byName = new Map<string, AttlsDeclarationOccurrence[]>();
+  for (const occ of occurrences) {
+    const list = byName.get(occ.itemName) ?? [];
+    list.push(occ);
+    byName.set(occ.itemName, list);
+  }
+
+  const referencedNames = new Set(refs.map(r => r.refValue));
+
+  // ── Duplicate declarations ─────────────────────────────────────────────
+  byName.forEach((list) => {
+    if (list.length <= 1) return;
+    list.forEach(occ => {
+      diagnostics.push({
+        line: occ.line, colStart: occ.col, colEnd: occ.col + occ.itemName.length,
+        message: `Duplicate declaration: '${occ.itemName}' is declared ${list.length} times.`,
+        severity: 'error',
+      });
+    });
+  });
+
+  // ── Missing declarations (dangling references) ────────────────────────
+  refs.forEach(ref => {
+    if (!byName.has(ref.refValue)) {
+      diagnostics.push({
+        line: ref.line, colStart: ref.col, colEnd: ref.col + ref.refValue.length,
+        message: `'${ref.refValue}' is referenced by '${ref.refKey}' but has no declaration in this file.`,
+        severity: 'error',
+      });
+    }
+  });
+
+  // ── Unused declarations ───────────────────────────────────────────────
+  byName.forEach((list, name) => {
+    if (list.length > 1) return; // already flagged as duplicate
+    const occ = list[0];
+    if (UNREFERENCED_ROOT_TYPES.has(occ.typeName)) return;
+    if (!referencedNames.has(name)) {
+      diagnostics.push({
+        line: occ.line, colStart: occ.col, colEnd: occ.col + occ.itemName.length,
+        message: `'${name}' (${occ.typeName}) is declared but never referenced.`,
+        severity: 'warning',
+      });
+    }
+  });
+
+  return diagnostics;
 }
 
 // ---------------------------------------------------------------------------
