@@ -1,12 +1,10 @@
 # Zlux Editor Changelog
 
-## `3.6.0`
-
-- Enhancement: AT-TLS language mode — added **Go to Definition** (Ctrl+Click / F12) and **Find All References** (Shift+F12) for cross-reference values and declaration names. Go to Definition navigates directly to the referenced item's declaration. Find All References lists every `*Ref` usage of a named item across the policy file, including its declaration.
-
 ## `3.5.0`
 
 - Enhancement: Added AT-TLS (Application Transparent Transport Layer Security) language mode for IBM z/OS Policy Agent files. Files containing `TTLSRule` declarations are automatically detected and syntax-highlighted. Hovering over a cross-reference value (any property ending in `Ref`) displays the full declaration block of the referenced item, making it easier to understand the complete meaning of a rule without manual searching. Hovering over any AT-TLS keyword displays a brief description of its purpose.
+- Enhancement: AT-TLS language mode — added **Go to Definition** (Ctrl+Click) and **Find All References** (Shift+F12) for cross-reference values and declaration names. Go to Definition navigates directly to the referenced item's declaration. Find All References lists every `*Ref` usage of a named item across the policy file, including its declaration.
+- Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
 
 ## `3.4.0`
 
