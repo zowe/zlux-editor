@@ -56,8 +56,8 @@ export class LimitsService {
         if (response && response.contents) {
           const contents = response.contents;
           const merged: EditorLimits = {
-            maxFileSize: typeof contents.maxFileSize === 'number' ? contents.maxFileSize : DEFAULT_LIMITS.maxFileSize,
-            folderMaxCount: typeof contents.folderMaxCount === 'number' ? contents.folderMaxCount : DEFAULT_LIMITS.folderMaxCount
+            maxFileSize: typeof contents.maxFileSize === 'number' && contents.maxFileSize > 0 ? contents.maxFileSize : DEFAULT_LIMITS.maxFileSize,
+            folderMaxCount: typeof contents.folderMaxCount === 'number' && contents.folderMaxCount > 0 ? contents.folderMaxCount : DEFAULT_LIMITS.folderMaxCount
           };
           this._limits.next(merged);
           this.log.info(`Loaded editor limits: maxFileSize=${merged.maxFileSize}, folderMaxCount=${merged.folderMaxCount}`);
