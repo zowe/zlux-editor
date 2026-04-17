@@ -36,6 +36,9 @@
       },
       "monaco": {
         "aggregationPolicy": "none"
+      },
+      "limits": {
+        "aggregationPolicy": "override"
       }
     }
   }

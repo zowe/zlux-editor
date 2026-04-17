@@ -274,9 +274,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.selectFile(fileContext, false, fileNode.line);
     } else {
       // pass file structure to specific code editor (monaco)
-      // trigger code-editor change, let code editor open file
+      // trigger code-editor change, let code editor open file.
+      // Note: openFileHandler (tab creation) is deferred to monacoService.openFile()
+      // so that large-file preflight checks run before the tab appears.
       this.editorFile = { context: fileContext, reload: true, line: fileContext.model.line || fileNode.line };
-      this.editorControl.openFileHandler(fileContext);
     }
 
   }

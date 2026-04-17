@@ -2,6 +2,8 @@
 
 ## `3.5.0`
 
+- Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.
+- Bugfix: Fixed duplicate language entries appearing in the editor toolbar language list when opening the editor multiple times in the same browser window.
 - Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
 
 ## `3.4.0`
