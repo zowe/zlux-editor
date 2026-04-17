@@ -30,11 +30,11 @@
 /** CEE message IDs with human-readable descriptions used by the hover provider. */
 export const CEE_MESSAGES: Record<string, string> = {
   CEE0198S: 'A thread was killed because a condition (exception) was raised but no condition handler chose to handle or recover from it. Look at the Original Condition in the CIB for the root cause.',
-  CEE3201S: 'Abend 0C1 — the CPU tried to execute a bit pattern that is not a valid z/Architecture instruction. Often caused by branching into data, a corrupted function pointer, or executing storage that was never initialized.',
-  CEE3202S: 'Abend 0C2 — the program tried to run a supervisor-state (privileged) instruction while in problem (user) state. Almost always indicates a code corruption or incorrect branch target.',
-  CEE3204S: 'Abend 0C4 — the program touched memory it is not allowed to access. Common causes: null pointer dereference (address 0), use-after-free, buffer overrun into a read-only page, or access to another address space.',
-  CEE3206S: 'Abend 0C6 — an instruction received an operand address that does not meet its alignment requirement (e.g. a fullword operation on an odd address). Usually indicates a corrupted pointer or incorrect offset arithmetic.',
-  CEE3209S: 'Abend 0C9 — integer division by zero or a quotient that overflows the destination register. Check the divisor in the operands of the failing instruction shown by the PSW.',
+  CEE3201S: 'Abend 0C1 -- the CPU tried to execute a bit pattern that is not a valid z/Architecture instruction. Often caused by branching into data, a corrupted function pointer, or executing storage that was never initialized.',
+  CEE3202S: 'Abend 0C2 -- the program tried to run a supervisor-state (privileged) instruction while in problem (user) state. Almost always indicates a code corruption or incorrect branch target.',
+  CEE3204S: 'Abend 0C4 -- the program touched memory it is not allowed to access. Common causes: null pointer dereference (address 0), use-after-free, buffer overrun into a read-only page, or access to another address space.',
+  CEE3206S: 'Abend 0C6 -- an instruction received an operand address that does not meet its alignment requirement (e.g. a fullword operation on an odd address). Usually indicates a corrupted pointer or incorrect offset arithmetic.',
+  CEE3209S: 'Abend 0C9 -- integer division by zero or a quotient that overflows the destination register. Check the divisor in the operands of the failing instruction shown by the PSW.',
   CEE3250C: 'A program check or explicit ABEND macro caused an abnormal termination with the shown system (Sxxx) or user (Uxxx) abend code. The reason code provides additional detail from the subsystem that issued the abend.',
   CEE3501S: 'Language Environment could not load the named shared library (DLL / .so). Check that the library exists on the LIBPATH, that its file permissions are correct, and that it was built for the right AMODE.',
   CEE3588S: 'A 31-bit caller tried to call a function inside a 64-bit DLL (or vice versa) without a proper AMODE-switching stub. The two modules need a compatible linkage shim or must be rebuilt to the same addressing mode.',
@@ -50,57 +50,57 @@ export const CEE_MESSAGES: Record<string, string> = {
  * Keys are the option name exactly as it appears in the dump (uppercase).
  */
 export const CEE_RUNOPTS: Record<string, string> = {
-  ABPERC: '**ABPERC** — Percentage of recoverable errors to tolerate before LE forces termination. `NONE` (default) means zero tolerance. Rarely changed; a non-zero value can mask repeated failures.',
-  ABTERMENC: '**ABTERMENC** — How LE reports termination to z/OS: as an abend code (`ABEND`, default) or a return code (`RETCODE`). Affects whether JCL COND checks on step abend will fire.',
-  ALL31: '**ALL31** — When `ON`, constrains all routines to 31-bit addressing even if compiled 64-bit. Required when mixing with 31-bit-only DLLs or system services.',
-  ANYHEAP: '**ANYHEAP** — Sizes the 31-bit heap for allocations requested with the `ANYWHERE` location qualifier. Relevant only to programs that do not use HEAP64.',
-  BELOWHEAP: '**BELOWHEAP** — Sizes the heap below the 16 MB line (24-bit addressable storage). Needed when calling VSAM, BSAM, or other interfaces that require 24-bit addresses.',
-  CBLOPTS: '**CBLOPTS** — Enables COBOL-specific LE runtime behaviors. Must match the compile-time CBLOPTS setting; a mismatch can produce unpredictable COBOL behavior.',
-  CBLPSHPOP: '**CBLPSHPOP** — Controls whether COBOL PUSH/POP ENVIRONMENT statements save and restore LE runtime options.',
-  CBLQDA: '**CBLQDA** — Enables the COBOL Qualified Data Area DSA layout required by certain LE-callable services. Rarely changed.',
-  CEEDUMP: '**CEEDUMP** — Controls CEEDUMP output file allocation: max lines per dump, SYSOUT class, and spool-release behavior. Ignored if the CEEDUMP DD is pre-allocated in JCL.',
-  CHECK: '**CHECK** — When `ON`, LE adds guard bytes around heap blocks and validates them on every free. Detects overruns and double-frees. Enable when chasing intermittent 0C4s in heap-intensive code; significant overhead.',
-  COUNTRY: '**COUNTRY** — Two-character ISO country code for LE NLS output (date/time format, numeric punctuation). Does not affect application-level globalization.',
-  DEPTHCONDLMT: '**DEPTHCONDLMT** — Maximum nesting depth for recursive condition handling. LE abends if this depth is exceeded. Default 10; `0` is unlimited (dangerous).',
-  DYNDUMP: '**DYNDUMP** — Whether LE also requests a system dump (SVCDUMP/TDUMP) alongside the CEEDUMP. `NODYNAMIC` (default) means CEEDUMP only. A full system dump requires RACF authority and is much larger.',
-  ENVAR: '**ENVAR** — Preset z/OS UNIX environment variables (e.g. `LIBPATH`, `TZ`) before `main()` runs, without modifying the shell profile.',
-  ERRCOUNT: '**ERRCOUNT** — Maximum recoverable errors before LE terminates the enclave. `0` (default) is unlimited. A non-zero value prevents infinite condition-handler retry loops.',
-  ERRUNIT: '**ERRUNIT** — Fortran logical unit number for LE error messages. Ignored for non-Fortran programs.',
-  FILEHIST: '**FILEHIST** — Enables file open/close event tracking. The history is included in the CEEDUMP. Useful for diagnosing file-not-found or already-open errors in COBOL and Fortran I/O.',
-  FILETAG: '**FILETAG** — Controls automatic EBCDIC↔code-page conversion for tagged HFS/zFS files. If a program reads files as garbage, verify this option and the file\'s tag are consistent.',
-  HEAP: '**HEAP** — Sizes the primary 31-bit heap (below the 2 GB bar). If the job abends with out-of-storage, increase the initial size and growth increment here.',
-  HEAP64: '**HEAP64** — Sizes the primary 64-bit heap (above the 2 GB bar). The default allocation area for 64-bit programs. If `malloc` returns NULL or a 0C4 follows a large allocation, increase these values.',
-  HEAPCHK: '**HEAPCHK** — Activates heap boundary-tag checking on every allocation and free. Identifies heap overruns and use-after-free bugs. High overhead; test environments only.',
-  HEAPPOOLS: '**HEAPPOOLS** — Configures fixed-size pool buckets for the 31-bit heap. Reduces fragmentation for programs that allocate many small same-size objects. Disable when debugging heap corruption — pools can delay the fault.',
-  HEAPPOOLS64: '**HEAPPOOLS64** — 64-bit equivalent of HEAPPOOLS. Same behavior but covers the above-the-bar heap.',
-  HEAPZONES: '**HEAPZONES** — Partitions the heap into isolated zones. A corrupted or exhausted zone can be identified without contaminating others.',
-  INFOMSGFILTER: '**INFOMSGFILTER** — Suppresses repeated LE informational messages that match the filter. Does not suppress warnings or errors.',
-  IOHEAP64: '**IOHEAP64** — Sizes the heap used by LE buffered I/O internally (stdio buffers, record management). Kept separate from the application heap. Increase if the program abends with a storage exception during heavy I/O.',
-  LIBHEAP64: '**LIBHEAP64** — Sizes the heap reserved exclusively for LE runtime internals (thread control blocks, condition handler chains). Corruption here indicates an LE runtime bug rather than application code.',
-  LIBSTACK: '**LIBSTACK** — Sizes the stack used by LE runtime routines running on behalf of the application. Rarely needs changing unless LE internal routines overflow.',
-  MSGFILE: '**MSGFILE** — Redirects LE message output to a named DD instead of SYSOUT.',
-  NATLANG: '**NATLANG** — National language for LE message text. `ENU` = US English. Changing requires the corresponding NLS catalog to be installed.',
-  NOTEST: '**NOTEST / TEST** — Controls z/OS Debugger (Debug Tool) entry. `NOTEST(ALL,...)` disables all debug entry points. Use `TEST(...)` to enable interactive debugging; requires the debugger and a `TEST`/`DEBUG` compile.',
-  OCSTATUS: '**OCSTATUS** — When `ON`, LE reports open files and sockets at abnormal termination. Useful for diagnosing resource leaks that survive a crash.',
-  PAGEFRAMESIZE: '**PAGEFRAMESIZE** — Preferred page frame size for 31-bit regions (`4K`, `1M`). Large pages reduce TLB pressure for large working sets but require system authorization.',
-  PAGEFRAMESIZE64: '**PAGEFRAMESIZE64** — Preferred page frame size for 64-bit regions. Large pages can improve throughput for programs with large heaps or code footprints.',
-  PLITASKCOUNT: '**PLITASKCOUNT** — Maximum concurrent PL/I TASK/ATTACH tasks. PL/I only.',
-  POSIX: '**POSIX** — When `ON`, establishes a z/OS UNIX POSIX process (`sigaction`, `pthread_create`, `fork`, etc.). Required for C/C++ programs using UNIX APIs. `OFF` runs as a traditional MVS batch job.',
-  PROFILE: '**PROFILE** — When `ON`, LE reads runtime options from a data set at startup. Allows changing options without relinking or modifying the PARM string.',
-  RPTOPTS: '**RPTOPTS** — When `ON`, LE prints the effective runtime option settings at job termination — the list you see at the bottom of this file. Essential for confirming which options were actually active during the crash.',
-  RPTSTG: '**RPTSTG** — When `ON`, LE prints heap and stack storage usage statistics at termination. Use to right-size HEAP/STACK options or detect storage leaks.',
-  STACK: '**STACK** — Sizes the call stack (DSA chain) for 31-bit programs. A 0C4 near GPR13-relative addressing often means the stack overflowed; increase the max here.',
-  STACK64: '**STACK64** — Sizes the call stack for 64-bit programs. Recursive algorithms and large local arrays may require a larger max. Stack overflow corrupts the DSA chain and produces garbled tracebacks.',
-  STORAGE: '**STORAGE** — Fill patterns written to storage on allocation and free. `NONE` (default) disables all filling. Setting patterns (e.g. `F4` on alloc, `FE` on free) is the fastest way to expose uninitialized-memory and use-after-free bugs.',
-  TERMTHDACT: '**TERMTHDACT** — What LE does when a thread terminates abnormally:\n- `UADUMP` — write a full CEEDUMP (produces this file)\n- `TRACE` — condensed traceback to SYSOUT only\n- `QUIET` — suppress all output\n- `DUMP` — CEEDUMP plus a system dump\n\nIf no CEEDUMP exists for a crash, this was likely `TRACE` or `QUIET`.',
-  THREADHEAP: '**THREADHEAP** — Per-thread private heap size. Increases reduce contention on the shared enclave heap in heavily multi-threaded programs.',
-  THREADSTACK: '**THREADSTACK** — Controls whether each 31-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`).',
-  THREADSTACK64: '**THREADSTACK64** — Controls whether each 64-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`). A tight max causes stack overflow in recursive or array-heavy threads.',
-  TRACE: '**TRACE** — LE internal trace collection. `OFF` by default. Produces very large output; enable only at IBM support\'s request.',
-  TRAP: '**TRAP** — Whether LE intercepts hardware program checks. `ON` (default) catches program checks, invokes condition handlers, and produces this CEEDUMP. `OFF` bypasses LE entirely — crashes produce system dumps but no CEEDUMPs.',
-  UPSI: '**UPSI** — Sets the 8-bit User Program Switch Indicator byte used by COBOL and Fortran programs. Rarely relevant to crashes.',
-  VCTRSAVE: '**VCTRSAVE** — Whether vector registers VR0–VR31 are saved across LE-managed calls. `YES` required if SIMD code runs on multiple threads simultaneously.',
-  XUFLOW: '**XUFLOW** — Fortran only. `ON` raises an LE condition on floating-point underflow instead of silently returning zero. Useful for detecting precision loss in numerical code.',
+  ABPERC: '**ABPERC** -- Percentage of recoverable errors to tolerate before LE forces termination. `NONE` (default) means zero tolerance. Rarely changed; a non-zero value can mask repeated failures.',
+  ABTERMENC: '**ABTERMENC** -- How LE reports termination to z/OS: as an abend code (`ABEND`, default) or a return code (`RETCODE`). Affects whether JCL COND checks on step abend will fire.',
+  ALL31: '**ALL31** -- When `ON`, constrains all routines to 31-bit addressing even if compiled 64-bit. Required when mixing with 31-bit-only DLLs or system services.',
+  ANYHEAP: '**ANYHEAP** -- Sizes the 31-bit heap for allocations requested with the `ANYWHERE` location qualifier. Relevant only to programs that do not use HEAP64.',
+  BELOWHEAP: '**BELOWHEAP** -- Sizes the heap below the 16 MB line (24-bit addressable storage). Needed when calling VSAM, BSAM, or other interfaces that require 24-bit addresses.',
+  CBLOPTS: '**CBLOPTS** -- Enables COBOL-specific LE runtime behaviors. Must match the compile-time CBLOPTS setting; a mismatch can produce unpredictable COBOL behavior.',
+  CBLPSHPOP: '**CBLPSHPOP** -- Controls whether COBOL PUSH/POP ENVIRONMENT statements save and restore LE runtime options.',
+  CBLQDA: '**CBLQDA** -- Enables the COBOL Qualified Data Area DSA layout required by certain LE-callable services. Rarely changed.',
+  CEEDUMP: '**CEEDUMP** -- Controls CEEDUMP output file allocation: max lines per dump, SYSOUT class, and spool-release behavior. Ignored if the CEEDUMP DD is pre-allocated in JCL.',
+  CHECK: '**CHECK** -- When `ON`, LE adds guard bytes around heap blocks and validates them on every free. Detects overruns and double-frees. Enable when chasing intermittent 0C4s in heap-intensive code; significant overhead.',
+  COUNTRY: '**COUNTRY** -- Two-character ISO country code for LE NLS output (date/time format, numeric punctuation). Does not affect application-level globalization.',
+  DEPTHCONDLMT: '**DEPTHCONDLMT** -- Maximum nesting depth for recursive condition handling. LE abends if this depth is exceeded. Default 10; `0` is unlimited (dangerous).',
+  DYNDUMP: '**DYNDUMP** -- Whether LE also requests a system dump (SVCDUMP/TDUMP) alongside the CEEDUMP. `NODYNAMIC` (default) means CEEDUMP only. A full system dump requires RACF authority and is much larger.',
+  ENVAR: '**ENVAR** -- Preset z/OS UNIX environment variables (e.g. `LIBPATH`, `TZ`) before `main()` runs, without modifying the shell profile.',
+  ERRCOUNT: '**ERRCOUNT** -- Maximum recoverable errors before LE terminates the enclave. `0` (default) is unlimited. A non-zero value prevents infinite condition-handler retry loops.',
+  ERRUNIT: '**ERRUNIT** -- Fortran logical unit number for LE error messages. Ignored for non-Fortran programs.',
+  FILEHIST: '**FILEHIST** -- Enables file open/close event tracking. The history is included in the CEEDUMP. Useful for diagnosing file-not-found or already-open errors in COBOL and Fortran I/O.',
+  FILETAG: '**FILETAG** -- Controls automatic EBCDIC<->code-page conversion for tagged HFS/zFS files. If a program reads files as garbage, verify this option and the file\'s tag are consistent.',
+  HEAP: '**HEAP** -- Sizes the primary 31-bit heap (below the 2 GB bar). If the job abends with out-of-storage, increase the initial size and growth increment here.',
+  HEAP64: '**HEAP64** -- Sizes the primary 64-bit heap (above the 2 GB bar). The default allocation area for 64-bit programs. If `malloc` returns NULL or a 0C4 follows a large allocation, increase these values.',
+  HEAPCHK: '**HEAPCHK** -- Activates heap boundary-tag checking on every allocation and free. Identifies heap overruns and use-after-free bugs. High overhead; test environments only.',
+  HEAPPOOLS: '**HEAPPOOLS** -- Configures fixed-size pool buckets for the 31-bit heap. Reduces fragmentation for programs that allocate many small same-size objects. Disable when debugging heap corruption -- pools can delay the fault.',
+  HEAPPOOLS64: '**HEAPPOOLS64** -- 64-bit equivalent of HEAPPOOLS. Same behavior but covers the above-the-bar heap.',
+  HEAPZONES: '**HEAPZONES** -- Partitions the heap into isolated zones. A corrupted or exhausted zone can be identified without contaminating others.',
+  INFOMSGFILTER: '**INFOMSGFILTER** -- Suppresses repeated LE informational messages that match the filter. Does not suppress warnings or errors.',
+  IOHEAP64: '**IOHEAP64** -- Sizes the heap used by LE buffered I/O internally (stdio buffers, record management). Kept separate from the application heap. Increase if the program abends with a storage exception during heavy I/O.',
+  LIBHEAP64: '**LIBHEAP64** -- Sizes the heap reserved exclusively for LE runtime internals (thread control blocks, condition handler chains). Corruption here indicates an LE runtime bug rather than application code.',
+  LIBSTACK: '**LIBSTACK** -- Sizes the stack used by LE runtime routines running on behalf of the application. Rarely needs changing unless LE internal routines overflow.',
+  MSGFILE: '**MSGFILE** -- Redirects LE message output to a named DD instead of SYSOUT.',
+  NATLANG: '**NATLANG** -- National language for LE message text. `ENU` = US English. Changing requires the corresponding NLS catalog to be installed.',
+  NOTEST: '**NOTEST / TEST** -- Controls z/OS Debugger (Debug Tool) entry. `NOTEST(ALL,...)` disables all debug entry points. Use `TEST(...)` to enable interactive debugging; requires the debugger and a `TEST`/`DEBUG` compile.',
+  OCSTATUS: '**OCSTATUS** -- When `ON`, LE reports open files and sockets at abnormal termination. Useful for diagnosing resource leaks that survive a crash.',
+  PAGEFRAMESIZE: '**PAGEFRAMESIZE** -- Preferred page frame size for 31-bit regions (`4K`, `1M`). Large pages reduce TLB pressure for large working sets but require system authorization.',
+  PAGEFRAMESIZE64: '**PAGEFRAMESIZE64** -- Preferred page frame size for 64-bit regions. Large pages can improve throughput for programs with large heaps or code footprints.',
+  PLITASKCOUNT: '**PLITASKCOUNT** -- Maximum concurrent PL/I TASK/ATTACH tasks. PL/I only.',
+  POSIX: '**POSIX** -- When `ON`, establishes a z/OS UNIX POSIX process (`sigaction`, `pthread_create`, `fork`, etc.). Required for C/C++ programs using UNIX APIs. `OFF` runs as a traditional MVS batch job.',
+  PROFILE: '**PROFILE** -- When `ON`, LE reads runtime options from a data set at startup. Allows changing options without relinking or modifying the PARM string.',
+  RPTOPTS: '**RPTOPTS** -- When `ON`, LE prints the effective runtime option settings at job termination -- the list you see at the bottom of this file. Essential for confirming which options were actually active during the crash.',
+  RPTSTG: '**RPTSTG** -- When `ON`, LE prints heap and stack storage usage statistics at termination. Use to right-size HEAP/STACK options or detect storage leaks.',
+  STACK: '**STACK** -- Sizes the call stack (DSA chain) for 31-bit programs. A 0C4 near GPR13-relative addressing often means the stack overflowed; increase the max here.',
+  STACK64: '**STACK64** -- Sizes the call stack for 64-bit programs. Recursive algorithms and large local arrays may require a larger max. Stack overflow corrupts the DSA chain and produces garbled tracebacks.',
+  STORAGE: '**STORAGE** -- Fill patterns written to storage on allocation and free. `NONE` (default) disables all filling. Setting patterns (e.g. `F4` on alloc, `FE` on free) is the fastest way to expose uninitialized-memory and use-after-free bugs.',
+  TERMTHDACT: '**TERMTHDACT** -- What LE does when a thread terminates abnormally:\n- `UADUMP` -- write a full CEEDUMP (produces this file)\n- `TRACE` -- condensed traceback to SYSOUT only\n- `QUIET` -- suppress all output\n- `DUMP` -- CEEDUMP plus a system dump\n\nIf no CEEDUMP exists for a crash, this was likely `TRACE` or `QUIET`.',
+  THREADHEAP: '**THREADHEAP** -- Per-thread private heap size. Increases reduce contention on the shared enclave heap in heavily multi-threaded programs.',
+  THREADSTACK: '**THREADSTACK** -- Controls whether each 31-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`).',
+  THREADSTACK64: '**THREADSTACK64** -- Controls whether each 64-bit thread gets a private stack (`ON`) or shares the enclave stack pool (`OFF`). A tight max causes stack overflow in recursive or array-heavy threads.',
+  TRACE: '**TRACE** -- LE internal trace collection. `OFF` by default. Produces very large output; enable only at IBM support\'s request.',
+  TRAP: '**TRAP** -- Whether LE intercepts hardware program checks. `ON` (default) catches program checks, invokes condition handlers, and produces this CEEDUMP. `OFF` bypasses LE entirely -- crashes produce system dumps but no CEEDUMPs.',
+  UPSI: '**UPSI** -- Sets the 8-bit User Program Switch Indicator byte used by COBOL and Fortran programs. Rarely relevant to crashes.',
+  VCTRSAVE: '**VCTRSAVE** -- Whether vector registers VR0-VR31 are saved across LE-managed calls. `YES` required if SIMD code runs on multiple threads simultaneously.',
+  XUFLOW: '**XUFLOW** -- Fortran only. `ON` raises an LE condition on floating-point underflow instead of silently returning zero. Useful for detecting precision loss in numerical code.',
 };
 
 /** Terms with hover documentation for the CEEDUMP language. */
@@ -108,57 +108,57 @@ export const CEEDUMP_HOVER_DOCS: Record<string, string> = {
   ASID: '**Address Space IDentifier (ASID)**\n\nA 16-bit number that z/OS uses to tag each address space. Two addresses with different ASIDs refer to completely separate virtual memory, even if the numeric values are identical. Cross-memory storage accesses require authorization; unauthorized references produce a 0C4 protection exception.',
   PID: '**Process ID (PID)**\n\nThe z/OS UNIX process number for the failing job step. Use this to find the matching entry in `ps` output or in `/proc`, and to correlate with syslog, operator messages, and other CEEDUMPs written during the same run. The Parent PID on the same line shows which process spawned this one.',
   DSA: '**Dynamic Storage Area (DSA)**\n\nLanguage Environment\'s equivalent of a stack frame. Each call pushes a new DSA; each return pops it. The DSA holds the routine\'s saved registers, local variables, and the linkage pointers (BKC, FWC, NAB) that chain the frames together. A corrupted DSA chain is a common cause of garbled tracebacks.',
-  CIB: '**Condition Information Block (CIB)**\n\nThe snapshot LE takes at the exact instant an exception fires. It records the failing PSW, all 16 GPRs, the interruption code, and the feedback token identifying the condition. When diagnosing a crash, the CIB is the ground truth — the registers in the Parameters section were captured later and may reflect cleanup code.',
+  CIB: '**Condition Information Block (CIB)**\n\nThe snapshot LE takes at the exact instant an exception fires. It records the failing PSW, all 16 GPRs, the interruption code, and the feedback token identifying the condition. When diagnosing a crash, the CIB is the ground truth -- the registers in the Parameters section were captured later and may reflect cleanup code.',
   PSW: '**Program Status Word (PSW)**\n\nThe CPU register that drives instruction fetch. The low-order bits give the next instruction address; other bits encode AMODE (24/31/64), the condition code, and interrupt masks. Subtracting the ILC from the PSW address gives the address of the instruction that *caused* the interruption.',
-  ILC: '**Instruction Length Code (ILC)**\n\nEncodes how many bytes the faulting instruction occupied: 1 = 2 bytes, 2 = 4 bytes, 3 = 6 bytes. Subtract `ILC × 2` from the PSW instruction address to get the address of the instruction that triggered the program check. That address should match column E Addr in the Traceback.',
+  ILC: '**Instruction Length Code (ILC)**\n\nEncodes how many bytes the faulting instruction occupied: 1 = 2 bytes, 2 = 4 bytes, 3 = 6 bytes. Subtract `ILC * 2` from the PSW instruction address to get the address of the instruction that triggered the program check. That address should match column E Addr in the Traceback.',
   NAB: '**Next Available Byte (NAB)**\n\nPoints to the first unused byte at the top of the current stack frame, playing the role of a stack pointer. When a routine is entered its NAB is advanced past its local storage. A NAB that points into code or read-only storage often signals stack overflow or a corrupted frame.',
-  BKC: '**Back Chain (BKC)**\n\nStored at offset +8 in each DSA, this pointer leads to the *caller\'s* DSA. LE walks BKC links to build the Traceback. If BKC is 0, null, or points into nonsense storage, the traceback will be truncated — a sign that the stack has been overwritten.',
+  BKC: '**Back Chain (BKC)**\n\nStored at offset +8 in each DSA, this pointer leads to the *caller\'s* DSA. LE walks BKC links to build the Traceback. If BKC is 0, null, or points into nonsense storage, the traceback will be truncated -- a sign that the stack has been overwritten.',
   FWC: '**Forward Chain (FWC)**\n\nThe mirror of BKC: stored in the caller\'s DSA, it points to the *callee\'s* DSA. LE uses the FWC to navigate downward through live frames. Mismatched BKC/FWC pairs indicate partial stack corruption.',
   PNAB: '**Previous Next Available Byte (PNAB)**\n\nThe NAB value that was current in the *calling* routine before it made the call. Saved in the DSA so it can be restored when the callee returns or when the stack is unwound during condition handling.',
   'UPSTACK DSA': '**Upstack DSA**\n\nThe callee reserves its own storage by bumping the NAB upward. This is the XPLINK convention and is typical for optimized C/C++ on z/OS. Because the callee owns its frame, register saves and local variables sit above the caller\'s NAB rather than below it as in traditional linkage.',
   'XPLINK DSA': '**XPLINK (Extra Performance Linkage) DSA**\n\nA streamlined calling convention used by z/OS XL C/C++ with optimization. Frames are variable-length and callee-allocated, branches replace traditional BALR/BASSM calls, and parameters are passed in registers rather than a list. XPLINK and non-XPLINK code can coexist but require a linkage stub at the boundary.',
-  'GPREG STORAGE': '**GPREG Storage**\n\nFor each GPR, the dump prints 64 bytes centered on the address the register held. The three lines show the 32 bytes *before* (`-0020`), the 32 bytes *at* (`+0000`), and the 32 bytes *after* (`+0020`) the register value. This lets you see what the register was pointing into: a string, a control block, code, or garbage — without having to look up addresses manually.',
-  Traceback: '**Traceback**\n\nThe call stack at the time of the dump, one row per frame, outermost call last. Column guide:\n- **DSA** — frame number (1 = deepest / most recent call)\n- **Entry** — routine name or entry point label\n- **E** — `+` marks the frame where the exception fired\n- **Offset** — distance from the entry point to the failing or call instruction\n- **Statement** — source line number (requires debug symbols)\n- **Load Mod** — the executable or DLL that owns this frame\n- **Program Unit** — the compilation unit (source file)\n- **Service** — the LE or compiler service level of the module\n- **Status** — `Call` (normal), `Exception` (fault here), or `Error`',
-  'Condition Information for Active Routines': '**Condition Information for Active Routines**\n\nOne entry per routine that was actively handling a condition when the dump was taken. Each entry shows two conditions:\n- **Current Condition** — what LE is processing right now (often CEE0198S "unhandled")\n- **Original Condition** — the root-cause exception that started the chain\n\nAlways start diagnosis from the Original Condition and its associated machine state.',
-  'Parameters, Registers, and Variables for Active Routines': '**Parameters, Registers, and Variables**\n\nPer-routine diagnostic detail. For each active frame:\n- Incoming parameter values (types decoded from debug info)\n- GPR/FPR/VR contents *saved on entry* to that routine\n- GPREG storage windows around each saved register\n- Local variable values with types (only when compiled with TEST or DEBUG)\n\nNote: these registers were saved during the prologue, not at the fault point — use the CIB machine state for the exact fault-time register values.',
+  'GPREG STORAGE': '**GPREG Storage**\n\nFor each GPR, the dump prints 64 bytes centered on the address the register held. The three lines show the 32 bytes *before* (`-0020`), the 32 bytes *at* (`+0000`), and the 32 bytes *after* (`+0020`) the register value. This lets you see what the register was pointing into: a string, a control block, code, or garbage -- without having to look up addresses manually.',
+  Traceback: '**Traceback**\n\nThe call stack at the time of the dump, one row per frame, outermost call last. Column guide:\n- **DSA** -- frame number (1 = deepest / most recent call)\n- **Entry** -- routine name or entry point label\n- **E** -- `+` marks the frame where the exception fired\n- **Offset** -- distance from the entry point to the failing or call instruction\n- **Statement** -- source line number (requires debug symbols)\n- **Load Mod** -- the executable or DLL that owns this frame\n- **Program Unit** -- the compilation unit (source file)\n- **Service** -- the LE or compiler service level of the module\n- **Status** -- `Call` (normal), `Exception` (fault here), or `Error`',
+  'Condition Information for Active Routines': '**Condition Information for Active Routines**\n\nOne entry per routine that was actively handling a condition when the dump was taken. Each entry shows two conditions:\n- **Current Condition** -- what LE is processing right now (often CEE0198S "unhandled")\n- **Original Condition** -- the root-cause exception that started the chain\n\nAlways start diagnosis from the Original Condition and its associated machine state.',
+  'Parameters, Registers, and Variables for Active Routines': '**Parameters, Registers, and Variables**\n\nPer-routine diagnostic detail. For each active frame:\n- Incoming parameter values (types decoded from debug info)\n- GPR/FPR/VR contents *saved on entry* to that routine\n- GPREG storage windows around each saved register\n- Local variable values with types (only when compiled with TEST or DEBUG)\n\nNote: these registers were saved during the prologue, not at the fault point -- use the CIB machine state for the exact fault-time register values.',
   'Control Blocks for Active Routines': '**Control Blocks for Active Routines**\n\nRaw hex dumps of the LE internal structures for each active frame: the DSA itself, any CIB attached to it, and linkage fields (BKC, FWC, NAB, FLAGS, member). Useful when the formatted sections look wrong and you need to verify the raw data, or when diagnosing LE internals corruption.',
   'Storage for Active Routines': '**Storage for Active Routines**\n\nThe complete contents of each active DSA printed as a hex+EBCDIC dump, starting at offset +000000. This covers local variables, parameter save areas, and compiler temporaries that may not appear in the decoded Variables section. Look here when a local variable shows as `CCCCCCCC` (uninitialized) in the Variables section.',
   'Information for enclave': '**Enclave**\n\nThe outermost LE runtime container, created when the first LE-managed routine starts. One enclave spans all threads in a process. The enclave name (`main` for a C program, or a COBOL/PL/I program name) appears on this line. Multiple-enclave dumps occur when nested LE environments exist, e.g. a COBOL program calling a C DLL that calls CEE3DMP.',
-  'Information for thread': '**Thread**\n\nAll sections that follow — Traceback, registers, condition info, storage — belong to this single thread, identified by its 16-hex-digit token. In a multi-threaded process each thread gets its own block. The thread token can be matched against `pthread_t` values in running code to identify which thread crashed.',
-  'Registers on Entry to CEE3DMP': '**Registers on Entry to CEE3DMP**\n\nGPR/FPR/VR values at the moment control arrived in CEE3DMP — either because your code called it directly, or because the runtime invoked it in response to an unhandled condition. These are the raw machine registers *before* the dump service has modified anything, making them the most trustworthy snapshot of application state.',
+  'Information for thread': '**Thread**\n\nAll sections that follow -- Traceback, registers, condition info, storage -- belong to this single thread, identified by its 16-hex-digit token. In a multi-threaded process each thread gets its own block. The thread token can be matched against `pthread_t` values in running code to identify which thread crashed.',
+  'Registers on Entry to CEE3DMP': '**Registers on Entry to CEE3DMP**\n\nGPR/FPR/VR values at the moment control arrived in CEE3DMP -- either because your code called it directly, or because the runtime invoked it in response to an unhandled condition. These are the raw machine registers *before* the dump service has modified anything, making them the most trustworthy snapshot of application state.',
   'Fully Qualified Names': '**Fully Qualified Names**\n\nLong names that were truncated in the Traceback table are expanded here. For z/OS UNIX programs this is the full HFS path (e.g. `/usr/lib/libfoo.so`); for batch programs it is the PDS member or data set name. Use these when the short name in the Traceback is ambiguous or shows only a partial path.',
   'Full Service Level': '**Full Service Level**\n\nThe complete PTF/APAR service string for each module in the traceback, beyond what fits in the `Service` column. When opening an IBM PMR or searching for known defects, paste this string to confirm exactly which fix level is installed. A mismatch between the running level and a known fix often explains the failure.',
   'Additional Language Specific Information': '**Additional Language Specific Information**\n\nContent here depends on the source language. For C/C++: `__amrc` errno/errno2, DLL load state, and file I/O error details. For COBOL: file status codes and the COBOL-specific condition handler chain. For PL/I: ONCODE and ON-unit information. If the crash involves I/O or a DLL, this section often contains the specific error code that the standard LE sections do not show.',
   'File Status and Attributes': '**File Status and Attributes**\n\nC/C++ only. One entry per open `FILE*` stream at crash time, showing the file name, open flags (r/w/a/b), current byte offset, and the `ferror`/`feof` state. When a crash happens inside or shortly after a read/write call, check here for an error flag that the application may not have checked.',
   'Inaccessible storage': '**Inaccessible Storage**\n\nThe dump service tried to read memory near this address but received a storage protection interrupt. Typical causes: the register held a null or near-null value, the pointer was never initialized, the object was already freed, or the address belongs to a different address space. This is often the direct symptom of a 0C4 crash.',
-  'CEE3DMP': '**CEE3DMP — Language Environment Dump Service**\n\nThe callable service that writes this file. It can be invoked:\n- Explicitly by application code (`CEE3DMP(title, options, &fc)`)\n- Automatically via the `TERMTHDACT(UADUMP)` runtime option on any unhandled condition\n- Via language-specific wrappers: C `cdump()`, Fortran `SDUMP`, PL/I `PLIDUMP`\n\nThe options string controls which sections appear. Common options: `TRACE`, `BLOCKS`, `STORAGE`, `REGISTERS`, `VARIABLES`, `CONDITION`.',
+  'CEE3DMP': '**CEE3DMP -- Language Environment Dump Service**\n\nThe callable service that writes this file. It can be invoked:\n- Explicitly by application code (`CEE3DMP(title, options, &fc)`)\n- Automatically via the `TERMTHDACT(UADUMP)` runtime option on any unhandled condition\n- Via language-specific wrappers: C `cdump()`, Fortran `SDUMP`, PL/I `PLIDUMP`\n\nThe options string controls which sections appear. Common options: `TRACE`, `BLOCKS`, `STORAGE`, `REGISTERS`, `VARIABLES`, `CONDITION`.',
 };
 
 /**
  * Monarch tokenizer definition for CEEDUMP files.
  *
  * Color tokens used by this tokenizer (define in a Monaco theme):
- *   cee-header         — CEE3DMP version + title banner
- *   cee-page-info      — page, date, ASID, PID metadata
- *   cee-message-id     — CEE message identifiers (e.g. CEE3845I)
- *   cee-section        — major section header labels
- *   cee-sub-section    — sub-section labels within routines
- *   cee-label          — field labels (e.g. "ASID:", "GPR0.....")
- *   cee-register       — register names (GPRn, FPRn, VRn, PSW)
- *   cee-offset         — hex offsets (+000000 / -0020)
- *   cee-mem-byte1      — first byte of a 32-bit hex value
- *   cee-mem-lower3     — lower 3 bytes of a 32-bit hex value
- *   cee-mem64-byte1    — first byte (high byte) of a 64-bit hex value
- *   cee-mem64-high32   — remaining 3 bytes of the high 32-bit word
- *   cee-mem64-midbt    — first byte of the low 32-bit word
- *   cee-mem64-lower3   — lower 3 bytes of the low 32-bit word
- *   cee-wildcard       — inaccessible/unknown address markers (****)
- *   cee-ascii          — EBCDIC decoded characters between | ... |
- *   cee-keyword        — status/attribute keywords (Call, Exception…)
- *   cee-compile-attr   — compile attribute tokens (C/C++, POSIX…)
- *   cee-condition      — condition message text lines
- *   cee-separator      — --- separator lines and page headers
- *   cee-runopt         — runtime option names in the RPTOPTS section (hoverable)
+ *   cee-header         -- CEE3DMP version + title banner
+ *   cee-page-info      -- page, date, ASID, PID metadata
+ *   cee-message-id     -- CEE message identifiers (e.g. CEE3845I)
+ *   cee-section        -- major section header labels
+ *   cee-sub-section    -- sub-section labels within routines
+ *   cee-label          -- field labels (e.g. "ASID:", "GPR0.....")
+ *   cee-register       -- register names (GPRn, FPRn, VRn, PSW)
+ *   cee-offset         -- hex offsets (+000000 / -0020)
+ *   cee-mem-byte1      -- first byte of a 32-bit hex value
+ *   cee-mem-lower3     -- lower 3 bytes of a 32-bit hex value
+ *   cee-mem64-byte1    -- first byte (high byte) of a 64-bit hex value
+ *   cee-mem64-high32   -- remaining 3 bytes of the high 32-bit word
+ *   cee-mem64-midbt    -- first byte of the low 32-bit word
+ *   cee-mem64-lower3   -- lower 3 bytes of the low 32-bit word
+ *   cee-wildcard       -- inaccessible/unknown address markers (****)
+ *   cee-ascii          -- EBCDIC decoded characters between | ... |
+ *   cee-keyword        -- status/attribute keywords (Call, Exception...)
+ *   cee-compile-attr   -- compile attribute tokens (C/C++, POSIX...)
+ *   cee-condition      -- condition message text lines
+ *   cee-separator      -- --- separator lines and page headers
+ *   cee-runopt         -- runtime option names in the RPTOPTS section (hoverable)
  */
 export const CEEDUMP_HILITE = {
   defaultToken: 'default',
@@ -203,7 +203,7 @@ export const CEEDUMP_HILITE = {
       [/^\s+(CIB Address:)\s*/, { token: 'cee-label', next: '@hexValue' }],
       [/^\s+(Current Condition:|Original Condition:|Location:|PSW:|ILC\.\.\.\.\.|Interruption Code\.\.\.\.\.)/, { token: 'cee-sub-section', next: '@conditionText' }],
 
-      // ---- "Storage dump near condition…" lines ----
+      // ---- "Storage dump near condition..." lines ----
       // AMODE 31 uses "location: XXXXXXXX"; AMODE 64 uses "location(XXXXXXXXXXXXXXXX)"
       [/^\s+(Storage dump near condition, beginning at location[:(])/, 'cee-sub-section'],
       [/^\s+(Storage around\s+)(GPR[0-9]+|FPR[0-9]+|FPC|VR[0-9]+)/, ['cee-sub-section', 'cee-register']],
@@ -224,7 +224,7 @@ export const CEEDUMP_HILITE = {
       [/Inaccessible storage\./, 'cee-separator'],
 
       // ---- Runtime option lines (RPTOPTS section at bottom of dump) ----
-      // Format: "   <source-label>   OPTIONNAME(...)" — source label is gray, option name is highlighted
+      // Format: "   <source-label>   OPTIONNAME(...)" -- source label is gray, option name is highlighted
       [/^(\s+(?:IBM-supplied default|Invocation command|Application|Installation default)\s+)([A-Z][A-Z0-9]*)/,
         ['cee-separator', 'cee-runopt']],
 

@@ -521,31 +521,31 @@ export class MonacoConfig {
           return { contents: [{ value: HLASM_INSTRUCTIONS[token] }] };
         }
 
-        // Register names R0–R15
+        // Register names R0-R15
         const regMatch = token.match(/^R([0-9]|1[0-5])$/);
         if (regMatch) {
           const num = parseInt(regMatch[1], 10);
           const regDesc: Record<number, string> = {
-            0:  'General-purpose register 0. Subroutine return value; also used as a branch mask in BCR.',
-            1:  'General-purpose register 1. Parameter list pointer on entry to a routine; first arg in CALL linkage.',
-            2:  'General-purpose register 2. Second argument or work register.',
-            3:  'General-purpose register 3. Third argument or work register.',
-            4:  'General-purpose register 4. Fourth argument or base register.',
-            5:  'General-purpose register 5. Base register or work register.',
-            6:  'General-purpose register 6. Base register or work register.',
-            7:  'General-purpose register 7. Work register.',
-            8:  'General-purpose register 8. Work register.',
-            9:  'General-purpose register 9. Work register.',
-            10: 'General-purpose register 10. Work register.',
-            11: 'General-purpose register 11. Base register for the Program Unit (PU base).',
-            12: 'General-purpose register 12. Base register for the Load Module (common anchor area).',
-            13: 'General-purpose register 13. Save area / DSA pointer — holds the address of the 18-fullword register save area (or LE DSA).',
-            14: 'General-purpose register 14. Return address — the caller stores the return address here before branching.',
-            15: 'General-purpose register 15. Entry point register — on entry to a subroutine, contains the load address of the called routine; also the return code.',
+            0:  'Subroutine return value; also used as a branch mask in BCR.',
+            1:  'Parameter list pointer on entry to a routine',
+            2:  'Argument or work register',
+            3:  'Argument or work register',
+            4:  'Argument or base register',
+            5:  'Base or work register',
+            6:  'Base or work register',
+            7:  'Work register',
+            8:  'Work register',
+            9:  'Work register',
+            10: 'Work register',
+            11: 'Base register for Program Unit',
+            12: 'Base register for Load Module (common anchor area).',
+            13: 'Save area / DSA pointer',
+            14: 'Return address',
+            15: 'Entry point register; also the return code',
           };
           return {
             contents: [
-              { value: `**R${num} — General Purpose Register ${num}**` },
+              { value: `**R${num} -- General Purpose Register ${num}**` },
               { value: regDesc[num] || 'General purpose register.' }
             ]
           };
@@ -585,7 +585,7 @@ export class MonacoConfig {
             };
             return {
               contents: [
-                { value: `**${token}** — Language Environment message` },
+                { value: `**${token}** -- Language Environment message` },
                 { value: `Severity: **${severityNames[severity] || severity}**\n\nSee the IBM z/OS Language Environment Runtime Messages documentation for the full description.` }
               ]
             };
@@ -633,16 +633,16 @@ export class MonacoConfig {
             10: 'Work register.',
             11: 'Base register for the Program Unit. Points to the module entry point.',
             12: 'Base register for the Load Module. Points to the common anchor area (CAA).',
-            13: 'DSA pointer — contains the address of the current routine\'s Dynamic Storage Area (stack frame).',
-            14: 'Return address — contains the address to which the routine will return.',
-            15: 'Entry point register — on entry, contains the address of the routine that was called.',
+            13: 'DSA pointer -- contains the address of the current routine\'s Dynamic Storage Area (stack frame).',
+            14: 'Return address -- contains the address to which the routine will return.',
+            15: 'Entry point register -- on entry, contains the address of the routine that was called.',
           };
           const desc = gprDescriptions[num] !== undefined
             ? gprDescriptions[num]
             : 'General purpose register used for computation or addressing.';
           return {
             contents: [
-              { value: `**GPR${num} — General Purpose Register ${num}**` },
+              { value: `**GPR${num} -- General Purpose Register ${num}**` },
               { value: desc }
             ]
           };
@@ -652,7 +652,7 @@ export class MonacoConfig {
         if (fprMatch) {
           return {
             contents: [
-              { value: `**FPR${fprMatch[1]} — Floating Point Register ${fprMatch[1]}**` },
+              { value: `**FPR${fprMatch[1]} -- Floating Point Register ${fprMatch[1]}**` },
               { value: 'One of the z/Architecture floating-point registers (FPR0, FPR2, FPR4, FPR6 in the basic set plus 8 extended registers). Used for IEEE and IBM HFP floating-point computations.' }
             ]
           };
@@ -662,7 +662,7 @@ export class MonacoConfig {
         if (vrMatch) {
           return {
             contents: [
-              { value: `**VR${vrMatch[1]} — Vector Register ${vrMatch[1]}**` },
+              { value: `**VR${vrMatch[1]} -- Vector Register ${vrMatch[1]}**` },
               { value: '128-bit register in the z/Architecture Vector Facility. Used by SIMD vector instructions for integer, floating-point, and string operations.' }
             ]
           };
