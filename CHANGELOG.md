@@ -1,7 +1,7 @@
 # Zlux Editor Changelog
 
 ## `3.5.0`
-
+- Bugfix: Fixed duplicate language entries appearing in the editor toolbar language list when opening the editor multiple times in the same browser window.
 - Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
 
 ## `3.4.0`
