@@ -268,7 +268,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   public registerLanguage(languageDefinition, highlighter?:any) {
-    monaco.languages.register(languageDefinition);
+    const alreadyRegistered = monaco.languages.getLanguages().some(l => l.id === languageDefinition.id);
+    if (!alreadyRegistered) {
+      monaco.languages.register(languageDefinition);
+    }
     if (highlighter) {
       monaco.languages.setMonarchTokensProvider(languageDefinition.id, highlighter);
     }

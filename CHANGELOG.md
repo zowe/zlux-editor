@@ -4,7 +4,10 @@
 
 - Enhancement: Added CEEDUMP language mode. Files named `CEEDUMP.*` are automatically detected. It provides syntax highlighting and hover-help for headers, common messages, registers and more. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis.
 - Enhancement: HLASM language mode now has hover-help and improved syntax highlighting
-  
+- Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.
+- Bugfix: Fixed duplicate language entries appearing in the editor toolbar language list when opening the editor multiple times in the same browser window.
+- Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
+
 ## `3.4.0`
 
 - Enhancement: Re-enabled JCL submit via submit menu and ability to view submitted job via JES Explorer desktop app.

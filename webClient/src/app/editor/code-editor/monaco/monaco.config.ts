@@ -488,12 +488,13 @@ export class MonacoConfig {
   onLoad() {
     let self = this;
     // This step only happens once per editor load, not once per file load. It happens before language menu is generated
-    monaco.languages.register(BPXPRM_LANG);
-    monaco.languages.register(CEEDUMP_LANG);
-    monaco.languages.register(HLASM_LANG);
-    monaco.languages.register(IEASYS_LANG);
-    monaco.languages.register(JCL_LANG);
-    monaco.languages.register(REXX_LANG);
+    const registeredIds = new Set(monaco.languages.getLanguages().map(l => l.id));
+    if (!registeredIds.has(BPXPRM_LANG.id)) { monaco.languages.register(BPXPRM_LANG); }
+    if (!registeredIds.has(CEEDUMP_LANG.id)) { monaco.languages.register(CEEDUMP_LANG); }
+    if (!registeredIds.has(HLASM_LANG.id)) { monaco.languages.register(HLASM_LANG); }
+    if (!registeredIds.has(IEASYS_LANG.id)) { monaco.languages.register(IEASYS_LANG); }
+    if (!registeredIds.has(JCL_LANG.id)) { monaco.languages.register(JCL_LANG); }
+    if (!registeredIds.has(REXX_LANG.id)) { monaco.languages.register(REXX_LANG); }
 
     monaco.languages.setMonarchTokensProvider('bpxprm', <any>BPXPRM_HILITE);
     monaco.languages.setMonarchTokensProvider('ceedump', <any>CEEDUMP_HILITE);

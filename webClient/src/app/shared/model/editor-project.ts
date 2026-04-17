@@ -22,6 +22,7 @@ export interface ProjectStructure {
     fileName?: string;
     isDataset: boolean;
     encoding?: number;
+    size?: number;
     datasetAttrs?: DatasetAttributes;
     etag?: string;
 }
@@ -32,7 +33,11 @@ export interface DatasetAttributes {
   dsorg?: DatasetOrganization,
   members?: Array<any>,
   recfm?: RecordFormat,
-  volser?: string
+  volser?: string,
+  space?: string,
+  prime?: number,
+  secnd?: number,
+  totalBlockSize?: number
 }
 
 export interface RecordFormat {

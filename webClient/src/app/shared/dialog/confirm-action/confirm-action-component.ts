@@ -15,6 +15,8 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 export interface DialogData {
   title: string;
   warningMessage: string;
+  confirmLabel?: string;
+  dismissLabel?: string;
 }
 
 @Component({
