@@ -373,7 +373,7 @@ export class MonacoService implements OnDestroy {
     const models = _editor.getModels();
     const fileUri = this.generateUri(fileNode.model);
     for (const model of models) {
-      if (model.uri === fileUri) {
+      if (model.uri.toString() === fileUri) {
         model.dispose();
         this.editorControl.saveCursorPosition = false;
       }
@@ -565,7 +565,7 @@ export class MonacoService implements OnDestroy {
   fileDuplicateChecker(uri: string): boolean {
     const models = this.editorControl.editorCore.getValue().editor.getModels();
     for (const model of models) {
-      if (model.uri === uri) {
+      if (model.uri.toString() === uri) {
         return true;
       }
     }
