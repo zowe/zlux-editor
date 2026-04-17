@@ -19,7 +19,7 @@ export interface EditorLimits {
 }
 
 const DEFAULT_LIMITS: EditorLimits = {
-  maxFileSize: 50000000,
+  maxFileSize: 52428800,
   folderMaxCount: 200
 };
 
@@ -71,16 +71,12 @@ export class LimitsService {
     );
   }
 
-  isFileSizeAllowed(sizeInBytes: number): boolean {
-    return sizeInBytes <= this._limits.getValue().maxFileSize;
-  }
-
   getFormattedMaxSize(): string {
     const bytes = this._limits.getValue().maxFileSize;
-    if (bytes >= 1000000) {
-      return `${(bytes / 1000000).toFixed(0)}MB`;
+    if (bytes >= 1048576) {
+      return `${(bytes / 1048576).toFixed(0)}MB`;
     }
-    return `${(bytes / 1000).toFixed(0)}KB`;
+    return `${(bytes / 1024).toFixed(0)}KB`;
   }
 
   /**

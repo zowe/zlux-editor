@@ -142,7 +142,7 @@ export class MonacoService implements OnDestroy {
         if (estimatedSize > 0 && estimatedSize > maxSize) {
           this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (org=${org}, space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
           preflight$ = this.confirmLargeFileOpen(fileNode.name,
-            `has an estimated size of ${(estimatedSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
+            `has an estimated size of ${(estimatedSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
         } else {
           preflight$ = of(false);
         }
@@ -156,7 +156,7 @@ export class MonacoService implements OnDestroy {
         if (knownSize > maxSize) {
           this.log.warn(`File ${fileNode.name} size ${knownSize} (from directory listing) exceeds limit ${maxSize}`);
           preflight$ = this.confirmLargeFileOpen(fileNode.name,
-            `is ${(knownSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
+            `is ${(knownSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
         } else {
           preflight$ = of(false);
         }
@@ -169,7 +169,7 @@ export class MonacoService implements OnDestroy {
             if (fileSize > maxSize) {
               this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
               return this.confirmLargeFileOpen(fileNode.name,
-                `is ${(fileSize / 1000000).toFixed(1)}MB`, maxSizeLabel);
+                `is ${(fileSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
             }
             return of(false);
           })
@@ -224,7 +224,7 @@ export class MonacoService implements OnDestroy {
               this.log.warn(`Response Content-Length ${contentLength} exceeds limit ${maxSize}, aborting download`);
               sub.unsubscribe(); // Cancels the XMLHttpRequest, breaking the server's socket
               observer.error({ _fileTooLarge: true,
-                message: `Content is too large (${(contentLength / 1000000).toFixed(1)}MB from Content-Length). Maximum allowed size is ${maxSizeLabel}.` });
+                message: `Content is too large (${(contentLength / 1048576).toFixed(1)}MB from Content-Length). Maximum allowed size is ${maxSizeLabel}.` });
             }
           } else if (event.type === HttpEventType.DownloadProgress) {
             // Monitor streaming progress and abort if accumulated bytes exceed limit
@@ -336,7 +336,7 @@ export class MonacoService implements OnDestroy {
     } else {
       this.getFileRequestObservable(fileNode, reload, line).subscribe({
         next: (response: any) => {
-          // Preflight passed (and user confirmed if oversized) — now add the tab
+          // Preflight passed (and user confirmed if oversized) -- now add the tab
           this.editorControl.openFileHandler(fileNode);
           //network load or switched to currently open file
           const resJson = response;
