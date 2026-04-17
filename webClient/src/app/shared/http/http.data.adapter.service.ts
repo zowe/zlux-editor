@@ -42,7 +42,8 @@ export class DataAdapterService {
         path: eFilePath,
         fileName: eFileName,
         isDataset: false,
-        encoding: eEncoding
+        encoding: eEncoding,
+        size: entry.size
       };
     });
   }
@@ -63,7 +64,11 @@ export class DataAdapterService {
           csiEntryType: entry.csiEntryType,
           dsorg: entry.dsorg,
           recfm: entry.recfm,
-          volser: entry.volser
+          volser: entry.volser,
+          space: entry.space,
+          prime: entry.prime,
+          secnd: entry.secnd,
+          totalBlockSize: entry.dsorg ? entry.dsorg.totalBlockSize : undefined
         }
       };
     });
@@ -85,7 +90,11 @@ export class DataAdapterService {
           csiEntryType: parent.csiEntryType,
           dsorg: parent.dsorg,
           recfm: parent.recfm,
-          volser: parent.volser
+          volser: parent.volser,
+          space: parent.space,
+          prime: parent.prime,
+          secnd: parent.secnd,
+          totalBlockSize: parent.dsorg ? parent.dsorg.totalBlockSize : undefined
         }
       };
     });
