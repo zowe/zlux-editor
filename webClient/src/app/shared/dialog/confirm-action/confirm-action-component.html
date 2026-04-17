@@ -8,20 +8,20 @@
   Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<div class="d-flex flex-align-items-start">
+<div class="d-flex flex-align-items-start" data-testid="confirm-action-dialog">
   <div>
-    <h2 mat-dialog-title>{{data.title}}</h2>
+    <h2 mat-dialog-title data-testid="confirm-action-title">{{data.title}}</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn" (click)="onCancel()">
+  <button mat-dialog-close class="close-dialog-btn" data-testid="confirm-action-close" (click)="onCancel()">
     <i class="fa fa-close"></i>
   </button>
 </div>
 <mat-dialog-content>
-  <p><b>Warning: </b>{{data.warningMessage}}</p>
+  <p data-testid="confirm-action-warning"><b>Warning: </b>{{data.warningMessage}}</p>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-flat-button class="right" color="primary" (click)="onConfirm()">{{data.confirmLabel || 'Yes'}}</button>
-  <button mat-button class="right" (click)="onDismiss()">{{data.dismissLabel || 'No'}}</button>
+  <button mat-flat-button class="right" color="primary" data-testid="confirm-action-confirm" (click)="onConfirm()">{{data.confirmLabel || 'Yes'}}</button>
+  <button mat-button class="right" data-testid="confirm-action-dismiss" (click)="onDismiss()">{{data.dismissLabel || 'No'}}</button>
 </mat-dialog-actions>
 
 <!-- 
