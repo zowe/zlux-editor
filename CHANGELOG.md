@@ -1,5 +1,10 @@
 # Zlux Editor Changelog
 
+## `3.6.0`
+
+- Enhancement: Re-enabled Language Server Protocol (LSP) support with a new lightweight WebSocket-based LSP client, providing completion, hover, and diagnostics.
+- Enhancement: LSP domain now auto-detects from the Zowe Desktop host URL instead of requiring manual configuration.
+
 ## `3.5.0`
 
 - Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.

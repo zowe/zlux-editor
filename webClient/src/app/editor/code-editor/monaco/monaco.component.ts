@@ -8,13 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef } from '@angular/core';
-// import { listen } from 'vscode-ws-jsonrpc';
-// import { MessageConnection } from 'vscode-jsonrpc';
-// import {
-//   BaseLanguageClient, CloseAction, ErrorAction,
-//   createMonacoServices, createConnection,
-// } from 'monaco-languageclient';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, Inject, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 
 import { MonacoService } from './monaco.service';
 import { MonacoConfig } from './monaco.config';
@@ -29,14 +23,13 @@ import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from "../../../shared/message-duration";
 import { debounceTime } from 'rxjs/operators';
 import { UtilsService } from '../../../shared/utils.service';
-const ReconnectingWebSocket = require('reconnecting-websocket');
 
 @Component({
   selector: 'app-monaco',
   templateUrl: './monaco.component.html',
   styleUrls: ['./monaco.component.scss']
 })
-export class MonacoComponent implements OnInit, OnChanges {
+export class MonacoComponent implements OnInit, OnChanges, OnDestroy {
   // Usually, we can use 1 public field do our set/get in template, within Angular lifecycle. But we want custom setter. 
   private _monacoOptions: any;
   @Input() get monacoOptions(): any { return this._monacoOptions }
@@ -184,16 +177,46 @@ export class MonacoComponent implements OnInit, OnChanges {
         }
         this.handleDiffEditorResize();
     });
-    /* disable for now...
-  this.editorControl.connToLS.subscribe((lang) => {
-    this.connectToLanguageServer(lang);
-  });
-  this.editorControl.disFromLS.subscribe((lang) => {
-    this.closeLanguageServer(lang);
-  });
 
-  this.connectToLanguageServer();
-  */
+    // Connect to configured language servers
+    this.editorControl.connToLS.subscribe((lang) => {
+      if (lang) {
+        this.languageService.connectLanguage(lang);
+      } else {
+        this.languageService.connectAll();
+      }
+    });
+
+    this.editorControl.disFromLS.subscribe((lang) => {
+      if (lang) {
+        this.languageService.disconnectLanguage(lang);
+      } else {
+        this.languageService.disconnectAll();
+      }
+    });
+
+    // Auto-connect to language servers if enabled
+    if (this.languageService.getEnabled()) {
+      this.languageService.connectAll();
+    }
+
+    // Forward document content changes to language servers
+    editor.onDidChangeModelContent(() => {
+      const model = editor.getModel();
+      if (model) {
+        const languageId = model.getLanguageId();
+        const uri = model.uri.toString();
+        this.languageService.notifyDidChange(uri, languageId, model.getValue());
+      }
+    });
+
+    // Forward save events to language servers
+    this.editorControl.bufferSaved.subscribe(() => {
+      const model = editor.getModel();
+      if (model) {
+        this.languageService.notifyDidSave(model.uri.toString(), model.getLanguageId());
+      }
+    });
   }
 
   keyBinds(editor: any) {
@@ -303,100 +326,22 @@ export class MonacoComponent implements OnInit, OnChanges {
     let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
   }
 
-  // connectToLanguageServer(lang?: string) {
-  //   let languages = this.languageService.getSettings().endpoint;
-  //   let connExist = this.languageService.connections.map(x => x.name);
-
-  //   for (let language in languages) {
-  //     if (lang) {
-  //       if (lang === language && connExist.indexOf(language) < 0) {
-  //         this.listenTo(language);
-  //       } else {
-  //         this.log.warn(`${language} server already started!`);
-  //       }
-  //     } else {
-  //       if (connExist.indexOf(language) < 0) {
-  //         this.listenTo(language);
-  //       } else {
-  //         this.log.warn(`${language} server already started!`);
-  //       }
-  //     }
-  //   }
-  // }
-
-  closeLanguageServer(lang?: string) {
-    this.languageService.connections
-      .filter(c => {
-        if (lang) {
-          return c.name === lang;
-        } else {
-          return true;
-        }
-      })
-      .forEach(c => {
-        let conn = this.languageService.connections;
-        c.connection.dispose();
-        conn.splice(conn.indexOf(c), 1);
-      });
+  ngOnDestroy(): void {
+    this.keyBindingSub.unsubscribe();
+    this.languageService.disconnectAll();
   }
 
-  // listenTo(lang: string) {
-  //   const langUrl = this.createUrl(lang);
-  //   const langWebSocket = this.createWebSocket(langUrl);
-  //   const langService = createMonacoServices(this.editorControl.editor.getValue());
-
-  //   this.log.info(`Connecting to ${lang} server`);
-
-  //   listen({
-  //     webSocket: langWebSocket,
-  //     onConnection: (connection: any) => {
-  //       // create and start the language client
-  //       const languageClient = this.createLanguageClient(lang, connection, langService);
-  //       const disposable = languageClient.start();
-  //       connection.onClose(() => disposable.dispose());
-  //       connection.onDispose(() => disposable.dispose());
-  //       this.languageService.addConnection(lang, connection);
-  //     }
-  //   });
-  // }
+  closeLanguageServer(lang?: string) {
+    if (lang) {
+      this.languageService.disconnectLanguage(lang);
+    } else {
+      this.languageService.disconnectAll();
+    }
+  }
 
   createUrl(language: string): string {
     return this.languageService.getLanguageUrl(language);
   }
-
-  // createLanguageClient(language: string, connection: MessageConnection, services: BaseLanguageClient.IServices): BaseLanguageClient {
-  //   return new BaseLanguageClient({
-  //     name: `${language} language client`,
-  //     clientOptions: {
-  //       // use a language id as a document selector
-  //       documentSelector: [language],
-  //       // disable the default error handler
-  //       errorHandler: {
-  //         error: () => ErrorAction.Continue,
-  //         closed: () => CloseAction.DoNotRestart
-  //       }
-  //     },
-  //     services,
-  //     // create a language client connection from the JSON RPC connection on demand
-  //     connectionProvider: {
-  //       get: (errorHandler, closeHandler) => {
-  //         return Promise.resolve(createConnection(connection, errorHandler, closeHandler));
-  //       }
-  //     }
-  //   });
-  // }
-
-  // createWebSocket(wsUrl: string): WebSocket {
-  //   const socketOptions = {
-  //     maxReconnectionDelay: 10000,
-  //     minReconnectionDelay: 1000,
-  //     reconnectionDelayGrowFactor: 1.3,
-  //     connectionTimeout: 10000,
-  //     maxRetries: 20,
-  //     debug: false
-  //   };
-  //   return new ReconnectingWebSocket(wsUrl, undefined, socketOptions);
-  // }
 
   toggleDiffViewer(): void {
     if (this.showDiffViewer) {
