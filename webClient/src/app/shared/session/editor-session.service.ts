@@ -271,6 +271,35 @@ export class EditorSessionService {
   }
 
   /**
+   * Delete all sessions and reset the index.
+   */
+  clearAllSessions(): Observable<any> {
+    const index = this._sessionIndex.getValue();
+    if (!index || index.sessions.length === 0) {
+      return of(true);
+    }
+    return new Observable(observer => {
+      let remaining = index.sessions.length;
+      const onDone = () => {
+        remaining--;
+        if (remaining <= 0) {
+          const freshIndex = this.createDefaultIndex();
+          this.saveIndex(freshIndex).subscribe({
+            next: () => { observer.next(true); observer.complete(); },
+            error: (err) => { observer.next(true); observer.complete(); }
+          });
+        }
+      };
+      for (const entry of index.sessions) {
+        const uri = this.configUri(`session-${entry.id}.json`);
+        const bkpUri = this.configUri(`session-${entry.id}.bkp.json`);
+        this.http.delete(uri).subscribe({ next: onDone, error: onDone });
+        this.http.delete(bkpUri).subscribe({ error: () => {} });
+      }
+    });
+  }
+
+  /**
    * Try to recover a session from its backup.
    */
   recoverSession(sessionId: string): Observable<EditorSession | null> {

@@ -509,6 +509,15 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Clear all saved sessions.
+   */
+  public clearAllSessions(): void {
+    this.sessionService.clearAllSessions().subscribe(() => {
+      this.recentSessions = [];
+    });
+  }
+
+  /**
    * Format a date for display on the welcome screen.
    */
   public formatSessionDate(isoString: string): string {

@@ -38,13 +38,31 @@
         margin-top: 24px;
         text-align: left;
         max-width: 420px;
+        .recent-sessions-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
         .recent-sessions-title {
           font-size: 14px;
           color: #888;
           text-transform: uppercase;
           letter-spacing: 0.5px;
-          margin-bottom: 8px;
-          display: block;
+        }
+        .clear-all-btn {
+          background: none;
+          border: 1px solid #555;
+          color: #aaa;
+          font-size: 12px;
+          padding: 2px 10px;
+          border-radius: 3px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          &:hover {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+          }
         }
         .session-list {
           max-height: 280px;

@@ -15,7 +15,10 @@ Copyright Contributors to the Zowe Project.
       <p>Use the explorer on the left-hand side to start your journey!</p>
       @if (recentSessions.length > 0) {
         <div class="recent-sessions">
-          <span class="recent-sessions-title">Recent Sessions</span>
+          <div class="recent-sessions-header">
+            <span class="recent-sessions-title">Recent Sessions</span>
+            <button class="clear-all-btn" (click)="clearAllSessions()">Clear All</button>
+          </div>
           <div class="session-list">
             @for (session of recentSessions; track session.id) {
               <div class="session-item" (click)="restoreSessionById(session.id)">
