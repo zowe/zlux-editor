@@ -38,13 +38,14 @@ export class TerminalPanelComponent implements OnInit, AfterViewInit, OnDestroy 
   ) {}
 
   ngOnInit() {
-    // Inject xterm CSS into the document if not already present
+    // Inject xterm CSS into the document via link tag if not already present
     if (!document.getElementById('xterm-css')) {
-      const xtermCss = require('@xterm/xterm/css/xterm.css');
-      const style = document.createElement('style');
-      style.id = 'xterm-css';
-      style.textContent = typeof xtermCss === 'string' ? xtermCss : (xtermCss.default || '');
-      document.head.appendChild(style);
+      const link = document.createElement('link');
+      link.id = 'xterm-css';
+      link.rel = 'stylesheet';
+      // __webpack_public_path__ resolves to the plugin's web content root
+      link.href = __webpack_public_path__ + 'assets/xterm/xterm.css';
+      document.head.appendChild(link);
     }
 
     this.terminal = new Terminal({
