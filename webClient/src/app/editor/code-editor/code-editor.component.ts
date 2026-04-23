@@ -20,7 +20,7 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { EditorSessionService, EditorSession, SessionTab } from '../../shared/session/editor-session.service';
+import { EditorSessionService, EditorSession, SessionTab, SessionIndexEntry } from '../../shared/session/editor-session.service';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -73,6 +73,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   private previousSessionData: any = {};
   private sessionAutoSave$ = new Subject<void>();
   private sessionRestoring = false;
+  public recentSessions: SessionIndexEntry[] = [];
 
   constructor(private http: HttpService,
     private editorControl: EditorControlService,
@@ -232,7 +233,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.autoSaveSession();
     });
 
-    // Auto-restore last session on startup
+    // Load session index for welcome screen display
     this.initSessionRestore();
 
   }
@@ -382,31 +383,15 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   // -- Session persistence methods --
 
   /**
-   * On startup: silently restore the last session, or create a default one.
+   * On startup: load session index and populate the welcome screen list.
+   * Does NOT auto-restore — user picks from the welcome screen.
    */
   private initSessionRestore(): void {
     this.sessionService.loadIndex().subscribe((index) => {
-      const lastId = index.lastSessionId;
-      if (lastId && index.sessions.some(s => s.id === lastId)) {
-        // Restore last session silently
-        this.sessionService.loadSession(lastId).subscribe((session) => {
-          if (session) {
-            this.restoreSession(session);
-          } else {
-            // Try recovery from backup
-            this.sessionService.recoverSession(lastId).subscribe((recovered) => {
-              if (recovered) {
-                this.log.info('Session recovered from backup');
-                this.restoreSession(recovered);
-              } else {
-                this.startDefaultSession();
-              }
-            });
-          }
-        });
-      } else {
-        this.startDefaultSession();
-      }
+      this.recentSessions = (index.sessions || []).slice()
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      // Always start with a fresh default session (no auto-restore)
+      this.startDefaultSession();
     });
   }
 
@@ -501,6 +486,42 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
    */
   private scheduleSessionSave(): void {
     this.sessionAutoSave$.next();
+  }
+
+  /**
+   * Restore a session by ID — called from the welcome screen.
+   */
+  public restoreSessionById(sessionId: string): void {
+    this.sessionService.loadSession(sessionId).subscribe((session) => {
+      if (session) {
+        this.restoreSession(session);
+      } else {
+        this.sessionService.recoverSession(sessionId).subscribe((recovered) => {
+          if (recovered) {
+            this.log.info('Session recovered from backup');
+            this.restoreSession(recovered);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Format a date for display on the welcome screen.
+   */
+  public formatSessionDate(isoString: string): string {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString();
   }
 }
 

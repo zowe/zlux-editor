@@ -12,8 +12,20 @@ Copyright Contributors to the Zowe Project.
   <div class="editor-instruction">
     <div class="instruction">
       <span class="welcome" style="color: #6ba4ff">Zowe Editor</span>
-      <p>Use the explorer on the left-hand side to start your journey!
-      </p>
+      <p>Use the explorer on the left-hand side to start your journey!</p>
+      @if (recentSessions.length > 0) {
+        <div class="recent-sessions">
+          <span class="recent-sessions-title">Recent Sessions</span>
+          <div class="session-list">
+            @for (session of recentSessions; track session.id) {
+              <div class="session-item" (click)="restoreSessionById(session.id)">
+                <span class="session-name">{{ session.name }}</span>
+                <span class="session-meta">{{ session.tabCount }} tab{{ session.tabCount !== 1 ? 's' : '' }} &middot; {{ formatSessionDate(session.updatedAt) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
     </div>
   </div>
 }
