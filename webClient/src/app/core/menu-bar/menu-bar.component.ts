@@ -401,6 +401,10 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  toggleTerminal() {
+    this.editorControl.toggleTerminal.next('');
+  }
+
   ngOnInit() {
     if (this.editorControl.isTestLangMode) {
       this.log.info(`Adding test language menu`);
@@ -427,6 +431,8 @@ export class MenuBarComponent implements OnInit, OnDestroy {
           this.refreshFile();
         } else if (event.which === KeyCode.KEY_S && event.shiftKey) {
           this.saveAsFile();
+        } else if (event.which === KeyCode.KEY_T && !event.ctrlKey) {
+          this.toggleTerminal();
         }
         // else if (event.which === KeyCode.KEY_S && event.ctrlKey) { TODO
         //   this.saveAll();

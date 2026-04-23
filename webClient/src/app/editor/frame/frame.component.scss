@@ -171,10 +171,30 @@
         cursor: pointer;
       }
     }
-    .gz-editor {
+    .gz-editor-and-terminal {
       height: 100%;
       position: relative;
       flex: 1 1 auto;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .gz-editor {
+      position: relative;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+    .terminal-resize-handle {
+      height: 4px;
+      background-color: #3f3f3f;
+      cursor: ns-resize;
+      flex-shrink: 0;
+      &:hover {
+        background-color: #007acc;
+      }
+    }
+    .gz-terminal {
+      flex-shrink: 0;
       overflow: hidden;
     }
   }

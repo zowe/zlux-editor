@@ -92,6 +92,10 @@ const config = {
         {
           from: path.resolve(__dirname, './src/assets'),
           to: path.resolve('../web/v3/assets')
+        },
+        {
+          from: path.resolve(__dirname, './node_modules/@xterm/xterm/css/xterm.css'),
+          to: path.resolve('../web/v3/assets/xterm/xterm.css')
         }
       ]
     }),

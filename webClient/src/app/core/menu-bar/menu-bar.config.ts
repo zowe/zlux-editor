@@ -238,6 +238,18 @@ export const MENU = [
         }
       }
     ]
+  },
+  {
+    name: 'View',
+    children: [
+      {
+        name: 'Toggle Terminal',
+        action: {
+          internalName: 'toggleTerminal'
+        },
+        keyMap: 'Alt+T'
+      }
+    ]
   }
   // {
   //     name: 'Language Server',

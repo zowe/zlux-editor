@@ -17,8 +17,16 @@
     <label class="toggle-tree" [hidden]="!showExplorer"><</label>
     <label class="toggle-tree" [hidden]="showExplorer">></label>
   </div>
-  <div class="gz-editor">
-    <app-code-editor></app-code-editor>
+  <div class="gz-editor-and-terminal">
+    <div class="gz-editor" [style.height]="showTerminal ? 'calc(100% - ' + terminalHeight + 'px)' : '100%'">
+      <app-code-editor></app-code-editor>
+    </div>
+    @if (showTerminal) {
+      <div class="terminal-resize-handle" (mousedown)="onTerminalResizeStart($event)"></div>
+      <div class="gz-terminal" [style.height.px]="terminalHeight">
+        <app-terminal-panel></app-terminal-panel>
+      </div>
+    }
   </div>
 </div>
 
