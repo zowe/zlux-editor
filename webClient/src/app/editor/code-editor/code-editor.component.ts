@@ -18,7 +18,11 @@ import { ProjectContext, ProjectContextType } from '../../shared/model/project-c
 import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
+import { EditorSessionService, EditorSession, SessionTab } from '../../shared/session/editor-session.service';
+import { SessionPickerComponent, SessionPickerResult } from '../../shared/dialog/session-picker/session-picker.component';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -69,14 +73,19 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
+  private sessionAutoSave$ = new Subject<void>();
+  private sessionRestoring = false;
 
   constructor(private http: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private appKeyboard: EditorKeybindingService,
+    private dialog: MatDialog,
+    private sessionService: EditorSessionService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private codeEditorService: CodeEditorService) {
 
     // TODO: If I wanted to spawn opened tabs from localStorage, like "Resume opened files when reopening Editor" feature
@@ -113,6 +122,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
       // update editor title
       this.updateEditorTitle();
+      // auto-save session on tab list change
+      this.scheduleSessionSave();
     });
 
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
@@ -216,6 +227,21 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.compareContents(fileContext);
       this.editorControl.compareDataset = true;
     })
+
+    // -- Session persistence --
+
+    // Debounced auto-save: triggers 2s after last tab change
+    this.sessionAutoSave$.pipe(debounceTime(2000)).subscribe(() => {
+      this.autoSaveSession();
+    });
+
+    // Listen for manual save/show/switch events
+    this.editorControl.saveSessionNow.subscribe(() => this.autoSaveSession());
+    this.editorControl.showSessionPicker.subscribe(() => this.showSessionPickerDialog());
+    this.editorControl.switchSession.subscribe((sessionId: string) => this.switchToSession(sessionId));
+
+    // Start the session restore flow
+    this.initSessionRestore();
 
   }
 
@@ -356,7 +382,183 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Save session before destroying
+    this.autoSaveSession();
     this.keyBindingSub.unsubscribe();
+  }
+
+  // -- Session persistence methods --
+
+  /**
+   * On startup: load session index, show picker if sessions exist,
+   * otherwise start with a default empty session.
+   */
+  private initSessionRestore(): void {
+    this.sessionService.loadIndex().subscribe((index) => {
+      if (index.sessions.length > 0) {
+        this.showSessionPickerDialog();
+      } else {
+        // No sessions — create and activate default
+        const session = this.sessionService.createDefaultSession();
+        this.sessionService.setCurrentSession(session);
+        this.sessionService.saveSession(session).subscribe();
+      }
+    });
+  }
+
+  /**
+   * Show the session picker dialog.
+   */
+  private showSessionPickerDialog(): void {
+    const index = this.sessionService['_sessionIndex'].getValue();
+    if (!index) return;
+
+    const dialogRef = this.dialog.open(SessionPickerComponent, {
+      width: '480px',
+      disableClose: false,
+      data: {
+        sessions: index.sessions,
+        lastSessionId: index.lastSessionId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe((result: SessionPickerResult) => {
+      if (!result || result.action === 'skip') {
+        // Start empty with a default session
+        const session = this.sessionService.createDefaultSession();
+        this.sessionService.setCurrentSession(session);
+        this.sessionService.saveSession(session).subscribe();
+        return;
+      }
+
+      // Process any deletions made in the dialog
+      const deletedIds: string[] = dialogRef.componentInstance.data['_deletedIds'] || [];
+      for (const id of deletedIds) {
+        this.sessionService.deleteSession(id).subscribe();
+      }
+
+      if (result.action === 'restore' && result.sessionId) {
+        this.switchToSession(result.sessionId);
+      } else if (result.action === 'create' && result.newSessionName) {
+        const session = this.sessionService.createSession(result.newSessionName);
+        this.sessionService.setCurrentSession(session);
+        this.sessionService.saveSession(session).subscribe();
+      }
+    });
+  }
+
+  /**
+   * Switch to a different session: save current, close all tabs, load target, restore tabs.
+   */
+  private switchToSession(sessionId: string): void {
+    // Save current session first
+    const currentSession = this.sessionService.currentSession;
+    if (currentSession) {
+      currentSession.tabs = this.sessionService.buildTabsFromOpenFiles(
+        this.editorControl.openFileList.getValue()
+      );
+      this.sessionService.saveSession(currentSession).subscribe();
+    }
+
+    // Load target session
+    this.sessionService.loadSession(sessionId).subscribe((session) => {
+      if (!session) {
+        // Try recovery from backup
+        this.sessionService.recoverSession(sessionId).subscribe((recovered) => {
+          if (recovered) {
+            this.log.warn(`Session ${sessionId} recovered from backup`);
+            this.restoreSession(recovered);
+          } else {
+            this.log.warn(`Session ${sessionId} not found and no backup available`);
+          }
+        });
+        return;
+      }
+      this.restoreSession(session);
+    });
+  }
+
+  /**
+   * Restore tabs from a session object.
+   */
+  private restoreSession(session: EditorSession): void {
+    this.sessionRestoring = true;
+    this.sessionService.setCurrentSession(session);
+
+    // Close all current tabs
+    this.editorControl.closeAllHandler();
+    this.noOpenFile = true;
+    this.editorFile = undefined;
+
+    // Re-open each tab from the session
+    if (session.tabs.length === 0) {
+      this.sessionRestoring = false;
+      return;
+    }
+
+    // Open tabs sequentially with a small delay to let monaco process each
+    let tabIndex = 0;
+    const openNext = () => {
+      if (tabIndex >= session.tabs.length) {
+        this.sessionRestoring = false;
+        // Select the previously active tab
+        const activeTab = session.tabs.find(t => t.active) || session.tabs[0];
+        if (activeTab) {
+          const match = this.editorControl.openFileList.getValue().find(
+            f => f.model.fileName === activeTab.fileName && f.model.path === activeTab.path
+          );
+          if (match) {
+            this.selectFile(match, true);
+          }
+        }
+        return;
+      }
+
+      const tab = session.tabs[tabIndex];
+      tabIndex++;
+
+      const fileStructure: ProjectStructure = {
+        id: tab.fileName + ':' + tab.path,
+        name: tab.name,
+        fileName: tab.fileName,
+        path: tab.path,
+        isDataset: tab.isDataset,
+        hasChildren: false,
+        language: tab.language,
+        encoding: tab.encoding
+      };
+
+      this.editorControl.openFileEmitter.emit(fileStructure);
+
+      // Small delay to let the file open before opening the next
+      setTimeout(openNext, 200);
+    };
+
+    openNext();
+  }
+
+  /**
+   * Auto-save the current session's tab list to the config dataservice.
+   */
+  private autoSaveSession(): void {
+    if (this.sessionRestoring) return;
+
+    const session = this.sessionService.currentSession;
+    if (!session) return;
+
+    session.tabs = this.sessionService.buildTabsFromOpenFiles(
+      this.editorControl.openFileList.getValue()
+    );
+    this.sessionService.saveSession(session).subscribe({
+      error: (err) => this.log.warn('Session auto-save failed', err)
+    });
+  }
+
+  /**
+   * Trigger a debounced session auto-save (called when tabs change).
+   */
+  private scheduleSessionSave(): void {
+    this.sessionAutoSave$.next();
   }
 }
 

@@ -23,6 +23,7 @@ import { LanguageServerComponent } from './language-server/language-server.compo
 import { TagComponent } from './tag/tag.component';
 import { ZluxTabbingModule } from '@zlux/widgets';
 import { OverwriteDatasetComponent } from './overwrite-dataset/overwrite-dataset.component';
+import { SessionPickerComponent } from './session-picker/session-picker.component';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -53,6 +54,7 @@ import { MatButtonModule } from '@angular/material/button';
         LanguageServerComponent,
         TagComponent,
         OverwriteDatasetComponent,
+        SessionPickerComponent,
     ],
     providers: [HttpService]
 })

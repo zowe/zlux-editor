@@ -238,6 +238,23 @@ export const MENU = [
         }
       }
     ]
+  },
+  {
+    name: 'Session',
+    children: [
+      {
+        name: 'Save Session',
+        action: {
+          internalName: 'saveSession'
+        }
+      },
+      {
+        name: 'Switch Session...',
+        action: {
+          internalName: 'showSessionPicker'
+        }
+      }
+    ]
   }
   // {
   //     name: 'Language Server',

@@ -401,6 +401,14 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     });
   }
 
+  saveSession() {
+    this.editorControl.saveSessionNow.next();
+  }
+
+  showSessionPicker() {
+    this.editorControl.showSessionPicker.next();
+  }
+
   ngOnInit() {
     if (this.editorControl.isTestLangMode) {
       this.log.info(`Adding test language menu`);

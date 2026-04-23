@@ -1,5 +1,13 @@
 # Zlux Editor Changelog
 
+## `3.6.0`
+
+- Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
+- Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
+- Enhancement: Multiple sessions supported — users can organize tabs by project/task and switch between them via Session menu.
+- Enhancement: Automatic backup files (`.bkp`) written before every session save to guard against corruption.
+- Enhancement: Recovery from backup if a session file is corrupted.
+
 ## `3.5.0`
 
 - Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.

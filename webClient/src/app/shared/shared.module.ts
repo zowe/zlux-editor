@@ -21,6 +21,7 @@ import { SnackBarService } from './snack-bar.service';
 import { LanguageServerService } from './language-server/language-server.service';
 import { EditorKeybindingService } from './editor-keybinding.service';
 import { LimitsService } from './limits.service';
+import { EditorSessionService } from './session/editor-session.service';
 
 @NgModule({
   imports: [
@@ -38,7 +39,8 @@ import { LimitsService } from './limits.service';
     SnackBarService,
     LanguageServerService,
     EditorKeybindingService,
-    LimitsService
+    LimitsService,
+    EditorSessionService
   ]
 })
 export class SharedModule { }
