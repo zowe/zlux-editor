@@ -12,6 +12,8 @@
     "test": "exit 0"
   },
   "dependencies": {
+    "@xterm/xterm": "^5.5.0",
+    "@xterm/addon-fit": "^0.10.0",
     "@zlux/widgets": "github:wadkarsatish/zlux-widgets-angular18#widgets-Angular-Library",
     "@zowe/zlux-angular-file-tree": "2.0.0-staging-474-20250915115421",
     "lodash": "4.18.1",

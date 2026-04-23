@@ -79,6 +79,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public compareDatasetEmitter: EventEmitter<ProjectContext> = new EventEmitter();
   public acceptChangeEmitter: EventEmitter<void> = new EventEmitter()
   public overwriteDatasetEmitter: EventEmitter<void> = new EventEmitter()
+  public toggleTerminal: EventEmitter<string> = new EventEmitter();
 
   private _rootContext: BehaviorSubject<ProjectContext> = new BehaviorSubject<ProjectContext>(undefined);
   private _context: BehaviorSubject<ProjectContext[]> = new BehaviorSubject<ProjectContext[]>(undefined);

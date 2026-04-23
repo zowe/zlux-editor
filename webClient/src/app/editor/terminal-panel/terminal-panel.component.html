@@ -1,0 +1,53 @@
+<!--
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+  SPDX-License-Identifier: EPL-2.0
+
+  Copyright Contributors to the Zowe Project.
+-->
+<div class="terminal-panel-wrapper">
+  <div class="terminal-toolbar">
+    <span class="terminal-title">Terminal</span>
+    <span class="terminal-status" [ngClass]="connectionStatus">{{ connectionStatus }}</span>
+    <div class="terminal-actions">
+      <button class="terminal-btn" (click)="toggleConfig()" title="Configure">
+        <i class="material-icons">settings</i>
+      </button>
+      @if (connectionStatus === 'connected') {
+        <button class="terminal-btn" (click)="disconnect()" title="Disconnect">
+          <i class="material-icons">link_off</i>
+        </button>
+      }
+      @if (connectionStatus !== 'connected') {
+        <button class="terminal-btn" (click)="connect()" title="Connect">
+          <i class="material-icons">link</i>
+        </button>
+      }
+      <button class="terminal-btn" (click)="clear()" title="Clear">
+        <i class="material-icons">delete_sweep</i>
+      </button>
+    </div>
+  </div>
+  @if (showConfig) {
+    <div class="terminal-config">
+      <label class="config-label">WebSocket URL:</label>
+      <input class="config-input" type="text" [(ngModel)]="wsUrl"
+             (keydown)="onUrlKeydown($event)"
+             placeholder="ws://host:port/path" />
+      <button class="config-connect-btn" (click)="connect()">Connect</button>
+    </div>
+  }
+  <div class="terminal-container" #terminalContainer></div>
+</div>
+
+<!--
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+  SPDX-License-Identifier: EPL-2.0
+
+  Copyright Contributors to the Zowe Project.
+-->

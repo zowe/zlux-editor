@@ -23,6 +23,7 @@ import { FrameComponent } from './frame/frame.component';
 import { ProjectTreeComponent } from './project-tree/project-tree.component';
 import { ZluxFileTreeModule } from '@zowe/zlux-angular-file-tree';
 import { CodeEditorModule } from './code-editor/code-editor.module';
+import { TerminalPanelComponent } from './terminal-panel/terminal-panel.component';
 
 @NgModule({
   imports: [
@@ -41,7 +42,8 @@ import { CodeEditorModule } from './code-editor/code-editor.module';
   declarations: [
     EditorComponent,
     FrameComponent,
-    ProjectTreeComponent
+    ProjectTreeComponent,
+    TerminalPanelComponent
   ],
   exports: [EditorComponent],
 })

@@ -1,0 +1,154 @@
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+  SPDX-License-Identifier: EPL-2.0
+
+  Copyright Contributors to the Zowe Project.
+*/
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.terminal-panel-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background-color: #1e1e1e;
+}
+
+.terminal-toolbar {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  background-color: #252526;
+  border-top: 1px solid #3f3f3f;
+  flex-shrink: 0;
+
+  .terminal-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: #cccccc;
+    margin-right: 8px;
+  }
+
+  .terminal-status {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: auto;
+
+    &.connected {
+      background-color: #2d6a2d;
+      color: #8fdf8f;
+    }
+
+    &.connecting {
+      background-color: #6a5f2d;
+      color: #dfcf8f;
+    }
+
+    &.disconnected {
+      background-color: #4a4a4a;
+      color: #999999;
+    }
+
+    &.error {
+      background-color: #6a2d2d;
+      color: #df8f8f;
+    }
+  }
+
+  .terminal-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .terminal-btn {
+    background: transparent;
+    border: none;
+    color: #cccccc;
+    cursor: pointer;
+    padding: 2px 4px;
+    display: flex;
+    align-items: center;
+    border-radius: 3px;
+
+    .material-icons {
+      font-size: 16px;
+    }
+
+    &:hover {
+      background-color: #3f3f3f;
+    }
+  }
+}
+
+.terminal-config {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background-color: #2d2d2d;
+  border-top: 1px solid #3f3f3f;
+  flex-shrink: 0;
+  gap: 8px;
+
+  .config-label {
+    font-size: 12px;
+    color: #cccccc;
+    white-space: nowrap;
+  }
+
+  .config-input {
+    flex: 1;
+    padding: 3px 6px;
+    font-size: 12px;
+    font-family: inherit;
+    background-color: #3c3c3c;
+    border: 1px solid #555555;
+    color: #cccccc;
+    border-radius: 3px;
+    outline: none;
+
+    &:focus {
+      border-color: #007acc;
+    }
+  }
+
+  .config-connect-btn {
+    padding: 3px 12px;
+    font-size: 12px;
+    background-color: #0e639c;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+    border-radius: 3px;
+
+    &:hover {
+      background-color: #1177bb;
+    }
+  }
+}
+
+.terminal-container {
+  flex: 1;
+  padding: 4px;
+  overflow: hidden;
+}
+
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+
+  SPDX-License-Identifier: EPL-2.0
+
+  Copyright Contributors to the Zowe Project.
+*/
