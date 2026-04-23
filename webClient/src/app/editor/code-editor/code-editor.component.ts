@@ -388,20 +388,22 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
    */
   private initSessionRestore(): void {
     this.sessionService.loadIndex().subscribe((index) => {
+      // Only show sessions that actually have tabs
       this.recentSessions = (index.sessions || []).slice()
+        .filter(s => s.tabCount > 0)
         .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      // Always start with a fresh default session (no auto-restore)
-      this.startDefaultSession();
+      // Start a fresh session with unique ID — don't persist until tabs are opened
+      this.startFreshSession();
     });
   }
 
   /**
-   * Create and activate a default session.
+   * Create a fresh session with a unique ID.
+   * NOT persisted until the user opens files (auto-save handles that).
    */
-  private startDefaultSession(): void {
-    const session = this.sessionService.createDefaultSession();
+  private startFreshSession(): void {
+    const session = this.sessionService.createSession();
     this.sessionService.setCurrentSession(session);
-    this.sessionService.saveSession(session).subscribe();
   }
 
   /**
