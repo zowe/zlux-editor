@@ -20,9 +20,7 @@ import { EditorKeybindingService } from '../../shared/editor-keybinding.service'
 import { KeyCode } from '../../shared/keycode-enum';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
 import { EditorSessionService, EditorSession, SessionTab } from '../../shared/session/editor-session.service';
-import { SessionPickerComponent, SessionPickerResult } from '../../shared/dialog/session-picker/session-picker.component';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -80,7 +78,6 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private appKeyboard: EditorKeybindingService,
-    private dialog: MatDialog,
     private sessionService: EditorSessionService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
@@ -235,12 +232,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.autoSaveSession();
     });
 
-    // Listen for manual save/show/switch events
-    this.editorControl.saveSessionNow.subscribe(() => this.autoSaveSession());
-    this.editorControl.showSessionPicker.subscribe(() => this.showSessionPickerDialog());
-    this.editorControl.switchSession.subscribe((sessionId: string) => this.switchToSession(sessionId));
-
-    // Start the session restore flow
+    // Auto-restore last session on startup
     this.initSessionRestore();
 
   }
@@ -390,92 +382,41 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   // -- Session persistence methods --
 
   /**
-   * On startup: load session index, show picker if sessions exist,
-   * otherwise start with a default empty session.
+   * On startup: silently restore the last session, or create a default one.
    */
   private initSessionRestore(): void {
     this.sessionService.loadIndex().subscribe((index) => {
-      if (index.sessions.length > 0) {
-        this.showSessionPickerDialog();
-      } else {
-        // No sessions — create and activate default
-        const session = this.sessionService.createDefaultSession();
-        this.sessionService.setCurrentSession(session);
-        this.sessionService.saveSession(session).subscribe();
-      }
-    });
-  }
-
-  /**
-   * Show the session picker dialog.
-   */
-  private showSessionPickerDialog(): void {
-    const index = this.sessionService['_sessionIndex'].getValue();
-    if (!index) return;
-
-    const dialogRef = this.dialog.open(SessionPickerComponent, {
-      width: '480px',
-      disableClose: false,
-      data: {
-        sessions: index.sessions,
-        lastSessionId: index.lastSessionId
-      }
-    });
-
-    dialogRef.afterClosed().subscribe((result: SessionPickerResult) => {
-      if (!result || result.action === 'skip') {
-        // Start empty with a default session
-        const session = this.sessionService.createDefaultSession();
-        this.sessionService.setCurrentSession(session);
-        this.sessionService.saveSession(session).subscribe();
-        return;
-      }
-
-      // Process any deletions made in the dialog
-      const deletedIds: string[] = dialogRef.componentInstance.data['_deletedIds'] || [];
-      for (const id of deletedIds) {
-        this.sessionService.deleteSession(id).subscribe();
-      }
-
-      if (result.action === 'restore' && result.sessionId) {
-        this.switchToSession(result.sessionId);
-      } else if (result.action === 'create' && result.newSessionName) {
-        const session = this.sessionService.createSession(result.newSessionName);
-        this.sessionService.setCurrentSession(session);
-        this.sessionService.saveSession(session).subscribe();
-      }
-    });
-  }
-
-  /**
-   * Switch to a different session: save current, close all tabs, load target, restore tabs.
-   */
-  private switchToSession(sessionId: string): void {
-    // Save current session first
-    const currentSession = this.sessionService.currentSession;
-    if (currentSession) {
-      currentSession.tabs = this.sessionService.buildTabsFromOpenFiles(
-        this.editorControl.openFileList.getValue()
-      );
-      this.sessionService.saveSession(currentSession).subscribe();
-    }
-
-    // Load target session
-    this.sessionService.loadSession(sessionId).subscribe((session) => {
-      if (!session) {
-        // Try recovery from backup
-        this.sessionService.recoverSession(sessionId).subscribe((recovered) => {
-          if (recovered) {
-            this.log.warn(`Session ${sessionId} recovered from backup`);
-            this.restoreSession(recovered);
+      const lastId = index.lastSessionId;
+      if (lastId && index.sessions.some(s => s.id === lastId)) {
+        // Restore last session silently
+        this.sessionService.loadSession(lastId).subscribe((session) => {
+          if (session) {
+            this.restoreSession(session);
           } else {
-            this.log.warn(`Session ${sessionId} not found and no backup available`);
+            // Try recovery from backup
+            this.sessionService.recoverSession(lastId).subscribe((recovered) => {
+              if (recovered) {
+                this.log.info('Session recovered from backup');
+                this.restoreSession(recovered);
+              } else {
+                this.startDefaultSession();
+              }
+            });
           }
         });
-        return;
+      } else {
+        this.startDefaultSession();
       }
-      this.restoreSession(session);
     });
+  }
+
+  /**
+   * Create and activate a default session.
+   */
+  private startDefaultSession(): void {
+    const session = this.sessionService.createDefaultSession();
+    this.sessionService.setCurrentSession(session);
+    this.sessionService.saveSession(session).subscribe();
   }
 
   /**
@@ -549,6 +490,7 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     session.tabs = this.sessionService.buildTabsFromOpenFiles(
       this.editorControl.openFileList.getValue()
     );
+    session.name = this.sessionService.autoNameFromTabs(session.tabs);
     this.sessionService.saveSession(session).subscribe({
       error: (err) => this.log.warn('Session auto-save failed', err)
     });

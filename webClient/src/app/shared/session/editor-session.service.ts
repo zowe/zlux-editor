@@ -291,13 +291,13 @@ export class EditorSessionService {
   /**
    * Create a new empty session with the given name.
    */
-  createSession(name: string): EditorSession {
+  createSession(name?: string): EditorSession {
     const now = new Date().toISOString();
     return {
       _objectType: SESSION_OBJECT_TYPE,
       _metaDataVersion: META_VERSION,
       id: this.generateId(),
-      name: name,
+      name: name || DEFAULT_SESSION_NAME,
       tabs: [],
       updatedAt: now,
       createdAt: now
@@ -342,6 +342,19 @@ export class EditorSessionService {
         encoding: f.model.encoding,
         active: f.active || false
       }));
+  }
+
+  /**
+   * Auto-generate a session name from the open tabs.
+   * Shows up to 3 file names, like "file1.ts, file2.js +2 more".
+   */
+  autoNameFromTabs(tabs: SessionTab[]): string {
+    if (tabs.length === 0) return DEFAULT_SESSION_NAME;
+    const names = tabs.map(t => t.name);
+    if (names.length <= 3) {
+      return names.join(', ');
+    }
+    return names.slice(0, 3).join(', ') + ` +${names.length - 3} more`;
   }
 
   /**

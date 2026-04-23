@@ -73,9 +73,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   public connToLS: EventEmitter<string> = new EventEmitter();
   public disFromLS: EventEmitter<string> = new EventEmitter();
   public openSettings: EventEmitter<void> = new EventEmitter(); //open settings menu, a menu-type projectcontext
-  public showSessionPicker: EventEmitter<void> = new EventEmitter();
-  public saveSessionNow: EventEmitter<void> = new EventEmitter();
-  public switchSession: EventEmitter<string> = new EventEmitter();
   public closeSettings: EventEmitter<void> = new EventEmitter(); 
   public selectSetting: EventEmitter<ProjectContext> = new EventEmitter(); //select menu-type projectcontext
   public changeTheme: EventEmitter<string> = new EventEmitter();
