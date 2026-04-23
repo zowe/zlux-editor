@@ -238,18 +238,30 @@ export const MENU = [
         }
       }
     ]
+  },
+  {
+    name: 'View',
+    children: [
+      {
+        name: 'Toggle Terminal',
+        action: {
+          internalName: 'toggleTerminal'
+        },
+        keyMap: 'Alt+T'
+      }
+    ]
+  },
+  {
+    name: 'Language Server',
+    children: [
+      {
+        name: 'URL',
+        action: {
+          internalName: 'languageServerSetting'
+        }
+      }
+    ],
   }
-  // {
-  //     name: 'Language Server',
-  //     children: [
-  //         {
-  //             name: 'URL',
-  //             action: {
-  //                 internalName: 'languageServerSetting'
-  //             }
-  //         }
-  //     ],
-  // }
 ];
 
 /*

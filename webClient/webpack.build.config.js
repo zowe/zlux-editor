@@ -69,6 +69,10 @@ const config = {
             }
           }
         ]
+      },
+      {
+        test: /\.css$/,
+        use: ['raw-loader']
       },             
       {
         test: [/\.js?$/, /\.ts?$/, /\.jsx?$/, /\.tsx?$/],

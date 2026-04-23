@@ -23,6 +23,7 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 import { LimitsService } from '../../../shared/limits.service';
+import { LanguageServerService } from '../../../shared/language-server/language-server.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
@@ -49,7 +50,8 @@ export class MonacoService implements OnDestroy {
     private editorControl: EditorControlService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
-    private limitsService: LimitsService
+    private limitsService: LimitsService,
+    private languageServerService: LanguageServerService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -424,6 +426,8 @@ export class MonacoService implements OnDestroy {
               let newModel;
               if (!duplicate) {
                 newModel = editorCore.createModel(model.value, model.language, model.uri);
+                // Notify language server that document was opened
+                this.languageServerService.notifyDidOpen(model.uri.toString(), model.language, model.value);
               } else {
                 newModel = editorCore.getModel(model.uri);
               }
@@ -525,6 +529,8 @@ export class MonacoService implements OnDestroy {
     const fileUri = this.generateUri(fileNode.model);
     for (const model of models) {
       if (model.uri.toString() === fileUri) {
+        // Notify language server that document was closed
+        this.languageServerService.notifyDidClose(model.uri.toString(), model.getLanguageId());
         model.dispose();
         this.editorControl.saveCursorPosition = false;
       }

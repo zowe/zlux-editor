@@ -41,7 +41,12 @@ export class FrameComponent implements OnInit, OnDestroy {
   private contentResultList: LineMapping[] = [];
   private cantSearch = true;
   showExplorer = true;
+  showTerminal = false;
+  terminalHeight = 250;
   private keyBindingSub: Subscription = new Subscription();
+  private terminalResizing = false;
+  private terminalResizeStartY = 0;
+  private terminalResizeStartHeight = 0;
   activityBar = [
     {
       name: 'Explorer',
@@ -82,6 +87,9 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.toggleTree();
     });
 
+    this.editorControl.toggleTerminal.subscribe(() => {
+      this.toggleTerminal();
+    });
 
     this.keyBindingSub.add(this.appKeyboard.keydownEvent.subscribe((event) => {
       if (event.which === KeyCode.KEY_B) {
@@ -212,6 +220,38 @@ export class FrameComponent implements OnInit, OnDestroy {
       this.editorControl.editor.getValue().layout();
     }, 150);
     
+  }
+
+  toggleTerminal() {
+    this.showTerminal = !this.showTerminal;
+    setTimeout(() => {
+      this.editorControl.editor.getValue().layout();
+    }, 50);
+  }
+
+  onTerminalResizeStart(event: MouseEvent) {
+    event.preventDefault();
+    this.terminalResizing = true;
+    this.terminalResizeStartY = event.clientY;
+    this.terminalResizeStartHeight = this.terminalHeight;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!this.terminalResizing) { return; }
+      const delta = this.terminalResizeStartY - e.clientY;
+      this.terminalHeight = Math.max(100, Math.min(600, this.terminalResizeStartHeight + delta));
+    };
+
+    const onMouseUp = () => {
+      this.terminalResizing = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      setTimeout(() => {
+        this.editorControl.editor.getValue().layout();
+      }, 50);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
   }
 }
 

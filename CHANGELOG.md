@@ -1,5 +1,12 @@
 # Zlux Editor Changelog
 
+## `3.6.0`
+
+- Enhancement: Re-enabled Language Server Protocol (LSP) support. Replaced the old `monaco-languageclient` integration with a lightweight custom LSP client that connects to language servers over WebSocket using JSON-RPC 2.0. Provides completion, hover, and diagnostics for configured languages (HLASM, JSON by default). Language server URL is now configurable via the Language Server menu.
+- Enhancement: Added an integrated terminal panel powered by xterm.js. Connects to a WebSocket-based terminal service (auto-detects Zowe VT Terminal). Toggled via View > Toggle Terminal or Alt+T. Panel is resizable via drag handle.
+- Enhancement: Added View menu with Toggle Terminal option and Alt+T keybinding.
+- Enhancement: Monaco editor now sends LSP document lifecycle notifications (didOpen, didChange, didSave, didClose) to connected language servers.
+
 ## `3.5.0`
 
 - Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.
