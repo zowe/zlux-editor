@@ -39,6 +39,9 @@
       },
       "limits": {
         "aggregationPolicy": "override"
+      },
+      "sessions": {
+        "aggregationPolicy": "none"
       }
     }
   }
