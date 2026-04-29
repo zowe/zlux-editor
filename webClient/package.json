@@ -14,7 +14,7 @@
   "dependencies": {
     "@zlux/widgets": "github:wadkarsatish/zlux-widgets-angular18#widgets-Angular-Library",
     "@zowe/zlux-angular-file-tree": "2.0.0-staging-474-20250915115421",
-    "lodash": "~4.17.10",
+    "lodash": "4.18.1",
     "material-icons": "^1.13.12",
     "monaco-editor": "^0.52.2",
     "ngx-bootstrap": "^18.0.2",

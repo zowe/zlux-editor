@@ -1,12 +1,18 @@
 # Zlux Editor Changelog
 
-## `3.5.0`
+## `3.6.0`
 
 - Enhancement: The editor now recognizes and highlights clickable strings in file content. Ctrl+Click (Cmd+Click on macOS) on any of the following will trigger an action:
     - **Unix file paths** (e.g. `/u/user/file.txt`): checks if the path is a file or directory; opens files in a new editor tab, and prompts to navigate the file explorer to directories.
     - **Dataset names** (e.g. `DSNAME=A.B`, `//'A.B'`, `//'A.B(MEMBER)'`): opens the dataset or member in the editor.
     - **URLs** (e.g. `https://example.com`): prompts the user before opening in a new browser tab.
     - Each of these behaviors can be individually enabled or disabled in the editor Settings menu (`Click Links File Path`, `Click Links Dataset`, `Click Links Url`), and all default to enabled.
+
+## `3.5.0`
+
+- Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.
+- Bugfix: Fixed duplicate language entries appearing in the editor toolbar language list when opening the editor multiple times in the same browser window.
+- Bugfix: Fixed `fileDuplicateChecker` and `closeFile` comparing `monaco.Uri` objects against plain strings, which caused the editor to display stale file contents after closing and reopening files.
 
 ## `3.4.0`
 
