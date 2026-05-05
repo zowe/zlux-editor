@@ -27,6 +27,11 @@
       background-color: yellow;
       color: black;
     }
+    ::ng-deep .path-link {
+      text-decoration: underline;
+      color: #7fb3d3;
+      cursor: pointer;
+    }
     ::ng-deep .myLineDecoration {
       background: #e6e1ad; width: 50px !important; 
     }

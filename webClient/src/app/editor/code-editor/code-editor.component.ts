@@ -509,6 +509,16 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Delete a single session by ID.
+   */
+  public deleteSession(sessionId: string, event: Event): void {
+    event.stopPropagation();
+    this.sessionService.deleteSession(sessionId).subscribe(() => {
+      this.recentSessions = this.recentSessions.filter(s => s.id !== sessionId);
+    });
+  }
+
+  /**
    * Clear all saved sessions.
    */
   public clearAllSessions(): void {

@@ -93,6 +93,23 @@
             white-space: nowrap;
             margin-left: 12px;
           }
+          .session-delete-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            opacity: 0;
+            transition: opacity 0.15s ease, color 0.15s ease;
+            &:hover {
+              color: #ff6b6b;
+            }
+          }
+          &:hover .session-delete-btn {
+            opacity: 1;
+          }
         }
       }
     }

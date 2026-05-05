@@ -24,6 +24,7 @@ Copyright Contributors to the Zowe Project.
               <div class="session-item" (click)="restoreSessionById(session.id)">
                 <span class="session-name">{{ session.name }}</span>
                 <span class="session-meta">{{ session.tabCount }} tab{{ session.tabCount !== 1 ? 's' : '' }} &middot; {{ formatSessionDate(session.updatedAt) }}</span>
+                <button class="session-delete-btn" (click)="deleteSession(session.id, $event)" title="Remove session">&times;</button>
               </div>
             }
           </div>
