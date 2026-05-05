@@ -478,6 +478,21 @@ export const DEFAULT_CONFIG: MonacoConfigItem[] = [
       type: ConfigItemType.array,
       values: ['none','same','indent','deepIndent'],
       default: 'none'
+    },
+    {
+      attribute: 'clickLinksFilePath',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'clickLinksDataset',
+      type: ConfigItemType.boolean,
+      default: true
+    },
+    {
+      attribute: 'clickLinksUrl',
+      type: ConfigItemType.boolean,
+      default: true
     }
 ];
 
