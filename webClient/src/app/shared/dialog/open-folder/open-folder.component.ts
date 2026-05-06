@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit, Inject, Optional } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, Optional, ElementRef } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { HttpService } from '../../http/http.service';
 
@@ -30,7 +30,7 @@ interface Breadcrumb {
   templateUrl: './open-folder.component.html',
   styleUrls: ['./open-folder.component.scss']
 })
-export class OpenFolderComponent implements OnInit {
+export class OpenFolderComponent implements OnInit, OnDestroy {
 
   value = '/';
   loading = false;
@@ -46,8 +46,19 @@ export class OpenFolderComponent implements OnInit {
   private historyIndex = -1;
   private navigating = false;
 
+  // Native drag state
+  private dragging = false;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private overlayPane: HTMLElement | null = null;
+  private overlayStartX = 0;
+  private overlayStartY = 0;
+  private boundDragMove = this.onDragMove.bind(this);
+  private boundDragEnd = this.onDragEnd.bind(this);
+
   constructor(
     private http: HttpService,
+    private el: ElementRef,
     private dialogRef: MatDialogRef<OpenFolderComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) private data: any
   ) { }
@@ -142,6 +153,46 @@ export class OpenFolderComponent implements OnInit {
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+
+  // Native drag implementation
+  onDragStart(event: MouseEvent) {
+    // Don't drag if clicking a button
+    if ((event.target as HTMLElement).closest('button')) return;
+
+    this.overlayPane = (this.el.nativeElement as HTMLElement).closest('.cdk-overlay-pane') as HTMLElement;
+    if (!this.overlayPane) return;
+
+    this.dragging = true;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+
+    const transform = this.overlayPane.style.transform;
+    const match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+    this.overlayStartX = match ? parseFloat(match[1]) : 0;
+    this.overlayStartY = match ? parseFloat(match[2]) : 0;
+
+    document.addEventListener('mousemove', this.boundDragMove);
+    document.addEventListener('mouseup', this.boundDragEnd);
+    event.preventDefault();
+  }
+
+  private onDragMove(event: MouseEvent) {
+    if (!this.dragging || !this.overlayPane) return;
+    const dx = event.clientX - this.dragStartX;
+    const dy = event.clientY - this.dragStartY;
+    this.overlayPane.style.transform = `translate(${this.overlayStartX + dx}px, ${this.overlayStartY + dy}px)`;
+  }
+
+  private onDragEnd() {
+    this.dragging = false;
+    document.removeEventListener('mousemove', this.boundDragMove);
+    document.removeEventListener('mouseup', this.boundDragEnd);
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('mousemove', this.boundDragMove);
+    document.removeEventListener('mouseup', this.boundDragEnd);
   }
 
   private getCurrentDir(): string {

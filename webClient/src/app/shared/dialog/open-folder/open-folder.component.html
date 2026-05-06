@@ -10,7 +10,8 @@ Copyright Contributors to the Zowe Project.
 <zlux-tab-trap></zlux-tab-trap>
 <div class="open-dir-dialog" id="open-dir-dialog">
   <!-- Draggable title bar -->
-  <div class="dialog-titlebar" id="open-dir-titlebar" cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragHandle>
+  <div class="dialog-titlebar" id="open-dir-titlebar"
+    (mousedown)="onDragStart($event)">
     <div class="titlebar-controls">
       <button class="titlebar-btn close-btn" mat-dialog-close id="open-dir-close"></button>
     </div>
