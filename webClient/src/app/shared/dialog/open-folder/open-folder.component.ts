@@ -56,6 +56,15 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
   private boundDragMove = this.onDragMove.bind(this);
   private boundDragEnd = this.onDragEnd.bind(this);
 
+  // Resize state
+  private resizing = false;
+  private resizeStartX = 0;
+  private resizeStartY = 0;
+  private resizeStartW = 0;
+  private resizeStartH = 0;
+  private boundResizeMove = this.onResizeMove.bind(this);
+  private boundResizeEnd = this.onResizeEnd.bind(this);
+
   constructor(
     private http: HttpService,
     private el: ElementRef,
@@ -193,6 +202,39 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     document.removeEventListener('mousemove', this.boundDragMove);
     document.removeEventListener('mouseup', this.boundDragEnd);
+    document.removeEventListener('mousemove', this.boundResizeMove);
+    document.removeEventListener('mouseup', this.boundResizeEnd);
+  }
+
+  // Resize implementation
+  onResizeStart(event: MouseEvent) {
+    this.overlayPane = (this.el.nativeElement as HTMLElement).closest('.cdk-overlay-pane') as HTMLElement;
+    if (!this.overlayPane) return;
+
+    this.resizing = true;
+    this.resizeStartX = event.clientX;
+    this.resizeStartY = event.clientY;
+    this.resizeStartW = this.overlayPane.offsetWidth;
+    this.resizeStartH = this.overlayPane.offsetHeight;
+
+    document.addEventListener('mousemove', this.boundResizeMove);
+    document.addEventListener('mouseup', this.boundResizeEnd);
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  private onResizeMove(event: MouseEvent) {
+    if (!this.resizing || !this.overlayPane) return;
+    const newW = Math.max(400, this.resizeStartW + (event.clientX - this.resizeStartX));
+    const newH = Math.max(300, this.resizeStartH + (event.clientY - this.resizeStartY));
+    this.overlayPane.style.width = newW + 'px';
+    this.overlayPane.style.height = newH + 'px';
+  }
+
+  private onResizeEnd() {
+    this.resizing = false;
+    document.removeEventListener('mousemove', this.boundResizeMove);
+    document.removeEventListener('mouseup', this.boundResizeEnd);
   }
 
   private getCurrentDir(): string {

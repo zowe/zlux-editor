@@ -9,71 +9,55 @@ Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
 <div class="open-dir-dialog" id="open-dir-dialog">
-  <!-- Draggable title bar -->
-  <div class="dialog-titlebar" id="open-dir-titlebar"
-    (mousedown)="onDragStart($event)">
-    <div class="titlebar-controls">
-      <button class="titlebar-btn close-btn" mat-dialog-close id="open-dir-close"></button>
-    </div>
-    <span class="titlebar-title" id="open-dir-title">Open Directory</span>
-    <div class="titlebar-spacer"></div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="dialog-toolbar" id="open-dir-toolbar">
-    <div class="toolbar-left">
-      <button mat-icon-button class="toolbar-btn" (click)="goBack()" [disabled]="!canGoBack()" id="open-dir-back">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      <button mat-icon-button class="toolbar-btn" (click)="goForward()" [disabled]="!canGoForward()" id="open-dir-forward">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
-    </div>
-    <div class="toolbar-breadcrumbs" id="open-dir-breadcrumb">
+  <!-- Header with nav, breadcrumbs, and close -->
+  <div class="dialog-header" id="open-dir-header" (mousedown)="onDragStart($event)">
+    <button mat-icon-button class="nav-btn" (click)="goBack()" [disabled]="!canGoBack()" id="open-dir-back">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button mat-icon-button class="nav-btn" (click)="goForward()" [disabled]="!canGoForward()" id="open-dir-forward">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <div class="header-breadcrumbs" id="open-dir-breadcrumb">
       @for (crumb of breadcrumbs; track crumb.path) {
-      <span class="crumb" (click)="navigateTo(crumb.path)" [class.crumb-active]="$last"
+      <span class="crumb" (click)="navigateTo(crumb.path); $event.stopPropagation()"
+        [class.crumb-active]="$last"
         [attr.id]="'open-dir-crumb-' + $index">{{crumb.name}}</span>
       @if (!$last) {
       <mat-icon class="crumb-sep">chevron_right</mat-icon>
       }
       }
     </div>
-    <div class="toolbar-right">
-      <mat-form-field appearance="outline" class="search-field" id="open-dir-search-field">
-        <mat-icon matPrefix class="search-icon">search</mat-icon>
-        <input matInput type="text" [(ngModel)]="filterText" placeholder="Filter" id="open-dir-filter">
-      </mat-form-field>
-    </div>
+    <button mat-icon-button class="close-btn" mat-dialog-close id="open-dir-close">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
-  <!-- Path bar -->
-  <div class="path-bar" id="open-dir-path-bar">
-    <mat-icon class="path-bar-icon">folder_open</mat-icon>
-    <input class="path-bar-input" type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
-      id="open-dir-input">
-    <button mat-icon-button class="path-bar-go" (click)="navigateTo(value)" id="open-dir-go">
-      <mat-icon>arrow_forward</mat-icon>
-    </button>
+  <!-- Path input + filter -->
+  <div class="dialog-toolbar" id="open-dir-toolbar">
+    <input class="path-input" type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
+      placeholder="/path/to/directory" id="open-dir-input">
+    <input class="filter-input" type="text" [(ngModel)]="filterText"
+      placeholder="Filter..." id="open-dir-filter">
   </div>
 
   <!-- Column headers -->
   <div class="column-headers" id="open-dir-columns">
     <div class="col-name col-header" (click)="sortBy('name')" id="open-dir-sort-name">
-      Name
+      <span>Name</span>
       @if (sortField === 'name') {
-      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
       }
     </div>
     <div class="col-date col-header" (click)="sortBy('date')" id="open-dir-sort-date">
-      Date Modified
+      <span>Date Modified</span>
       @if (sortField === 'date') {
-      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
       }
     </div>
     <div class="col-size col-header" (click)="sortBy('size')" id="open-dir-sort-size">
-      Size
+      <span>Size</span>
       @if (sortField === 'size') {
-      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
       }
     </div>
   </div>
@@ -106,7 +90,7 @@ Copyright Contributors to the Zowe Project.
           (click)="selectEntry(entry)"
           (dblclick)="navigateInto(entry)">
         <div class="col-name">
-          <mat-icon class="row-icon" [class.folder]="entry.directory">{{entry.directory ? 'folder' : 'insert_drive_file'}}</mat-icon>
+          <mat-icon class="row-icon folder">folder</mat-icon>
           <span class="row-name">{{entry.name}}</span>
         </div>
         <div class="col-date">
@@ -123,15 +107,16 @@ Copyright Contributors to the Zowe Project.
 
   <!-- Footer -->
   <div class="dialog-footer" id="open-dir-footer">
-    <div class="footer-info">
-      <span class="footer-count" id="open-dir-count">{{filteredEntries.length}} items</span>
-    </div>
+    <span class="footer-count" id="open-dir-count">{{filteredEntries.length}} items</span>
     <div class="footer-actions">
       <button mat-button class="footer-btn cancel-btn" mat-dialog-close id="open-dir-cancel">Cancel</button>
       <button mat-flat-button class="footer-btn open-btn" color="primary" [mat-dialog-close]="value"
         [disabled]="!value" id="open-dir-submit">Open</button>
     </div>
   </div>
+
+  <!-- Resize handle -->
+  <div class="resize-handle" id="open-dir-resize" (mousedown)="onResizeStart($event)"></div>
 </div>
 
 <!--
