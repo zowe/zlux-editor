@@ -8,15 +8,14 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, OnInit, Inject, Optional } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { HttpService } from '../../http/http.service';
 
 interface DirEntry {
   name: string;
   path: string;
   directory: boolean;
-  icon: string;
 }
 
 interface Breadcrumb {
@@ -36,38 +35,52 @@ export class OpenFolderComponent implements OnInit {
   entries: DirEntry[] = [];
   breadcrumbs: Breadcrumb[] = [];
   selectedEntry: DirEntry | null = null;
+  errorMsg = '';
 
-  constructor(private http: HttpService, private dialogRef: MatDialogRef<OpenFolderComponent>) { }
+  constructor(
+    private http: HttpService,
+    private dialogRef: MatDialogRef<OpenFolderComponent>,
+    @Optional() @Inject(MAT_DIALOG_DATA) private data: any
+  ) { }
 
   ngOnInit() {
-    this.navigateTo('/');
+    const startDir = (this.data && this.data.directory) ? this.data.directory : '/';
+    this.navigateTo(startDir);
   }
 
   navigateTo(path: string) {
     if (!path || !path.startsWith('/')) {
       path = '/' + (path || '');
     }
-    // Remove trailing slash except for root
     if (path.length > 1 && path.endsWith('/')) {
       path = path.slice(0, -1);
     }
     this.value = path;
     this.selectedEntry = null;
+    this.errorMsg = '';
     this.buildBreadcrumbs(path);
     this.fetchDirectory(path);
   }
 
   navigateInto(entry: DirEntry) {
     if (entry.directory) {
-      this.navigateTo(entry.path + '/' + entry.name);
+      const newPath = entry.path ? entry.path + '/' + entry.name : '/' + entry.name;
+      this.navigateTo(newPath);
     }
   }
 
   selectEntry(entry: DirEntry) {
     if (entry.directory) {
       this.selectedEntry = entry;
-      this.value = entry.path + '/' + entry.name;
+      this.value = entry.path ? entry.path + '/' + entry.name : '/' + entry.name;
     }
+  }
+
+  goUp() {
+    if (this.value === '/') return;
+    const lastSlash = this.value.lastIndexOf('/');
+    const parent = lastSlash <= 0 ? '/' : this.value.substring(0, lastSlash);
+    this.navigateTo(parent);
   }
 
   private buildBreadcrumbs(path: string) {
@@ -84,7 +97,7 @@ export class OpenFolderComponent implements OnInit {
     this.loading = true;
     this.entries = [];
     const targetPath = path.startsWith('/') ? path.substring(1) : path;
-    const requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', targetPath);
+    const requestUrl = ZoweZLUX.uriBroker.unixFileUri('contents', targetPath || '.');
 
     this.http.get(requestUrl).subscribe(
       (response: any) => {
@@ -95,14 +108,14 @@ export class OpenFolderComponent implements OnInit {
             .sort((a: any, b: any) => a.name.localeCompare(b.name))
             .map((e: any) => ({
               name: e.name,
-              path: path === '/' ? '' : path,
-              directory: true,
-              icon: 'folder'
+              path: path,
+              directory: true
             }));
         }
       },
       (error: any) => {
         this.loading = false;
+        this.errorMsg = 'Unable to read directory';
         this.entries = [];
       }
     );

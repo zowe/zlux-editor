@@ -8,104 +8,315 @@
   Copyright Contributors to the Zowe Project.
 */
 
-.open-dir-content {
-  min-height: 300px;
-  max-height: 400px;
+:host {
+  display: block;
 }
 
-.dir-browser {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  overflow: hidden;
+.open-dir-dialog {
   display: flex;
   flex-direction: column;
-  max-height: 280px;
+  height: 100%;
+  margin: -24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.dir-breadcrumb {
+// Header
+.dialog-header {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  padding: 6px 10px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 12px;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e8e8e8;
+  background: #fafafa;
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d1d1f;
+    letter-spacing: -0.2px;
+  }
+
+  .dialog-close-btn {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #86868b;
+    }
+
+    &:hover mat-icon {
+      color: #1d1d1f;
+    }
+  }
+}
+
+// Toolbar
+.dialog-toolbar {
+  padding: 10px 16px;
+  background: #f5f5f7;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.toolbar-nav {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 4px;
+}
+
+.nav-btn {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #515154;
+  }
+
+  &:disabled mat-icon {
+    color: #c7c7cc;
+  }
+}
+
+.breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  flex: 1;
   gap: 2px;
+  padding: 4px 8px;
+  background: #fff;
+  border-radius: 6px;
+  border: 1px solid #d2d2d7;
 }
 
 .crumb {
   cursor: pointer;
-  color: #1976d2;
-  padding: 2px 4px;
-  border-radius: 3px;
+  font-size: 12px;
+  color: #515154;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
 
   &:hover {
-    background: #e3f2fd;
-    text-decoration: underline;
+    background: #e8e8ed;
+    color: #1d1d1f;
+  }
+
+  &.crumb-active {
+    color: #1d1d1f;
+    font-weight: 500;
   }
 }
 
-.crumb-sep {
-  color: #999;
-  margin: 0 1px;
+.crumb-chevron {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  color: #c7c7cc;
+  flex-shrink: 0;
 }
 
-.dir-loading,
-.dir-empty {
-  padding: 20px;
-  text-align: center;
-  color: #666;
+.path-input-field {
+  width: 100%;
+
+  ::ng-deep .mat-mdc-form-field-infix {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    min-height: 28px !important;
+  }
+
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing {
+    border-color: #d2d2d7 !important;
+  }
+
+  ::ng-deep .mat-mdc-form-field-wrapper {
+    padding-bottom: 0;
+  }
+}
+
+.path-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #86868b;
+  margin-right: 4px;
+}
+
+// Browser
+.browser-container {
+  flex: 1;
+  min-height: 260px;
+  max-height: 340px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.browser-loading,
+.browser-error,
+.browser-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  gap: 8px;
+  color: #86868b;
   font-size: 13px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #c7c7cc;
+  }
 }
 
-.dir-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.browser-error mat-icon {
+  color: #ff3b30;
+}
+
+.browser-list {
   overflow-y: auto;
   flex: 1;
+  padding: 4px 0;
 }
 
-.dir-item {
+.browser-item {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 7px 16px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.1s;
+  border-radius: 6px;
+  margin: 1px 8px;
+  transition: background 0.12s;
 
   &:hover {
-    background: #e8f4fd;
+    background: #f5f5f7;
   }
 
   &.selected {
-    background: #bbdefb;
+    background: #007aff;
+
+    .item-name {
+      color: #fff;
+    }
+
+    .item-icon {
+      color: #fff;
+    }
+
+    .item-arrow {
+      color: rgba(255, 255, 255, 0.7);
+    }
   }
 }
 
-.dir-item-icon {
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  margin-right: 8px;
-  color: #fbc02d;
+.item-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  color: #4a9ff5;
+  flex-shrink: 0;
 }
 
-.dir-item-name {
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.selected-path {
+.item-name {
   flex: 1;
-  font-size: 12px;
-  color: #666;
+  font-size: 13px;
+  color: #1d1d1f;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.item-arrow {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #c7c7cc;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.browser-item:hover .item-arrow {
+  opacity: 1;
+}
+
+.browser-item.selected .item-arrow {
+  opacity: 1;
+}
+
+// Footer
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid #e8e8e8;
+  background: #fafafa;
+}
+
+.footer-path {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin-right: 12px;
+}
+
+.footer-path-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #86868b;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.footer-path-text {
+  font-size: 12px;
+  color: #515154;
   white-space: nowrap;
-  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+
+  button {
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+
+// Spinner animation
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 /*
