@@ -16,6 +16,8 @@ interface DirEntry {
   name: string;
   path: string;
   directory: boolean;
+  size: number;
+  dateModified: string;
 }
 
 interface Breadcrumb {
@@ -36,6 +38,13 @@ export class OpenFolderComponent implements OnInit {
   breadcrumbs: Breadcrumb[] = [];
   selectedEntry: DirEntry | null = null;
   errorMsg = '';
+  filterText = '';
+  sortField: 'name' | 'date' | 'size' = 'name';
+  sortDir: 'asc' | 'desc' = 'asc';
+
+  private history: string[] = [];
+  private historyIndex = -1;
+  private navigating = false;
 
   constructor(
     private http: HttpService,
@@ -46,6 +55,15 @@ export class OpenFolderComponent implements OnInit {
   ngOnInit() {
     const startDir = (this.data && this.data.directory) ? this.data.directory : '/';
     this.navigateTo(startDir);
+  }
+
+  get filteredEntries(): DirEntry[] {
+    let result = this.entries;
+    if (this.filterText) {
+      const filter = this.filterText.toLowerCase();
+      result = result.filter(e => e.name.toLowerCase().includes(filter));
+    }
+    return this.applySorting(result);
   }
 
   navigateTo(path: string) {
@@ -60,11 +78,20 @@ export class OpenFolderComponent implements OnInit {
     this.errorMsg = '';
     this.buildBreadcrumbs(path);
     this.fetchDirectory(path);
+
+    if (!this.navigating) {
+      if (this.historyIndex < this.history.length - 1) {
+        this.history = this.history.slice(0, this.historyIndex + 1);
+      }
+      this.history.push(path);
+      this.historyIndex = this.history.length - 1;
+    }
+    this.navigating = false;
   }
 
   navigateInto(entry: DirEntry) {
     if (entry.directory) {
-      const newPath = entry.path ? entry.path + '/' + entry.name : '/' + entry.name;
+      const newPath = this.value === '/' ? '/' + entry.name : this.value + '/' + entry.name;
       this.navigateTo(newPath);
     }
   }
@@ -72,15 +99,71 @@ export class OpenFolderComponent implements OnInit {
   selectEntry(entry: DirEntry) {
     if (entry.directory) {
       this.selectedEntry = entry;
-      this.value = entry.path ? entry.path + '/' + entry.name : '/' + entry.name;
+      this.value = this.getCurrentDir() === '/' ? '/' + entry.name : this.getCurrentDir() + '/' + entry.name;
     }
   }
 
-  goUp() {
-    if (this.value === '/') return;
-    const lastSlash = this.value.lastIndexOf('/');
-    const parent = lastSlash <= 0 ? '/' : this.value.substring(0, lastSlash);
-    this.navigateTo(parent);
+  goBack() {
+    if (this.canGoBack()) {
+      this.historyIndex--;
+      this.navigating = true;
+      this.navigateTo(this.history[this.historyIndex]);
+    }
+  }
+
+  goForward() {
+    if (this.canGoForward()) {
+      this.historyIndex++;
+      this.navigating = true;
+      this.navigateTo(this.history[this.historyIndex]);
+    }
+  }
+
+  canGoBack(): boolean {
+    return this.historyIndex > 0;
+  }
+
+  canGoForward(): boolean {
+    return this.historyIndex < this.history.length - 1;
+  }
+
+  sortBy(field: 'name' | 'date' | 'size') {
+    if (this.sortField === field) {
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir = 'asc';
+    }
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes == null || bytes === 0) return '—';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
+
+  private getCurrentDir(): string {
+    // The directory we're currently viewing (not the selected value)
+    const lastCrumb = this.breadcrumbs[this.breadcrumbs.length - 1];
+    return lastCrumb ? lastCrumb.path : '/';
+  }
+
+  private applySorting(entries: DirEntry[]): DirEntry[] {
+    const dir = this.sortDir === 'asc' ? 1 : -1;
+    return [...entries].sort((a, b) => {
+      switch (this.sortField) {
+        case 'name':
+          return dir * a.name.localeCompare(b.name);
+        case 'size':
+          return dir * ((a.size || 0) - (b.size || 0));
+        case 'date':
+          return dir * (a.dateModified || '').localeCompare(b.dateModified || '');
+        default:
+          return 0;
+      }
+    });
   }
 
   private buildBreadcrumbs(path: string) {
@@ -105,11 +188,12 @@ export class OpenFolderComponent implements OnInit {
         if (response && response.entries) {
           this.entries = response.entries
             .filter((e: any) => e.directory)
-            .sort((a: any, b: any) => a.name.localeCompare(b.name))
             .map((e: any) => ({
               name: e.name,
               path: path,
-              directory: true
+              directory: true,
+              size: e.size || 0,
+              dateModified: this.formatDate(e.lastModifiedDate || e.createdAt || e.mtime)
             }));
         }
       },
@@ -119,6 +203,18 @@ export class OpenFolderComponent implements OnInit {
         this.entries = [];
       }
     );
+  }
+
+  private formatDate(dateStr: string | undefined): string {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) +
+        ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateStr || '';
+    }
   }
 }
 

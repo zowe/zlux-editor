@@ -29,6 +29,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
     imports: [
@@ -40,6 +41,7 @@ import { MatButtonModule } from '@angular/material/button';
         MatDialogModule,
         MatSelectModule,
         MatButtonModule,
+        DragDropModule,
         ZluxTabbingModule,
     ],
     declarations: [

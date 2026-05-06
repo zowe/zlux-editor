@@ -9,68 +9,111 @@ Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
 <div class="open-dir-dialog" id="open-dir-dialog">
-  <!-- Header -->
-  <div class="dialog-header" id="open-dir-header">
-    <h2 id="open-dir-title">Open Directory</h2>
-    <button mat-icon-button mat-dialog-close class="dialog-close-btn" id="open-dir-close">
-      <mat-icon>close</mat-icon>
+  <!-- Draggable title bar -->
+  <div class="dialog-titlebar" id="open-dir-titlebar" cdkDrag cdkDragRootElement=".cdk-overlay-pane" cdkDragHandle>
+    <div class="titlebar-controls">
+      <button class="titlebar-btn close-btn" mat-dialog-close id="open-dir-close"></button>
+    </div>
+    <span class="titlebar-title" id="open-dir-title">Open Directory</span>
+    <div class="titlebar-spacer"></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="dialog-toolbar" id="open-dir-toolbar">
+    <div class="toolbar-left">
+      <button mat-icon-button class="toolbar-btn" (click)="goBack()" [disabled]="!canGoBack()" id="open-dir-back">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <button mat-icon-button class="toolbar-btn" (click)="goForward()" [disabled]="!canGoForward()" id="open-dir-forward">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+    <div class="toolbar-breadcrumbs" id="open-dir-breadcrumb">
+      @for (crumb of breadcrumbs; track crumb.path) {
+      <span class="crumb" (click)="navigateTo(crumb.path)" [class.crumb-active]="$last"
+        [attr.id]="'open-dir-crumb-' + $index">{{crumb.name}}</span>
+      @if (!$last) {
+      <mat-icon class="crumb-sep">chevron_right</mat-icon>
+      }
+      }
+    </div>
+    <div class="toolbar-right">
+      <mat-form-field appearance="outline" class="search-field" id="open-dir-search-field">
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
+        <input matInput type="text" [(ngModel)]="filterText" placeholder="Filter" id="open-dir-filter">
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Path bar -->
+  <div class="path-bar" id="open-dir-path-bar">
+    <mat-icon class="path-bar-icon">folder_open</mat-icon>
+    <input class="path-bar-input" type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
+      id="open-dir-input">
+    <button mat-icon-button class="path-bar-go" (click)="navigateTo(value)" id="open-dir-go">
+      <mat-icon>arrow_forward</mat-icon>
     </button>
   </div>
 
-  <!-- Toolbar: breadcrumbs + path input -->
-  <div class="dialog-toolbar" id="open-dir-toolbar">
-    <div class="toolbar-nav" id="open-dir-nav">
-      <button mat-icon-button class="nav-btn" (click)="goUp()" [disabled]="value === '/'" id="open-dir-up">
-        <mat-icon>arrow_upward</mat-icon>
-      </button>
-      <div class="breadcrumb-bar" id="open-dir-breadcrumb">
-        @for (crumb of breadcrumbs; track crumb.path) {
-        <span class="crumb" (click)="navigateTo(crumb.path)"
-          [class.crumb-active]="$last"
-          [attr.id]="'open-dir-crumb-' + $index">{{crumb.name}}</span>
-        @if (!$last) {
-        <mat-icon class="crumb-chevron">chevron_right</mat-icon>
-        }
-        }
-      </div>
+  <!-- Column headers -->
+  <div class="column-headers" id="open-dir-columns">
+    <div class="col-name col-header" (click)="sortBy('name')" id="open-dir-sort-name">
+      Name
+      @if (sortField === 'name') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      }
     </div>
-    <mat-form-field appearance="outline" class="path-input-field" id="open-dir-path-field">
-      <mat-icon matPrefix class="path-icon">folder_open</mat-icon>
-      <input matInput type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
-        placeholder="Enter path..." id="open-dir-input">
-    </mat-form-field>
+    <div class="col-date col-header" (click)="sortBy('date')" id="open-dir-sort-date">
+      Date Modified
+      @if (sortField === 'date') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      }
+    </div>
+    <div class="col-size col-header" (click)="sortBy('size')" id="open-dir-sort-size">
+      Size
+      @if (sortField === 'size') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward'}}</mat-icon>
+      }
+    </div>
   </div>
 
   <!-- File browser -->
   <div class="browser-container" id="open-dir-browser">
     @if (loading) {
-    <div class="browser-loading" id="open-dir-loading">
+    <div class="browser-status" id="open-dir-loading">
       <mat-icon class="spin">sync</mat-icon>
-      <span>Loading directory...</span>
+      <span>Loading...</span>
     </div>
     }
     @if (!loading && errorMsg) {
-    <div class="browser-error" id="open-dir-error">
+    <div class="browser-status error" id="open-dir-error">
       <mat-icon>error_outline</mat-icon>
       <span>{{errorMsg}}</span>
     </div>
     }
-    @if (!loading && !errorMsg && entries.length === 0) {
-    <div class="browser-empty" id="open-dir-empty">
+    @if (!loading && !errorMsg && filteredEntries.length === 0) {
+    <div class="browser-status" id="open-dir-empty">
       <mat-icon>folder_off</mat-icon>
-      <span>No subdirectories</span>
+      <span>No items</span>
     </div>
     }
     @if (!loading && !errorMsg) {
     <div class="browser-list" id="open-dir-list">
-      @for (entry of entries; track entry.name) {
-      <div class="browser-item" [class.selected]="selectedEntry === entry"
+      @for (entry of filteredEntries; track entry.name) {
+      <div class="browser-row" [class.selected]="selectedEntry === entry"
           [attr.id]="'open-dir-item-' + entry.name"
           (click)="selectEntry(entry)"
           (dblclick)="navigateInto(entry)">
-        <mat-icon class="item-icon">folder</mat-icon>
-        <span class="item-name">{{entry.name}}</span>
-        <mat-icon class="item-arrow">chevron_right</mat-icon>
+        <div class="col-name">
+          <mat-icon class="row-icon" [class.folder]="entry.directory">{{entry.directory ? 'folder' : 'insert_drive_file'}}</mat-icon>
+          <span class="row-name">{{entry.name}}</span>
+        </div>
+        <div class="col-date">
+          <span class="row-meta">{{entry.dateModified || '—'}}</span>
+        </div>
+        <div class="col-size">
+          <span class="row-meta">{{entry.directory ? '—' : formatSize(entry.size)}}</span>
+        </div>
       </div>
       }
     </div>
@@ -79,13 +122,12 @@ Copyright Contributors to the Zowe Project.
 
   <!-- Footer -->
   <div class="dialog-footer" id="open-dir-footer">
-    <div class="footer-path" id="open-dir-selected-path">
-      <mat-icon class="footer-path-icon">subdirectory_arrow_right</mat-icon>
-      <span class="footer-path-text">{{value}}</span>
+    <div class="footer-info">
+      <span class="footer-count" id="open-dir-count">{{filteredEntries.length}} items</span>
     </div>
     <div class="footer-actions">
-      <button mat-button mat-dialog-close id="open-dir-cancel">Cancel</button>
-      <button mat-flat-button color="primary" [mat-dialog-close]="value"
+      <button mat-button class="footer-btn cancel-btn" mat-dialog-close id="open-dir-cancel">Cancel</button>
+      <button mat-flat-button class="footer-btn open-btn" color="primary" [mat-dialog-close]="value"
         [disabled]="!value" id="open-dir-submit">Open</button>
     </div>
   </div>
