@@ -10,14 +10,14 @@ Copyright Contributors to the Zowe Project.
 <zlux-tab-trap></zlux-tab-trap>
 <div class="d-flex flex-align-items-start">
   <div>
-    <h2 mat-dialog-title>Open Directory</h2>
+    <h2 mat-dialog-title id="open-dir-title">Open Directory</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <button mat-dialog-close class="close-dialog-btn" id="open-dir-close"><i class="fa fa-close"></i></button>
 </div>
 <mat-dialog-content>
-  <mat-form-field>
+  <mat-form-field appearance="outline" style="width: 100%">
     <mat-label>Directory</mat-label>
-    <input matInput type="text" tabindex="2" [(ngModel)]="value">
+    <input matInput type="text" tabindex="2" [(ngModel)]="value" id="open-dir-input">
     @if (value) {
     <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
       <mat-icon tabindex="-1">close</mat-icon>
@@ -27,7 +27,7 @@ Copyright Contributors to the Zowe Project.
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
-    [disabled]="!value">Open</button>
+    [disabled]="!value" id="open-dir-submit">Open</button>
 </mat-dialog-actions>
 
 <!--

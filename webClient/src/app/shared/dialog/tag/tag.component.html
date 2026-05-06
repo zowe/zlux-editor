@@ -9,14 +9,14 @@ Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
 <div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-  <h2 mat-dialog-title>Untagged File Found</h2>
+  <button mat-dialog-close class="close-dialog-btn" id="tag-close"><i class="fa fa-close"></i></button>
+  <h2 mat-dialog-title id="tag-title">Untagged File Found</h2>
 </div>
 <mat-dialog-content>
   <p> <b>{{data.fileName}}</b> is currently untagged. Please select a tag for it in USS. </p>
   Encoding:
-  <mat-form-field>
-    <mat-select class="select-encoding" placeholder="Select An Encoding" [(ngModel)]="results.encoding">
+  <mat-form-field appearance="outline" style="width: 100%">
+    <mat-select class="select-encoding" placeholder="Select An Encoding" [(ngModel)]="results.encoding" id="tag-encoding-select">
       @for (option of options; track option) {
       <mat-option [value]="option">
         {{option}}</mat-option>
@@ -26,7 +26,7 @@ Copyright Contributors to the Zowe Project.
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results"
-    [disabled]=!results.encoding>Save</button>
+    [disabled]=!results.encoding id="tag-submit">Save</button>
 </mat-dialog-actions>
 <!--
 This program and the accompanying materials are

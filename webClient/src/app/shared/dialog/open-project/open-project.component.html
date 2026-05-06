@@ -10,14 +10,14 @@ Copyright Contributors to the Zowe Project.
 <zlux-tab-trap></zlux-tab-trap>
 <div class="d-flex flex-align-items-start">
   <div>
-    <h2 mat-dialog-title>Open Project</h2>
+    <h2 mat-dialog-title id="open-project-title">Open Project</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <button mat-dialog-close class="close-dialog-btn" id="open-project-close"><i class="fa fa-close"></i></button>
 </div>
 <mat-dialog-content>
   Choose a project:
-  <mat-form-field>
-    <mat-select [(value)]="selected">
+  <mat-form-field appearance="outline" style="width: 100%">
+    <mat-select [(value)]="selected" id="open-project-select">
       @for (project of projectList; track project) {
       <mat-option [value]="project">
         {{ project.name }}
@@ -28,7 +28,7 @@ Copyright Contributors to the Zowe Project.
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="selected"
-    [disabled]="!selected">Open</button>
+    [disabled]="!selected" id="open-project-submit">Open</button>
 </mat-dialog-actions>
 
 <!--
