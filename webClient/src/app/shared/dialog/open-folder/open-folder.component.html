@@ -14,18 +14,48 @@ Copyright Contributors to the Zowe Project.
   </div>
   <button mat-dialog-close class="close-dialog-btn" id="open-dir-close"><i class="fa fa-close"></i></button>
 </div>
-<mat-dialog-content>
+<mat-dialog-content class="open-dir-content">
   <mat-form-field appearance="outline" style="width: 100%">
     <mat-label>Directory</mat-label>
-    <input matInput type="text" tabindex="2" [(ngModel)]="value" id="open-dir-input">
+    <input matInput type="text" tabindex="2" [(ngModel)]="value" (keydown.enter)="navigateTo(value)" id="open-dir-input">
     @if (value) {
     <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
       <mat-icon tabindex="-1">close</mat-icon>
     </button>
     }
   </mat-form-field>
+  <div class="dir-browser" id="open-dir-browser">
+    <div class="dir-breadcrumb" id="open-dir-breadcrumb">
+      @for (crumb of breadcrumbs; track crumb.path) {
+      <span class="crumb" (click)="navigateTo(crumb.path)" [attr.id]="'open-dir-crumb-' + crumb.name">{{crumb.name}}</span>
+      @if (!$last) {
+      <span class="crumb-sep">/</span>
+      }
+      }
+    </div>
+    @if (loading) {
+    <div class="dir-loading">Loading...</div>
+    }
+    @if (!loading && entries.length === 0) {
+    <div class="dir-empty">No subdirectories found</div>
+    }
+    @if (!loading) {
+    <ul class="dir-list" id="open-dir-list">
+      @for (entry of entries; track entry.name) {
+      <li class="dir-item" [class.selected]="selectedEntry === entry"
+          [attr.id]="'open-dir-item-' + entry.name"
+          (click)="selectEntry(entry)"
+          (dblclick)="navigateInto(entry)">
+        <mat-icon class="dir-item-icon">{{entry.icon}}</mat-icon>
+        <span class="dir-item-name">{{entry.name}}</span>
+      </li>
+      }
+    </ul>
+    }
+  </div>
 </mat-dialog-content>
 <mat-dialog-actions>
+  <span class="selected-path" id="open-dir-selected">{{value}}</span>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
     [disabled]="!value" id="open-dir-submit">Open</button>
 </mat-dialog-actions>

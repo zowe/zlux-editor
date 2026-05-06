@@ -540,7 +540,7 @@ export class MenuBarComponent implements OnInit, OnDestroy {
 
   openDirectory() {
     let openDirRef = this.dialog.open(OpenFolderComponent, {
-      width: '500px'
+      width: '550px'
     });
 
     openDirRef.afterClosed().subscribe(result => {
