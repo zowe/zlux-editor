@@ -8,6 +8,20 @@
   Copyright Contributors to the Zowe Project.
 */
 
+$accent: #2563eb;
+$accent-hover: #1d4ed8;
+$border: #e2e8f0;
+$bg-header: #f8fafc;
+$bg-toolbar: #ffffff;
+$bg-body: #ffffff;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$text-muted: #94a3b8;
+$row-hover: #f1f5f9;
+$row-selected: #2563eb;
+$folder-color: #f59e0b;
+$radius: 8px;
+
 :host {
   display: block;
   height: 100%;
@@ -18,19 +32,36 @@
   flex-direction: column;
   height: 100%;
   margin: -24px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: $bg-body;
   position: relative;
+  border-radius: $radius;
+  overflow: hidden;
+}
+
+// ── Resize edges ──
+.resize-edge {
+  position: absolute;
+  z-index: 100;
+
+  &.edge-top { top: -3px; left: 6px; right: 6px; height: 6px; cursor: ns-resize; }
+  &.edge-bottom { bottom: -3px; left: 6px; right: 6px; height: 6px; cursor: ns-resize; }
+  &.edge-left { left: -3px; top: 6px; bottom: 6px; width: 6px; cursor: ew-resize; }
+  &.edge-right { right: -3px; top: 6px; bottom: 6px; width: 6px; cursor: ew-resize; }
+  &.edge-top-left { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+  &.edge-top-right { top: -3px; right: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+  &.edge-bottom-left { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+  &.edge-bottom-right { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
 }
 
 // ── Header ──
 .dialog-header {
   display: flex;
   align-items: center;
-  padding: 8px 8px 8px 12px;
-  background: #f0f0f0;
-  border-bottom: 1px solid #ddd;
-  gap: 4px;
+  padding: 6px 6px 6px 10px;
+  background: $bg-header;
+  border-bottom: 1px solid $border;
+  gap: 2px;
   cursor: grab;
   user-select: none;
   flex-shrink: 0;
@@ -41,18 +72,20 @@
 }
 
 .nav-btn {
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
   flex-shrink: 0;
 
   mat-icon {
-    font-size: 20px;
-    color: #555;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $text-secondary;
   }
 
   &:disabled mat-icon {
-    color: #bbb;
+    color: $text-muted;
   }
 }
 
@@ -62,97 +95,114 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  gap: 2px;
-  padding: 0 8px;
+  gap: 1px;
+  padding: 0 6px;
 }
 
 .crumb {
-  font-size: 13px;
-  color: #0066cc;
+  font-size: 12px;
+  color: $accent;
   cursor: pointer;
   white-space: nowrap;
-  padding: 2px 4px;
-  border-radius: 3px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
 
   &:hover {
-    background: rgba(0, 102, 204, 0.08);
+    background: rgba($accent, 0.08);
   }
 
   &.crumb-active {
-    color: #333;
-    font-weight: 500;
+    color: $text-primary;
+    font-weight: 600;
     cursor: default;
     &:hover { background: transparent; }
   }
 }
 
 .crumb-sep {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
-  color: #999;
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: $text-muted;
   flex-shrink: 0;
 }
 
 .close-btn {
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 !important;
   flex-shrink: 0;
 
+  ::ng-deep .mat-mdc-button-persistent-ripple,
+  ::ng-deep .mat-ripple {
+    border-radius: 50%;
+  }
+
   mat-icon {
-    font-size: 18px;
-    color: #666;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: $text-secondary;
   }
 
   &:hover mat-icon {
-    color: #333;
+    color: $text-primary;
   }
 }
 
-// ── Toolbar (path + filter) ──
+// ── Toolbar ──
 .dialog-toolbar {
   display: flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 6px 10px;
   gap: 8px;
-  background: #fafafa;
-  border-bottom: 1px solid #e5e5e5;
+  background: $bg-toolbar;
+  border-bottom: 1px solid $border;
   flex-shrink: 0;
 }
 
 .path-input {
   flex: 1;
   min-width: 0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 13px;
-  font-family: 'Menlo', 'Consolas', monospace;
-  color: #333;
-  background: #fff;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: $text-primary;
+  background: #f8fafc;
   outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
-    border-color: #0066cc;
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba($accent, 0.1);
+    background: #fff;
   }
 }
 
 .filter-input {
-  width: 120px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 5px 10px;
+  width: 110px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 10px;
   font-size: 12px;
-  color: #333;
-  background: #fff;
+  color: $text-primary;
+  background: #f8fafc;
   outline: none;
   flex-shrink: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
-    border-color: #0066cc;
-    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.12);
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba($accent, 0.1);
+    background: #fff;
+  }
+
+  &::placeholder {
+    color: $text-muted;
   }
 }
 
@@ -160,9 +210,9 @@
 .column-headers {
   display: flex;
   align-items: center;
-  padding: 4px 16px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 5px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid $border;
   flex-shrink: 0;
 }
 
@@ -171,15 +221,16 @@
   align-items: center;
   font-size: 11px;
   font-weight: 600;
-  color: #666;
+  color: $text-secondary;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   cursor: pointer;
   gap: 2px;
   user-select: none;
+  transition: color 0.15s;
 
   &:hover {
-    color: #333;
+    color: $text-primary;
   }
 }
 
@@ -187,7 +238,7 @@
   font-size: 16px !important;
   width: 16px !important;
   height: 16px !important;
-  color: #0066cc;
+  color: $accent;
 }
 
 .col-name {
@@ -199,7 +250,7 @@
 }
 
 .col-date {
-  width: 160px;
+  width: 150px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -208,7 +259,7 @@
 }
 
 .col-size {
-  width: 70px;
+  width: 65px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -230,19 +281,19 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  gap: 8px;
-  color: #999;
+  gap: 10px;
+  color: $text-muted;
   font-size: 13px;
 
   mat-icon {
-    font-size: 32px;
-    width: 32px;
-    height: 32px;
-    color: #ccc;
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #cbd5e1;
   }
 
   &.error mat-icon {
-    color: #e53935;
+    color: #ef4444;
   }
 }
 
@@ -254,16 +305,16 @@
 .browser-row {
   display: flex;
   align-items: center;
-  padding: 6px 16px;
+  padding: 7px 16px;
   cursor: pointer;
-  transition: background 0.1s;
+  transition: background 0.12s;
 
   &:hover {
-    background: #f5f8ff;
+    background: $row-hover;
   }
 
   &.selected {
-    background: #0066cc;
+    background: $row-selected;
 
     .row-name,
     .row-meta {
@@ -271,12 +322,12 @@
     }
 
     .row-icon {
-      color: #fff !important;
+      color: #fde68a !important;
     }
   }
 
   & + .browser-row {
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid #f1f5f9;
   }
 }
 
@@ -288,14 +339,14 @@
   flex-shrink: 0;
 
   &.folder {
-    color: #f9a825;
+    color: $folder-color;
   }
 }
 
 .row-name {
   flex: 1;
   font-size: 13px;
-  color: #222;
+  color: $text-primary;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -304,7 +355,7 @@
 
 .row-meta {
   font-size: 12px;
-  color: #888;
+  color: $text-secondary;
   white-space: nowrap;
 }
 
@@ -314,14 +365,14 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: #f5f5f5;
-  border-top: 1px solid #e0e0e0;
+  background: #f8fafc;
+  border-top: 1px solid $border;
   flex-shrink: 0;
 }
 
 .footer-count {
   font-size: 12px;
-  color: #888;
+  color: $text-secondary;
 }
 
 .footer-actions {
@@ -331,43 +382,27 @@
 
 .footer-btn {
   font-size: 13px !important;
-  border-radius: 4px !important;
-  padding: 4px 14px !important;
-  min-height: 28px !important;
+  border-radius: 6px !important;
+  padding: 5px 16px !important;
+  min-height: 30px !important;
   line-height: 20px !important;
 }
 
 .cancel-btn {
-  color: #555 !important;
+  color: $text-secondary !important;
 }
 
 .open-btn {
-  background: #0066cc !important;
+  background: $accent !important;
   color: #fff !important;
 
-  &:disabled {
-    background: #ccc !important;
+  &:hover {
+    background: $accent-hover !important;
   }
-}
 
-// ── Resize handle ──
-.resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
-
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
-    right: 3px;
-    width: 8px;
-    height: 8px;
-    border-right: 2px solid #bbb;
-    border-bottom: 2px solid #bbb;
+  &:disabled {
+    background: #cbd5e1 !important;
+    color: #fff !important;
   }
 }
 

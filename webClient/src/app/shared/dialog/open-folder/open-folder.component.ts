@@ -58,10 +58,13 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
 
   // Resize state
   private resizing = false;
+  private resizeEdge = '';
   private resizeStartX = 0;
   private resizeStartY = 0;
   private resizeStartW = 0;
   private resizeStartH = 0;
+  private resizeStartLeft = 0;
+  private resizeStartTop = 0;
   private boundResizeMove = this.onResizeMove.bind(this);
   private boundResizeEnd = this.onResizeEnd.bind(this);
 
@@ -111,7 +114,8 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
 
   navigateInto(entry: DirEntry) {
     if (entry.directory) {
-      const newPath = this.value === '/' ? '/' + entry.name : this.value + '/' + entry.name;
+      const currentDir = this.getCurrentDir();
+      const newPath = currentDir === '/' ? '/' + entry.name : currentDir + '/' + entry.name;
       this.navigateTo(newPath);
     }
   }
@@ -119,7 +123,8 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
   selectEntry(entry: DirEntry) {
     if (entry.directory) {
       this.selectedEntry = entry;
-      this.value = this.getCurrentDir() === '/' ? '/' + entry.name : this.getCurrentDir() + '/' + entry.name;
+      const currentDir = this.getCurrentDir();
+      this.value = currentDir === '/' ? '/' + entry.name : currentDir + '/' + entry.name;
     }
   }
 
@@ -206,16 +211,22 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
     document.removeEventListener('mouseup', this.boundResizeEnd);
   }
 
-  // Resize implementation
-  onResizeStart(event: MouseEvent) {
+  // Resize implementation - supports all edges
+  onResizeStart(event: MouseEvent, edge: string) {
     this.overlayPane = (this.el.nativeElement as HTMLElement).closest('.cdk-overlay-pane') as HTMLElement;
     if (!this.overlayPane) return;
 
     this.resizing = true;
+    this.resizeEdge = edge;
     this.resizeStartX = event.clientX;
     this.resizeStartY = event.clientY;
     this.resizeStartW = this.overlayPane.offsetWidth;
     this.resizeStartH = this.overlayPane.offsetHeight;
+
+    const transform = this.overlayPane.style.transform;
+    const match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+    this.resizeStartLeft = match ? parseFloat(match[1]) : 0;
+    this.resizeStartTop = match ? parseFloat(match[2]) : 0;
 
     document.addEventListener('mousemove', this.boundResizeMove);
     document.addEventListener('mouseup', this.boundResizeEnd);
@@ -225,10 +236,23 @@ export class OpenFolderComponent implements OnInit, OnDestroy {
 
   private onResizeMove(event: MouseEvent) {
     if (!this.resizing || !this.overlayPane) return;
-    const newW = Math.max(400, this.resizeStartW + (event.clientX - this.resizeStartX));
-    const newH = Math.max(300, this.resizeStartH + (event.clientY - this.resizeStartY));
+    const dx = event.clientX - this.resizeStartX;
+    const dy = event.clientY - this.resizeStartY;
+    const edge = this.resizeEdge;
+
+    let newW = this.resizeStartW;
+    let newH = this.resizeStartH;
+    let newLeft = this.resizeStartLeft;
+    let newTop = this.resizeStartTop;
+
+    if (edge.includes('r')) { newW = Math.max(400, this.resizeStartW + dx); }
+    if (edge.includes('l')) { newW = Math.max(400, this.resizeStartW - dx); newLeft = this.resizeStartLeft + (this.resizeStartW - newW); }
+    if (edge.includes('b')) { newH = Math.max(300, this.resizeStartH + dy); }
+    if (edge.includes('t')) { newH = Math.max(300, this.resizeStartH - dy); newTop = this.resizeStartTop + (this.resizeStartH - newH); }
+
     this.overlayPane.style.width = newW + 'px';
     this.overlayPane.style.height = newH + 'px';
+    this.overlayPane.style.transform = `translate(${newLeft}px, ${newTop}px)`;
   }
 
   private onResizeEnd() {

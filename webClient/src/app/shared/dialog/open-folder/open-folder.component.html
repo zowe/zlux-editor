@@ -7,9 +7,18 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zowe Project.
 -->
-<zlux-tab-trap></zlux-tab-trap>
 <div class="open-dir-dialog" id="open-dir-dialog">
-  <!-- Header with nav, breadcrumbs, and close -->
+  <!-- Resize edges (all borders) -->
+  <div class="resize-edge edge-top" (mousedown)="onResizeStart($event, 't')"></div>
+  <div class="resize-edge edge-bottom" (mousedown)="onResizeStart($event, 'b')"></div>
+  <div class="resize-edge edge-left" (mousedown)="onResizeStart($event, 'l')"></div>
+  <div class="resize-edge edge-right" (mousedown)="onResizeStart($event, 'r')"></div>
+  <div class="resize-edge edge-top-left" (mousedown)="onResizeStart($event, 'tl')"></div>
+  <div class="resize-edge edge-top-right" (mousedown)="onResizeStart($event, 'tr')"></div>
+  <div class="resize-edge edge-bottom-left" (mousedown)="onResizeStart($event, 'bl')"></div>
+  <div class="resize-edge edge-bottom-right" (mousedown)="onResizeStart($event, 'br')"></div>
+
+  <!-- Header: drag handle + nav + breadcrumbs + close -->
   <div class="dialog-header" id="open-dir-header" (mousedown)="onDragStart($event)">
     <button mat-icon-button class="nav-btn" (click)="goBack()" [disabled]="!canGoBack()" id="open-dir-back">
       <mat-icon>chevron_left</mat-icon>
@@ -32,10 +41,10 @@ Copyright Contributors to the Zowe Project.
     </button>
   </div>
 
-  <!-- Path input + filter -->
+  <!-- Toolbar: path + filter -->
   <div class="dialog-toolbar" id="open-dir-toolbar">
     <input class="path-input" type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
-      placeholder="/path/to/directory" id="open-dir-input">
+      placeholder="/path/to/directory" spellcheck="false" id="open-dir-input">
     <input class="filter-input" type="text" [(ngModel)]="filterText"
       placeholder="Filter..." id="open-dir-filter">
   </div>
@@ -79,7 +88,7 @@ Copyright Contributors to the Zowe Project.
     @if (!loading && !errorMsg && filteredEntries.length === 0) {
     <div class="browser-status" id="open-dir-empty">
       <mat-icon>folder_off</mat-icon>
-      <span>No items</span>
+      <span>Empty folder</span>
     </div>
     }
     @if (!loading && !errorMsg) {
@@ -110,13 +119,10 @@ Copyright Contributors to the Zowe Project.
     <span class="footer-count" id="open-dir-count">{{filteredEntries.length}} items</span>
     <div class="footer-actions">
       <button mat-button class="footer-btn cancel-btn" mat-dialog-close id="open-dir-cancel">Cancel</button>
-      <button mat-flat-button class="footer-btn open-btn" color="primary" [mat-dialog-close]="value"
+      <button mat-flat-button class="footer-btn open-btn" [mat-dialog-close]="value"
         [disabled]="!value" id="open-dir-submit">Open</button>
     </div>
   </div>
-
-  <!-- Resize handle -->
-  <div class="resize-handle" id="open-dir-resize" (mousedown)="onResizeStart($event)"></div>
 </div>
 
 <!--
