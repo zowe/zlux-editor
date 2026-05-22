@@ -10,14 +10,34 @@
 -->
 
 <div class="file-explorer-container">
+  <div class="project-tree-header">
+    <button mat-icon-button aria-label="Create File" title="Create File" (click)="createFile()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
   <zlux-file-tree #fileExplorer
     (nodeClick)="onNodeClick($event)"
     (openInNewTab)="onOpenInNewTab($event)"
     (deleteClick)="onDeleteClick($event)"
     (pathChanged)="onPathChanged($event)"
+    (rightClick)="onRightClick($event)"
     [style]="{'height': '100%', 'padding-bottom': '100px'}"
   >
   </zlux-file-tree>
+
+  <!-- Right-click context menu -->
+  @if (showContextMenu) {
+  <div class="context-menu"
+    [style.top.px]="contextMenuPosition.y"
+    [style.left.px]="contextMenuPosition.x">
+    @if (contextMenuItems.createMember) {
+    <button class="context-menu-item" (click)="onContextCreateMember()">
+      <mat-icon>post_add</mat-icon>
+      <span>Create Member</span>
+    </button>
+    }
+  </div>
+  }
 </div>
 
 

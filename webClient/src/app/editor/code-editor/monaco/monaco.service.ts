@@ -599,6 +599,36 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
 
+  private saveAsDatasetMember(fileContext: ProjectContext, result: any, obs: any) {
+    const datasetName = result.datasetName;
+    const memberName = result.memberName;
+    const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
+    const requestUrl = memberName
+      ? ZoweZLUX.uriBroker.datasetContentsUri(datasetName, memberName)
+      : ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
+
+    const contents = fileContext.model.contents ? fileContext.model.contents.split('\n') : [''];
+
+    this.http.put(requestUrl, { records: contents }).subscribe(
+      (res: any) => {
+        this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
+          { duration: MessageDuration.Medium, panelClass: 'center' });
+        // Update file context to reflect it's now a dataset
+        fileContext.model.isDataset = true;
+        fileContext.model.fileName = fullName;
+        fileContext.model.name = memberName || datasetName;
+        fileContext.model.path = datasetName;
+        fileContext.temp = false;
+        obs.next('Save');
+      },
+      (error: any) => {
+        this.snackBar.open(`Failed to save to dataset ${fullName}: ${error.error || error.message}`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        obs.next('Error');
+      }
+    );
+  }
+
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset) {
@@ -622,6 +652,17 @@ export class MonacoService implements OnDestroy {
             }
           });
           saveRef.afterClosed().subscribe(result => {
+            if (!result) {
+              obs.next('Cancel');
+              return;
+            }
+
+            // Handle "Save as Dataset/Member" option
+            if (result.saveType === 'dataset') {
+              this.saveAsDatasetMember(fileContext, result, obs);
+              return;
+            }
+
             // Check if file already exists at destination
             this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
               const title = `"${result.fileName}" already exists. Do you want to replace it?`;

@@ -21,6 +21,8 @@ import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
+import { MessageDuration } from '../../shared/message-duration';
+import { CreateMemberDialogComponent } from '../../shared/dialog/create-member/create-member-dialog.component';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
@@ -28,11 +30,20 @@ import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
   styleUrls: ['./project-tree.component.scss'],
+  host: {
+    '(document:click)': 'onDocumentClick($event)',
+  }
 })
 export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
+
+  // Context menu state
+  showContextMenu = false;
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMenuItems = { createMember: false };
+  private rightClickedNode: any = null;
 
   nodes: ProjectStructure[];
   options = {
@@ -297,6 +308,46 @@ export class ProjectTreeComponent {
     });
   }
 
+  createFile() {
+    this.editorControl.createFile();
+  }
+
+  private openCreateMemberDialog(datasetName: string) {
+    const dialogRef = this.dialog.open(CreateMemberDialogComponent, {
+      width: '400px',
+      data: { datasetName: datasetName }
+    });
+
+    dialogRef.afterClosed().subscribe(memberName => {
+      if (memberName) {
+        const fullName = `${datasetName}(${memberName})`;
+        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(datasetName, memberName);
+        this.httpService.put(requestUrl, { records: [] }).subscribe(
+          (res: any) => {
+            this.snackBarService.open(`Member ${fullName} created successfully.`, 'Dismiss',
+              { duration: MessageDuration.Medium, panelClass: 'center' });
+            // Open the new member in the editor
+            const memberData: ProjectStructure = {
+              id: String(Date.now()),
+              name: memberName,
+              fileName: memberName,
+              path: datasetName,
+              hasChildren: false,
+              isDataset: true
+            };
+            this.editorControl.openBuffer('', memberData).subscribe(x => {
+              this.log.debug(`New member ${fullName} opened in editor.`);
+            });
+          },
+          (error: any) => {
+            this.snackBarService.open(`Failed to create member: ${error.error || error.message}`, 'Dismiss',
+              { duration: MessageDuration.Long, panelClass: 'center' });
+          }
+        );
+      }
+    });
+  }
+
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
@@ -326,6 +377,52 @@ export class ProjectTreeComponent {
       }
       return 'assignment';
     }
+  }
+
+  onRightClick($event: any) {
+    if ($event && $event.event) {
+      $event.event.preventDefault();
+      this.contextMenuPosition = {
+        x: $event.event.clientX || $event.event.pageX,
+        y: $event.event.clientY || $event.event.pageY
+      };
+    }
+
+    this.rightClickedNode = $event;
+
+    // Check if the right-clicked item is a PDS/PDSE (has children = contains members)
+    const data = $event.data || $event;
+    const isPDS = data && (data.hasChildren || data.isPDSDir ||
+      (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE')));
+
+    this.contextMenuItems = {
+      createMember: isPDS
+    };
+
+    this.showContextMenu = true;
+  }
+
+  onContextCreateMember() {
+    this.closeContextMenu();
+    if (this.rightClickedNode) {
+      const data = this.rightClickedNode.data || this.rightClickedNode;
+      const datasetName = data.path || data.name || data.label || '';
+      if (datasetName) {
+        this.openCreateMemberDialog(datasetName);
+      } else {
+        this.snackBarService.open('Could not determine dataset name from selection.', 'Dismiss',
+          { duration: MessageDuration.Medium, panelClass: 'center' });
+      }
+    }
+  }
+
+  closeContextMenu() {
+    this.showContextMenu = false;
+    this.rightClickedNode = null;
+  }
+
+  onDocumentClick($event: any) {
+    this.closeContextMenu();
   }
 }
 

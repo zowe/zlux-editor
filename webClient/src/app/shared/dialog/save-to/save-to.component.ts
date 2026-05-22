@@ -13,13 +13,20 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'app-save-to',
-  templateUrl: './save-to.component.html'
+  templateUrl: './save-to.component.html',
 })
 export class SaveToComponent {
+  saveAsDataset = false;
+
   results = {
     directory: '',
     fileName: '',
     encoding: '',
+  };
+
+  datasetResults = {
+    datasetName: '',
+    memberName: '',
   };
 
   options: string[];
@@ -36,6 +43,26 @@ export class SaveToComponent {
     }
     if (this.data.fileDirectory) {
       this.results.directory = this.data.fileDirectory;
+    }
+  }
+
+  isValid(): boolean {
+    if (!this.saveAsDataset) {
+      return !!(this.results.fileName && this.results.directory && this.results.encoding);
+    } else {
+      return !!(this.datasetResults.datasetName);
+    }
+  }
+
+  getDialogResult(): any {
+    if (!this.saveAsDataset) {
+      return this.results;
+    } else {
+      return {
+        saveType: 'dataset',
+        datasetName: this.datasetResults.datasetName,
+        memberName: this.datasetResults.memberName
+      };
     }
   }
 }
