@@ -42,6 +42,7 @@ export class ProjectTreeComponent {
   showContextMenu = false;
   contextMenuPosition = { x: 0, y: 0 };
   private rightClickedNode: any = null;
+  private pendingContextPosition: { x: number, y: number } | null = null;
 
   nodes: ProjectStructure[];
   options = {
@@ -377,10 +378,22 @@ export class ProjectTreeComponent {
     }
   }
 
+  /**
+   * Synchronously prevents the browser native context menu and stores cursor position.
+   * Must be bound to (contextmenu) on the wrapper div so preventDefault runs immediately.
+   */
+  onTreeContextMenu($event: MouseEvent) {
+    $event.preventDefault();
+    $event.stopPropagation();
+    this.pendingContextPosition = { x: $event.clientX, y: $event.clientY };
+  }
+
   onRightClick($event: any) {
-    if ($event && $event.event) {
-      $event.event.preventDefault();
-      $event.event.stopPropagation();
+    // Use the position captured synchronously in onTreeContextMenu
+    if (this.pendingContextPosition) {
+      this.contextMenuPosition = this.pendingContextPosition;
+      this.pendingContextPosition = null;
+    } else if ($event && $event.event) {
       this.contextMenuPosition = {
         x: $event.event.clientX || $event.event.pageX,
         y: $event.event.clientY || $event.event.pageY

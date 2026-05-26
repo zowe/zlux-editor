@@ -13,21 +13,24 @@
   <div class="project-tree-header">
     <button class="create-file-btn" aria-label="Create File" title="Create File" (click)="createFile()">+</button>
   </div>
-  <zlux-file-tree #fileExplorer
-    (nodeClick)="onNodeClick($event)"
-    (openInNewTab)="onOpenInNewTab($event)"
-    (deleteClick)="onDeleteClick($event)"
-    (pathChanged)="onPathChanged($event)"
-    (rightClick)="onRightClick($event)"
-    [style]="{'flex': '1', 'overflow': 'auto', 'padding-bottom': '100px'}"
-  >
-  </zlux-file-tree>
+  <div class="file-tree-wrapper" (contextmenu)="onTreeContextMenu($event)">
+    <zlux-file-tree #fileExplorer
+      (nodeClick)="onNodeClick($event)"
+      (openInNewTab)="onOpenInNewTab($event)"
+      (deleteClick)="onDeleteClick($event)"
+      (pathChanged)="onPathChanged($event)"
+      (rightClick)="onRightClick($event)"
+      [style]="{'height': '100%'}"
+    >
+    </zlux-file-tree>
+  </div>
 
   <!-- Right-click context menu -->
-  @if (showContextMenu) {
+  @if (showContextMenu && contextMenuPosition.x > 0) {
   <div class="context-menu"
     [style.top.px]="contextMenuPosition.y"
-    [style.left.px]="contextMenuPosition.x">
+    [style.left.px]="contextMenuPosition.x"
+    (click)="$event.stopPropagation()">
     <button class="context-menu-item" (click)="onContextCreateMember()">
       <mat-icon>post_add</mat-icon>
       <span>Create Member</span>

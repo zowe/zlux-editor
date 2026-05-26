@@ -181,6 +181,12 @@
     flex-direction: column;
   }
 
+  .file-tree-wrapper {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+  }
+
   .project-tree-header {
     display: flex;
     align-items: center;
