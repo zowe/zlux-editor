@@ -14,6 +14,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 @Component({
   selector: 'app-save-to',
   templateUrl: './save-to.component.html',
+  styleUrls: ['./save-to.component.scss'],
 })
 export class SaveToComponent {
   saveAsDataset = false;
