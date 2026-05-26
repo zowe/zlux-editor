@@ -11,9 +11,7 @@
 
 <div class="file-explorer-container">
   <div class="project-tree-header">
-    <button mat-icon-button aria-label="Create File" title="Create File" (click)="createFile()">
-      <mat-icon>add</mat-icon>
-    </button>
+    <button class="create-file-btn" aria-label="Create File" title="Create File" (click)="createFile()">+</button>
   </div>
   <zlux-file-tree #fileExplorer
     (nodeClick)="onNodeClick($event)"

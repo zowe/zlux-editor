@@ -187,6 +187,25 @@
     padding: 4px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+
+    .create-file-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 4px;
+      background: transparent;
+      color: #ffffff;
+      font-size: 20px;
+      line-height: 24px;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .create-file-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
   }
 
   .dataset-container { //Note: This is temporary and will be removed when Dataset functionality for Explorer gets better.
