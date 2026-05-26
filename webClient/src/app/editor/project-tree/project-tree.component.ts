@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, ViewChild, Inject } from '@angular/core';
+import { Component, ViewChild, Inject, Optional } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
@@ -23,26 +23,20 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MessageDuration } from '../../shared/message-duration';
 import { CreateMemberDialogComponent } from '../../shared/dialog/create-member/create-member-dialog.component';
-import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginWindowActions, ContextMenuItem } from 'pluginlib/inject-resources';
 import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss'],
-  host: {
-    '(document:click)': 'onDocumentClick($event)',
-  }
+  styleUrls: ['./project-tree.component.scss']
 })
 export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
 
-  showContextMenu = false;
-  contextMenuPosition = { x: 0, y: 0 };
   private rightClickedNode: any = null;
-  private pendingContextPosition: { x: number, y: number } | null = null;
 
   nodes: ProjectStructure[];
   options = {
@@ -99,7 +93,8 @@ export class ProjectTreeComponent {
     private snackBarService: SnackBarService,
     private codeEditorService: EditorService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition) {
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {
   }
 
   ngOnInit() {
@@ -379,36 +374,40 @@ export class ProjectTreeComponent {
   }
 
   /**
-   * Synchronously prevents the browser native context menu and stores cursor position.
-   * Must be bound to (contextmenu) on the wrapper div so preventDefault runs immediately.
+   * Handles right-click from zlux-file-tree.
+   * Uses windowActions.spawnContextMenu() — the correct Zowe API.
+   * The library already calls preventDefault() internally before emitting this event.
    */
-  onTreeContextMenu($event: MouseEvent) {
-    $event.preventDefault();
-    $event.stopPropagation();
-    this.pendingContextPosition = { x: $event.clientX, y: $event.clientY };
-  }
-
   onRightClick($event: any) {
-    // Use the position captured synchronously in onTreeContextMenu
-    if (this.pendingContextPosition) {
-      this.contextMenuPosition = this.pendingContextPosition;
-      this.pendingContextPosition = null;
-    } else if ($event && $event.event) {
-      this.contextMenuPosition = {
-        x: $event.event.clientX || $event.event.pageX,
-        y: $event.event.clientY || $event.event.pageY
-      };
-    }
-
     this.rightClickedNode = $event;
 
     const data = $event.data || $event;
-    this.showContextMenu = !!(data && (data.hasChildren || data.isPDSDir ||
+    const isPDS = !!(data && (data.hasChildren || data.isPDSDir ||
       (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE'))));
+
+    if (!isPDS || !this.windowActions) {
+      return;
+    }
+
+    const menuItems: ContextMenuItem[] = [
+      {
+        text: 'Create Member',
+        action: () => { this.onContextCreateMember(); }
+      }
+    ];
+
+    // Get coordinates from the original mouse event if available
+    const origEvent = $event.originalEvent || ($event.event && $event.event.originalEvent) || $event.event;
+    const x = origEvent ? origEvent.clientX : 0;
+    const y = origEvent ? origEvent.clientY : 0;
+
+    const spawned = this.windowActions.spawnContextMenu(x, y, menuItems, true);
+    if (!spawned) {
+      this.windowActions.spawnContextMenu(x, Math.max(0, y - 25), menuItems, true);
+    }
   }
 
   onContextCreateMember() {
-    this.closeContextMenu();
     if (this.rightClickedNode) {
       const data = this.rightClickedNode.data || this.rightClickedNode;
       const datasetName = data.path || data.name || data.label || '';
@@ -421,14 +420,7 @@ export class ProjectTreeComponent {
     }
   }
 
-  closeContextMenu() {
-    this.showContextMenu = false;
-    this.rightClickedNode = null;
-  }
 
-  onDocumentClick($event: any) {
-    this.closeContextMenu();
-  }
 }
 
 /*
