@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, ViewChild, Inject, Optional } from '@angular/core';
+import { Component, ViewChild, Inject, Optional, HostListener } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
@@ -23,7 +23,7 @@ import { DataAdapterService } from '../../shared/http/http.data.adapter.service'
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MessageDuration } from '../../shared/message-duration';
 import { CreateMemberDialogComponent } from '../../shared/dialog/create-member/create-member-dialog.component';
-import { Angular2InjectionTokens, Angular2PluginWindowActions, ContextMenuItem } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
 import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
@@ -31,12 +31,22 @@ import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
   templateUrl: './project-tree.component.html',
   styleUrls: ['./project-tree.component.scss']
 })
+
 export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
 
+  showContextMenu = false;
+  contextMenuPosition = { x: 0, y: 0 };
   private rightClickedNode: any = null;
+  private _capturedCoords: { x: number, y: number } | null = null;
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.showContextMenu = false;
+    this.rightClickedNode = null;
+  }
 
   nodes: ProjectStructure[];
   options = {
@@ -374,40 +384,47 @@ export class ProjectTreeComponent {
   }
 
   /**
-   * Handles right-click from zlux-file-tree.
-   * Uses windowActions.spawnContextMenu() — the correct Zowe API.
-   * The library already calls preventDefault() internally before emitting this event.
+   * Captures mouse coordinates synchronously from the native contextmenu event
+   * on the wrapper div, BEFORE the library handles it.
+   */
+  captureContextCoords($event: MouseEvent) {
+    this._capturedCoords = { x: $event.clientX, y: $event.clientY };
+    // Don't preventDefault here — let the library handle its own built-in menu
+  }
+
+  /**
+   * Handles right-click from zlux-file-tree (libary-emitted event, node data only).
+   * For PDS nodes, shows a small 'Create Member' overlay using coords captured above.
+   * Does NOT call windowActions — that would compete with the library's own menu.
    */
   onRightClick($event: any) {
     this.rightClickedNode = $event;
+    this.showContextMenu = false;
 
     const data = $event.data || $event;
     const isPDS = !!(data && (data.hasChildren || data.isPDSDir ||
       (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE'))));
 
-    if (!isPDS || !this.windowActions) {
+    if (!isPDS) {
       return;
     }
 
-    const menuItems: ContextMenuItem[] = [
-      {
-        text: 'Create Member',
-        action: () => { this.onContextCreateMember(); }
+    // Delay showing the menu to allow captureContextCoords to fire first
+    // (it fires later in the same event bubble since it's on a parent element)
+    setTimeout(() => {
+      if (this._capturedCoords) {
+        this.contextMenuPosition = {
+          x: this._capturedCoords.x + 4,
+          y: this._capturedCoords.y + 4
+        };
+        this._capturedCoords = null;
       }
-    ];
-
-    // Get coordinates from the original mouse event if available
-    const origEvent = $event.originalEvent || ($event.event && $event.event.originalEvent) || $event.event;
-    const x = origEvent ? origEvent.clientX : 0;
-    const y = origEvent ? origEvent.clientY : 0;
-
-    const spawned = this.windowActions.spawnContextMenu(x, y, menuItems, true);
-    if (!spawned) {
-      this.windowActions.spawnContextMenu(x, Math.max(0, y - 25), menuItems, true);
-    }
+      this.showContextMenu = true;
+    }, 50);
   }
 
   onContextCreateMember() {
+    this.showContextMenu = false;
     if (this.rightClickedNode) {
       const data = this.rightClickedNode.data || this.rightClickedNode;
       const datasetName = data.path || data.name || data.label || '';

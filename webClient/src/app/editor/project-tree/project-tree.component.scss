@@ -220,9 +220,15 @@
     height: 100%;
   }
 
-  .context-menu {
+  .file-tree-wrapper {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+  }
+
+  .create-member-menu {
     position: fixed;
-    z-index: 1000;
+    z-index: 9999;
     background: #2d2d2d;
     border: 1px solid #555;
     border-radius: 4px;
@@ -230,9 +236,8 @@
     padding: 4px 0;
     min-width: 160px;
 
-    button {
-      display: flex;
-      align-items: center;
+    .create-member-item {
+      display: block;
       width: 100%;
       padding: 8px 16px;
       background: none;
@@ -240,16 +245,10 @@
       color: #e0e0e0;
       font-size: 13px;
       cursor: pointer;
-      gap: 8px;
+      text-align: left;
 
       &:hover {
         background: #3a3a3a;
-      }
-
-      .mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
       }
     }
   }
