@@ -30,12 +30,10 @@
   <div class="context-menu"
     [style.top.px]="contextMenuPosition.y"
     [style.left.px]="contextMenuPosition.x">
-    @if (contextMenuItems.createMember) {
     <button class="context-menu-item" (click)="onContextCreateMember()">
       <mat-icon>post_add</mat-icon>
       <span>Create Member</span>
     </button>
-    }
   </div>
   }
 </div>

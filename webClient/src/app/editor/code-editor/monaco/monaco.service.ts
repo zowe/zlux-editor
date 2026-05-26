@@ -603,9 +603,7 @@ export class MonacoService implements OnDestroy {
     const datasetName = result.datasetName;
     const memberName = result.memberName;
     const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
-    const requestUrl = memberName
-      ? ZoweZLUX.uriBroker.datasetContentsUri(datasetName, memberName)
-      : ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
 
     const contents = fileContext.model.contents ? fileContext.model.contents.split('\n') : [''];
 

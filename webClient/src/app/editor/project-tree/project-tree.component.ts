@@ -39,10 +39,8 @@ export class ProjectTreeComponent {
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
 
-  // Context menu state
   showContextMenu = false;
   contextMenuPosition = { x: 0, y: 0 };
-  contextMenuItems = { createMember: false };
   private rightClickedNode: any = null;
 
   nodes: ProjectStructure[];
@@ -321,7 +319,7 @@ export class ProjectTreeComponent {
     dialogRef.afterClosed().subscribe(memberName => {
       if (memberName) {
         const fullName = `${datasetName}(${memberName})`;
-        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(datasetName, memberName);
+        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
         this.httpService.put(requestUrl, { records: [] }).subscribe(
           (res: any) => {
             this.snackBarService.open(`Member ${fullName} created successfully.`, 'Dismiss',
@@ -390,16 +388,9 @@ export class ProjectTreeComponent {
 
     this.rightClickedNode = $event;
 
-    // Check if the right-clicked item is a PDS/PDSE (has children = contains members)
     const data = $event.data || $event;
-    const isPDS = data && (data.hasChildren || data.isPDSDir ||
-      (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE')));
-
-    this.contextMenuItems = {
-      createMember: isPDS
-    };
-
-    this.showContextMenu = true;
+    this.showContextMenu = !!(data && (data.hasChildren || data.isPDSDir ||
+      (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE'))));
   }
 
   onContextCreateMember() {
