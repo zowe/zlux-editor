@@ -380,6 +380,7 @@ export class ProjectTreeComponent {
   onRightClick($event: any) {
     if ($event && $event.event) {
       $event.event.preventDefault();
+      $event.event.stopPropagation();
       this.contextMenuPosition = {
         x: $event.event.clientX || $event.event.pageX,
         y: $event.event.clientY || $event.event.pageY
