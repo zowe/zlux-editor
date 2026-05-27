@@ -13,27 +13,14 @@
   <div class="project-tree-header">
     <button class="create-file-btn" aria-label="Create File" title="Create File" (click)="createFile()">+</button>
   </div>
-  <div class="file-tree-wrapper" (contextmenu)="captureContextCoords($event)">
-    <zlux-file-tree #fileExplorer
-      (nodeClick)="onNodeClick($event)"
-      (openInNewTab)="onOpenInNewTab($event)"
-      (deleteClick)="onDeleteClick($event)"
-      (pathChanged)="onPathChanged($event)"
-      (rightClick)="onRightClick($event)"
-      [style]="{'height': '100%'}"
-    >
-    </zlux-file-tree>
-  </div>
-
-  <!-- Custom context menu overlay — only shown for PDS nodes -->
-  @if (showContextMenu) {
-  <div class="create-member-menu"
-    [style.top.px]="contextMenuPosition.y"
-    [style.left.px]="contextMenuPosition.x"
-    (click)="$event.stopPropagation()">
-    <button class="create-member-item" (click)="onContextCreateMember()">Create Member</button>
-  </div>
-  }
+  <zlux-file-tree #fileExplorer
+    (nodeClick)="onNodeClick($event)"
+    (openInNewTab)="onOpenInNewTab($event)"
+    (deleteClick)="onDeleteClick($event)"
+    (pathChanged)="onPathChanged($event)"
+    [style]="{'flex': '1', 'overflow': 'auto'}"
+  >
+  </zlux-file-tree>
 </div>
 
 

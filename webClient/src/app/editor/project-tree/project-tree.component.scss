@@ -181,12 +181,6 @@
     flex-direction: column;
   }
 
-  .file-tree-wrapper {
-    flex: 1;
-    overflow: auto;
-    position: relative;
-  }
-
   .project-tree-header {
     display: flex;
     align-items: center;
@@ -218,39 +212,6 @@
     padding-left: 10px;
     padding-top: 10px;
     height: 100%;
-  }
-
-  .file-tree-wrapper {
-    flex: 1;
-    overflow: auto;
-    position: relative;
-  }
-
-  .create-member-menu {
-    position: fixed;
-    z-index: 9999;
-    background: #2d2d2d;
-    border: 1px solid #555;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    padding: 4px 0;
-    min-width: 160px;
-
-    .create-member-item {
-      display: block;
-      width: 100%;
-      padding: 8px 16px;
-      background: none;
-      border: none;
-      color: #e0e0e0;
-      font-size: 13px;
-      cursor: pointer;
-      text-align: left;
-
-      &:hover {
-        background: #3a3a3a;
-      }
-    }
   }
 }
 

@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, ViewChild, Inject, Optional, HostListener } from '@angular/core';
+import { Component, ViewChild, Inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
@@ -22,8 +22,7 @@ import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
 import { MessageDuration } from '../../shared/message-duration';
-import { CreateMemberDialogComponent } from '../../shared/dialog/create-member/create-member-dialog.component';
-import { Angular2InjectionTokens, Angular2PluginWindowActions } from 'pluginlib/inject-resources';
+import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
@@ -36,17 +35,6 @@ export class ProjectTreeComponent {
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
-
-  showContextMenu = false;
-  contextMenuPosition = { x: 0, y: 0 };
-  private rightClickedNode: any = null;
-  private _capturedCoords: { x: number, y: number } | null = null;
-
-  @HostListener('document:click')
-  onDocumentClick() {
-    this.showContextMenu = false;
-    this.rightClickedNode = null;
-  }
 
   nodes: ProjectStructure[];
   options = {
@@ -103,8 +91,7 @@ export class ProjectTreeComponent {
     private snackBarService: SnackBarService,
     private codeEditorService: EditorService,
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
-    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
-    @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions) {
+    @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition) {
   }
 
   ngOnInit() {
@@ -316,42 +303,6 @@ export class ProjectTreeComponent {
     this.editorControl.createFile();
   }
 
-  private openCreateMemberDialog(datasetName: string) {
-    const dialogRef = this.dialog.open(CreateMemberDialogComponent, {
-      width: '400px',
-      data: { datasetName: datasetName }
-    });
-
-    dialogRef.afterClosed().subscribe(memberName => {
-      if (memberName) {
-        const fullName = `${datasetName}(${memberName})`;
-        const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-        this.httpService.put(requestUrl, { records: [] }).subscribe(
-          (res: any) => {
-            this.snackBarService.open(`Member ${fullName} created successfully.`, 'Dismiss',
-              { duration: MessageDuration.Medium, panelClass: 'center' });
-            // Open the new member in the editor
-            const memberData: ProjectStructure = {
-              id: String(Date.now()),
-              name: memberName,
-              fileName: memberName,
-              path: datasetName,
-              hasChildren: false,
-              isDataset: true
-            };
-            this.editorControl.openBuffer('', memberData).subscribe(x => {
-              this.log.debug(`New member ${fullName} opened in editor.`);
-            });
-          },
-          (error: any) => {
-            this.snackBarService.open(`Failed to create member: ${error.error || error.message}`, 'Dismiss',
-              { duration: MessageDuration.Long, panelClass: 'center' });
-          }
-        );
-      }
-    });
-  }
-
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
@@ -382,61 +333,6 @@ export class ProjectTreeComponent {
       return 'assignment';
     }
   }
-
-  /**
-   * Captures mouse coordinates synchronously from the native contextmenu event
-   * on the wrapper div, BEFORE the library handles it.
-   */
-  captureContextCoords($event: MouseEvent) {
-    this._capturedCoords = { x: $event.clientX, y: $event.clientY };
-    // Don't preventDefault here — let the library handle its own built-in menu
-  }
-
-  /**
-   * Handles right-click from zlux-file-tree (libary-emitted event, node data only).
-   * For PDS nodes, shows a small 'Create Member' overlay using coords captured above.
-   * Does NOT call windowActions — that would compete with the library's own menu.
-   */
-  onRightClick($event: any) {
-    this.rightClickedNode = $event;
-    this.showContextMenu = false;
-
-    const data = $event.data || $event;
-    const isPDS = !!(data && (data.hasChildren || data.isPDSDir ||
-      (data.datasetAttrs && (data.datasetAttrs.dsorg === 'PO' || data.datasetAttrs.dsorg === 'POE'))));
-
-    if (!isPDS) {
-      return;
-    }
-
-    // Delay showing the menu to allow captureContextCoords to fire first
-    // (it fires later in the same event bubble since it's on a parent element)
-    setTimeout(() => {
-      if (this._capturedCoords) {
-        this.contextMenuPosition = {
-          x: this._capturedCoords.x + 4,
-          y: this._capturedCoords.y + 4
-        };
-        this._capturedCoords = null;
-      }
-      this.showContextMenu = true;
-    }, 50);
-  }
-
-  onContextCreateMember() {
-    this.showContextMenu = false;
-    if (this.rightClickedNode) {
-      const data = this.rightClickedNode.data || this.rightClickedNode;
-      const datasetName = data.path || data.name || data.label || '';
-      if (datasetName) {
-        this.openCreateMemberDialog(datasetName);
-      } else {
-        this.snackBarService.open('Could not determine dataset name from selection.', 'Dismiss',
-          { duration: MessageDuration.Medium, panelClass: 'center' });
-      }
-    }
-  }
-
 
 }
 
