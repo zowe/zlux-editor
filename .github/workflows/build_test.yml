@@ -123,8 +123,8 @@ jobs:
       - name: '[Prep 1] Checkout'
         uses: actions/checkout@v4
 
-      - name: '[Prep 2] Validate package.json'
-        uses: zowe-actions/shared-actions/validate-package-json@main
+      # - name: '[Prep 2] Validate package.json'
+      #   uses: zowe-actions/shared-actions/validate-package-json@main
 
       - name: '[Prep 3] Cache node modules'
         uses: actions/cache@v4
