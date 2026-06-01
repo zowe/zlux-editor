@@ -158,7 +158,7 @@ jobs:
           plugin-version: ${{ github.event.inputs.BUILD_VERSION }}
 
       - name: '[Prep 7] build'
-        uses: zowe-actions/zlux-builds/plugins/zlux-plugins@v3.x/main
+        uses: zowe-actions/zlux-builds/plugins/zlux-plugins@users/jstruga/add-custom-deploy
         with:
           build-zss: false
 
