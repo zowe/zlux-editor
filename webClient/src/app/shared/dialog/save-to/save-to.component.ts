@@ -121,9 +121,21 @@ export class SaveToComponent implements OnDestroy {
     }
     // Pre-populate dataset fields if file was opened from a dataset
     if (this.data.datasetName) {
-      this.datasetResults.datasetName = this.data.datasetName.toUpperCase();
-      if (this.data.memberName) {
-        this.datasetResults.memberName = this.data.memberName.toUpperCase();
+      let dsName = this.data.datasetName.toUpperCase();
+      let memName = this.data.memberName ? this.data.memberName.toUpperCase() : '';
+
+      // Strip parenthesized member from dataset name if present
+      const parenMatch = dsName.match(/^([^()]+)\(([^()]+)\)$/);
+      if (parenMatch) {
+        dsName = parenMatch[1];
+        if (!memName) {
+          memName = parenMatch[2];
+        }
+      }
+
+      this.datasetResults.datasetName = dsName;
+      if (memName) {
+        this.datasetResults.memberName = memName;
         this.memberModeEnabled = true;
         this.saveMode = 'member';
       } else {
@@ -197,8 +209,19 @@ export class SaveToComponent implements OnDestroy {
   // --- Event Handlers ---
 
   onDatasetNameInput(): void {
-    const raw = this.datasetResults.datasetName;
-    this.datasetResults.datasetName = raw.toUpperCase();
+    let raw = this.datasetResults.datasetName.toUpperCase();
+
+    // Auto-split parenthesized names like DATASET(MEMBER) into separate fields
+    const parenMatch = raw.match(/^([^()]+)\(([^()]+)\)$/);
+    if (parenMatch) {
+      this.datasetResults.datasetName = parenMatch[1];
+      this.datasetResults.memberName = parenMatch[2];
+      this.memberModeEnabled = true;
+      this.saveMode = 'member';
+    } else {
+      this.datasetResults.datasetName = raw;
+    }
+
     this.datasetNameInput$.next(this.datasetResults.datasetName);
   }
 

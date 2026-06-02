@@ -83,6 +83,25 @@ Copyright Contributors to the Zowe Project.
 
       <!-- Allocate New Dataset - Collapsible -->
       <div class="allocate-section">
+        <!-- Dataset Info (read-only) -->
+        @if (datasetInfo && !showAllocate) {
+        <div class="dataset-info-panel fade-in">
+          <div class="dataset-info-header">
+            <i class="fa fa-info-circle"></i> Existing Dataset Properties
+          </div>
+          <div class="dataset-info-grid">
+            <span class="info-label">Organization:</span><span class="info-value">{{datasetInfo.dsorg}}</span>
+            <span class="info-label">Record Format:</span><span class="info-value">{{datasetInfo.recfm}}</span>
+            <span class="info-label">Record Length:</span><span class="info-value">{{datasetInfo.lrecl}}</span>
+            <span class="info-label">Block Size:</span><span class="info-value">{{datasetInfo.blksize}}</span>
+            <span class="info-label">Volume:</span><span class="info-value">{{datasetInfo.volser}}</span>
+            <span class="info-label">Space Unit:</span><span class="info-value">{{datasetInfo.space}}</span>
+            <span class="info-label">Primary:</span><span class="info-value">{{datasetInfo.primary}}</span>
+            <span class="info-label">Secondary:</span><span class="info-value">{{datasetInfo.secondary}}</span>
+          </div>
+        </div>
+        }
+
         <button mat-button type="button" class="allocate-toggle-btn" (click)="showAllocate = !showAllocate">
           <i class="fa" [class.fa-chevron-right]="!showAllocate" [class.fa-chevron-down]="showAllocate"></i>
           Allocate New Dataset
