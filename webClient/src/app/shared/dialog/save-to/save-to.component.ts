@@ -83,6 +83,7 @@ export class SaveToComponent implements OnDestroy {
   // --- Dataset lookup state ---
   memberModeEnabled = false;
   datasetLookupStatus: DatasetLookupStatus = 'idle';
+  datasetInfo: { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string } | null = null;
   private datasetNameInput$ = new Subject<string>();
   private destroy$ = new Subject<void>();
   private lastLookedUpName = '';
@@ -120,10 +121,13 @@ export class SaveToComponent implements OnDestroy {
     }
     // Pre-populate dataset fields if file was opened from a dataset
     if (this.data.datasetName) {
-      this.saveMode = 'dataset';
       this.datasetResults.datasetName = this.data.datasetName.toUpperCase();
       if (this.data.memberName) {
         this.datasetResults.memberName = this.data.memberName.toUpperCase();
+        this.memberModeEnabled = true;
+        this.saveMode = 'member';
+      } else {
+        this.saveMode = 'dataset';
       }
     }
 
@@ -157,8 +161,12 @@ export class SaveToComponent implements OnDestroy {
       if (response._notFound) {
         this.datasetLookupStatus = 'not-found';
         this.memberModeEnabled = false;
+        this.datasetInfo = null;
         return;
       }
+
+      // Extract dataset attributes from response
+      this.datasetInfo = this.extractDatasetInfo(response);
 
       // Parse response to determine if PDS
       const isPDS = this.checkIfPartitioned(response);
@@ -293,6 +301,27 @@ export class SaveToComponent implements OnDestroy {
   }
 
   // --- Private Helpers ---
+
+  private extractDatasetInfo(response: any): { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string } | null {
+    try {
+      const datasets = response?.datasets || response?.items || [];
+      if (datasets.length > 0) {
+        const ds = datasets[0];
+        const dsorgObj = ds?.dsorg;
+        const recfmObj = ds?.recfm;
+        const dsorg = typeof dsorgObj === 'string' ? dsorgObj : (dsorgObj?.organization || 'Unknown');
+        const recfm = recfmObj?.recordLength ? `${recfmObj.carriageControl || ''}${recfmObj.isBlocked ? 'B' : ''}` : 'Unknown';
+        const lrecl = recfmObj?.recordLength || ds?.lrecl || 'Unknown';
+        const blksize = (dsorgObj?.totalBlockSize || ds?.blksize || 'Unknown').toString();
+        const volser = ds?.volser || 'Unknown';
+        const space = ds?.space || 'Unknown';
+        const primary = (ds?.prime || 'Unknown').toString();
+        const secondary = (ds?.secnd || 'Unknown').toString();
+        return { dsorg, recfm, lrecl: lrecl.toString(), blksize, volser, space, primary, secondary };
+      }
+    } catch (e) { /* ignore */ }
+    return null;
+  }
 
   private checkIfPartitioned(response: any): boolean {
     // The metadata response can have different structures depending on the server.

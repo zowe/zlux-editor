@@ -166,6 +166,45 @@
   }
 }
 
+/* ─── Dataset Info Panel (read-only) ─── */
+.dataset-info-panel {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background-color: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 6px;
+
+  .dataset-info-header {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 8px;
+
+    .fa {
+      margin-right: 4px;
+      color: #1565c0;
+    }
+  }
+
+  .dataset-info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    font-size: 12px;
+  }
+
+  .info-label {
+    color: rgba(0, 0, 0, 0.55);
+    white-space: nowrap;
+  }
+
+  .info-value {
+    color: rgba(0, 0, 0, 0.87);
+    font-family: monospace;
+    font-weight: 500;
+  }
+}
+
 /* ─── Deep overrides for Material inside this dialog ─── */
 ::ng-deep .save-to-dialog {
   .mat-mdc-form-field {
