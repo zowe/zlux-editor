@@ -684,8 +684,8 @@ export class MonacoService implements OnDestroy {
 
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
-      if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
+      if (fileContext.model.isDataset && !saveAs) {
+        this.editorControl.saveBuffer(fileContext, null, false).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -701,7 +701,9 @@ export class MonacoService implements OnDestroy {
             width: '540px',
             data: {
               canBeISO: x,
-              fileName: fileContext.model.fileName, ...(fileDirectory && { fileDirectory: fileDirectory })
+              fileName: fileContext.model.fileName,
+              ...(fileDirectory && { fileDirectory: fileDirectory }),
+              ...(fileContext.model.isDataset && { datasetName: fileContext.model.path, memberName: fileContext.model.name })
             }
           });
           saveRef.afterClosed().subscribe(result => {

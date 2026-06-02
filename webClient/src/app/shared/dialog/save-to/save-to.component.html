@@ -23,25 +23,25 @@ Copyright Contributors to the Zowe Project.
       <button mat-button class="mode-btn" [class.active]="saveMode === 'dataset'" (click)="saveMode = 'dataset'">
         <i class="fa fa-database"></i>&nbsp;Dataset
       </button>
-      <button mat-button class="mode-btn" [class.active]="saveMode === 'member'"
-        [disabled]="!memberModeEnabled" (click)="saveMode = 'member'"
-        [title]="!memberModeEnabled ? 'Enter a valid PDS name in Dataset mode first' : ''">
+      @if (memberModeEnabled) {
+      <button mat-button class="mode-btn" [class.active]="saveMode === 'member'" (click)="saveMode = 'member'">
         <i class="fa fa-file-code-o"></i>&nbsp;Member
       </button>
+      }
     </div>
 
     <!-- ═══════════════════════════════ USS FILE MODE ═══════════════════════════════ -->
     @if (saveMode === 'uss') {
     <div class="save-form fade-in">
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>File Name</mat-label>
         <input matInput type="text" [(ngModel)]="results.fileName">
       </mat-form-field>
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>Directory</mat-label>
         <input matInput type="text" [(ngModel)]="results.directory">
       </mat-form-field>
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>Encoding</mat-label>
         <mat-select tabindex="0" [(ngModel)]="results.encoding">
           @for (option of options; track option) {
@@ -55,7 +55,7 @@ Copyright Contributors to the Zowe Project.
     <!-- ═══════════════════════════════ DATASET MODE ═══════════════════════════════ -->
     @if (saveMode === 'dataset') {
     <div class="save-form fade-in">
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>Dataset Name</mat-label>
         <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
           (input)="onDatasetNameInput()"
@@ -105,7 +105,7 @@ Copyright Contributors to the Zowe Project.
 
           <!-- Dataset Type -->
           <div class="form-row">
-            <mat-form-field class="half-width">
+            <mat-form-field class="half-width" appearance="outline">
               <mat-label>Dataset Type</mat-label>
               <mat-select [(ngModel)]="allocateProps.datasetNameType"
                 (selectionChange)="onDatasetTypeChange($event.value)">
@@ -114,7 +114,7 @@ Copyright Contributors to the Zowe Project.
                 }
               </mat-select>
             </mat-form-field>
-            <mat-form-field class="half-width">
+            <mat-form-field class="half-width" appearance="outline">
               <mat-label>Organization</mat-label>
               <input matInput [(ngModel)]="allocateProps.organization" readonly>
             </mat-form-field>
@@ -122,7 +122,7 @@ Copyright Contributors to the Zowe Project.
 
           <!-- Space Allocation -->
           <div class="form-row">
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Alloc Unit</mat-label>
               <mat-select [(ngModel)]="allocateProps.allocationUnit">
                 @for (unit of allocationUnitOptions; track unit) {
@@ -130,11 +130,11 @@ Copyright Contributors to the Zowe Project.
                 }
               </mat-select>
             </mat-form-field>
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Primary</mat-label>
               <input matInput type="number" [(ngModel)]="allocateProps.primarySpace">
             </mat-form-field>
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Secondary</mat-label>
               <input matInput type="number" [(ngModel)]="allocateProps.secondarySpace">
             </mat-form-field>
@@ -142,7 +142,7 @@ Copyright Contributors to the Zowe Project.
 
           <!-- Record Settings -->
           <div class="form-row">
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Record Fmt</mat-label>
               <mat-select [(ngModel)]="allocateProps.recordFormat">
                 @for (fmt of recordFormatOptions; track fmt) {
@@ -150,11 +150,11 @@ Copyright Contributors to the Zowe Project.
                 }
               </mat-select>
             </mat-form-field>
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Record Len</mat-label>
               <input matInput type="number" [(ngModel)]="allocateProps.recordLength">
             </mat-form-field>
-            <mat-form-field class="third-width">
+            <mat-form-field class="third-width" appearance="outline">
               <mat-label>Dir Blocks</mat-label>
               <input matInput type="number" [(ngModel)]="allocateProps.directoryBlocks"
                 placeholder="0 for PS">
@@ -163,7 +163,7 @@ Copyright Contributors to the Zowe Project.
 
           <!-- Optional: Block Size -->
           <div class="form-row">
-            <mat-form-field class="half-width">
+            <mat-form-field class="half-width" appearance="outline">
               <mat-label>Block Size (optional)</mat-label>
               <input matInput type="number" [(ngModel)]="allocateProps.blockSize">
             </mat-form-field>
@@ -177,7 +177,7 @@ Copyright Contributors to the Zowe Project.
     <!-- ═══════════════════════════════ MEMBER MODE ═══════════════════════════════ -->
     @if (saveMode === 'member') {
     <div class="save-form fade-in">
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>PDS Dataset Name</mat-label>
         <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
           (input)="onDatasetNameInput()"
@@ -200,7 +200,7 @@ Copyright Contributors to the Zowe Project.
         }
       </mat-form-field>
 
-      <mat-form-field class="w-100">
+      <mat-form-field class="w-100" appearance="outline">
         <mat-label>Member Name</mat-label>
         <input matInput type="text" maxlength="8" [(ngModel)]="datasetResults.memberName"
           (input)="datasetResults.memberName = datasetResults.memberName.toUpperCase()"

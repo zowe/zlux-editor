@@ -299,7 +299,7 @@ export class ProjectTreeComponent {
     });
   }
 
-  createFile() {
+  onNewFileClick() {
     this.editorControl.createFile();
   }
 

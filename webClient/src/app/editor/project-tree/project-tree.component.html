@@ -10,14 +10,12 @@
 -->
 
 <div class="file-explorer-container">
-  <div class="project-tree-header">
-    <button class="create-file-btn" aria-label="Create File" title="Create File" (click)="createFile()">+</button>
-  </div>
   <zlux-file-tree #fileExplorer
     (nodeClick)="onNodeClick($event)"
     (openInNewTab)="onOpenInNewTab($event)"
     (deleteClick)="onDeleteClick($event)"
     (pathChanged)="onPathChanged($event)"
+    (newFileClick)="onNewFileClick()"
     [style]="{'flex': '1', 'overflow': 'auto'}"
   >
   </zlux-file-tree>

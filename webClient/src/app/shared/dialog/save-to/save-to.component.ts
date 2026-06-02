@@ -118,6 +118,14 @@ export class SaveToComponent implements OnDestroy {
     if (this.data.fileDirectory) {
       this.results.directory = this.data.fileDirectory;
     }
+    // Pre-populate dataset fields if file was opened from a dataset
+    if (this.data.datasetName) {
+      this.saveMode = 'dataset';
+      this.datasetResults.datasetName = this.data.datasetName.toUpperCase();
+      if (this.data.memberName) {
+        this.datasetResults.memberName = this.data.memberName.toUpperCase();
+      }
+    }
 
     // Debounced dataset metadata lookup — only fires for syntactically valid dataset names
     this.datasetNameInput$.pipe(
@@ -166,6 +174,11 @@ export class SaveToComponent implements OnDestroy {
         }
       }
     });
+
+    // If dataset name was pre-populated, trigger the lookup immediately
+    if (this.datasetResults.datasetName && this.isDatasetNameValid()) {
+      this.datasetNameInput$.next(this.datasetResults.datasetName);
+    }
   }
 
   ngOnDestroy(): void {
