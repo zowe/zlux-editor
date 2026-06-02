@@ -202,6 +202,11 @@
     color: rgba(0, 0, 0, 0.87);
     font-family: monospace;
     font-weight: 500;
+
+    &.missing {
+      color: rgba(0, 0, 0, 0.35);
+      font-style: italic;
+    }
   }
 }
 

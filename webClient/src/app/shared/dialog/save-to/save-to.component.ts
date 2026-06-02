@@ -83,17 +83,17 @@ export class SaveToComponent implements OnDestroy {
   // --- Dataset lookup state ---
   memberModeEnabled = false;
   datasetLookupStatus: DatasetLookupStatus = 'idle';
-  datasetInfo: { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string } | null = null;
+  datasetInfo: { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string; dirblk: string } | null = null;
   private datasetNameInput$ = new Subject<string>();
   private destroy$ = new Subject<void>();
-  private lastLookedUpName = '';
+  private memberModeFromData = false; // true if member mode was set from pre-populated data
 
   // --- Options ---
   options: string[];
   templateOptions = ['JCL', 'COBOL', 'PLX', 'XML'];
   datasetNameTypeOptions = ['PDS', 'LIBRARY', 'BASIC', 'LARGE'];
   allocationUnitOptions = ['TRK', 'CYL', 'BLK', 'KB', 'MB'];
-  recordFormatOptions = ['F', 'FB', 'V', 'VB', 'VBA', 'U'];
+  recordFormatOptions = ['F', 'FA', 'FB', 'FBA', 'FBS', 'V', 'VA', 'VB', 'VBA', 'VBS', 'U'];
 
   // Zowe dataset name: 1-8 char qualifiers separated by dots; each qualifier starts with A-Z, #, $, @;
   // remaining chars allow A-Z, 0-9, #, $, @, -; up to 12 qualifiers; total 3-44 chars
@@ -113,10 +113,13 @@ export class SaveToComponent implements OnDestroy {
     } else {
       this.options = ['UTF-8', 'ISO-8859-1', 'IBM-1047'];
     }
-    if (this.data.fileName) {
+    // Default encoding to first option so user doesn't have to pick manually
+    this.results.encoding = this.options[0];
+    // Only pre-fill USS fields if the file is NOT from a dataset
+    if (this.data.fileName && !this.data.datasetName) {
       this.results.fileName = this.data.fileName;
     }
-    if (this.data.fileDirectory) {
+    if (this.data.fileDirectory && !this.data.datasetName) {
       this.results.directory = this.data.fileDirectory;
     }
     // Pre-populate dataset fields if file was opened from a dataset
@@ -137,6 +140,7 @@ export class SaveToComponent implements OnDestroy {
       if (memName) {
         this.datasetResults.memberName = memName;
         this.memberModeEnabled = true;
+        this.memberModeFromData = true;
         this.saveMode = 'member';
       } else {
         this.saveMode = 'dataset';
@@ -151,16 +155,19 @@ export class SaveToComponent implements OnDestroy {
         const trimmed = name.trim().toUpperCase();
         if (!trimmed || trimmed.length < this.datasetMinLength) {
           this.datasetLookupStatus = 'idle';
-          this.memberModeEnabled = false;
+          if (!this.memberModeFromData) {
+            this.memberModeEnabled = false;
+          }
           return of(null);
         }
         // Don't make API calls for syntactically invalid names
         if (!this.datasetPattern.test(trimmed)) {
           this.datasetLookupStatus = 'error';
-          this.memberModeEnabled = false;
+          if (!this.memberModeFromData) {
+            this.memberModeEnabled = false;
+          }
           return of(null);
         }
-        this.lastLookedUpName = trimmed;
         this.datasetLookupStatus = 'loading';
         const url = ZoweZLUX.uriBroker.datasetMetadataUri(encodeURIComponent(trimmed), 'true', undefined, true);
         return this.http.get(url).pipe(
@@ -172,7 +179,10 @@ export class SaveToComponent implements OnDestroy {
 
       if (response._notFound) {
         this.datasetLookupStatus = 'not-found';
-        this.memberModeEnabled = false;
+        // Don't disable member mode if it was set from pre-populated data
+        if (!this.memberModeFromData) {
+          this.memberModeEnabled = false;
+        }
         this.datasetInfo = null;
         return;
       }
@@ -225,16 +235,82 @@ export class SaveToComponent implements OnDestroy {
     this.datasetNameInput$.next(this.datasetResults.datasetName);
   }
 
+  toggleAllocate(): void {
+    this.showAllocate = !this.showAllocate;
+    // Pre-fill ALL allocate fields from existing dataset info when opening
+    if (this.showAllocate && this.datasetInfo) {
+      this.prefillFromExistingDataset();
+    }
+  }
+
+  /** Populate allocate form fields from existing dataset properties */
+  private prefillFromExistingDataset(): void {
+    if (!this.datasetInfo) return;
+
+    // Always overwrite with existing values (if they have real data)
+    if (this.datasetInfo.space !== '—') {
+      this.allocateProps.allocationUnit = this.datasetInfo.space;
+    }
+    if (this.datasetInfo.primary !== '—') {
+      this.allocateProps.primarySpace = this.datasetInfo.primary;
+    }
+    if (this.datasetInfo.secondary !== '—') {
+      this.allocateProps.secondarySpace = this.datasetInfo.secondary;
+    }
+    if (this.datasetInfo.recfm !== '—') {
+      // Ensure the recfm value is in the dropdown options; if not, add it dynamically
+      if (!this.recordFormatOptions.includes(this.datasetInfo.recfm)) {
+        this.recordFormatOptions = [...this.recordFormatOptions, this.datasetInfo.recfm];
+      }
+      this.allocateProps.recordFormat = this.datasetInfo.recfm;
+    }
+    if (this.datasetInfo.lrecl !== '—') {
+      this.allocateProps.recordLength = this.datasetInfo.lrecl;
+    }
+    if (this.datasetInfo.blksize !== '—') {
+      this.allocateProps.blockSize = this.datasetInfo.blksize;
+    }
+
+    // Set directory blocks from existing dataset or use safe defaults
+    if (this.datasetInfo.dirblk !== '—') {
+      this.allocateProps.directoryBlocks = this.datasetInfo.dirblk;
+    } else {
+      // Default: 20 for PDS, 0 for sequential
+      const dsorg = this.datasetInfo.dsorg;
+      this.allocateProps.directoryBlocks = (dsorg.startsWith('PO') || dsorg === 'PARTITIONED') ? '20' : '0';
+    }
+
+    // Set dataset type + organization from dsorg
+    const dsorg = this.datasetInfo.dsorg;
+    if (dsorg.startsWith('PO') || dsorg === 'PARTITIONED') {
+      this.allocateProps.datasetNameType = 'PDS';
+      this.allocateProps.organization = 'PO';
+    } else if (dsorg === 'PS' || dsorg.startsWith('PS')) {
+      this.allocateProps.datasetNameType = 'BASIC';
+      this.allocateProps.organization = 'PS';
+    }
+
+    // Clear template selection since we're using actual values
+    this.allocateProps.template = '';
+  }
+
   onTemplateSelect(value: string): void {
     if (!value) return;
     const tmpl = TEMPLATES.get(value);
     if (tmpl) {
+      // Template always overwrites all fields
       this.allocateProps.allocationUnit = tmpl.allocationUnit;
       this.allocateProps.primarySpace = tmpl.primarySpace;
       this.allocateProps.secondarySpace = tmpl.secondarySpace;
       this.allocateProps.recordFormat = tmpl.recordFormat;
       this.allocateProps.recordLength = tmpl.recordLength;
       this.allocateProps.directoryBlocks = this.allocateProps.organization === 'PS' ? '0' : tmpl.directoryBlocks;
+      // Also set dataset type to PDS for templates (templates are typically for PDS members)
+      if (this.allocateProps.organization !== 'PS') {
+        this.allocateProps.datasetNameType = 'PDS';
+        this.allocateProps.organization = 'PO';
+        this.allocateProps.directoryBlocks = tmpl.directoryBlocks;
+      }
     }
   }
 
@@ -267,6 +343,8 @@ export class SaveToComponent implements OnDestroy {
 
       case 'dataset':
         if (!this.isDatasetNameValid()) return false;
+        // If dataset doesn't exist and user hasn't opened Allocate, block save
+        if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
         if (this.showAllocate) {
           return !!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
@@ -278,6 +356,8 @@ export class SaveToComponent implements OnDestroy {
         return true;
 
       case 'member':
+        // Disable save if we confirmed the dataset is sequential (can't write members to it)
+        if (this.datasetLookupStatus === 'sequential') return false;
         return this.isDatasetNameValid() && this.isMemberNameValid();
 
       default:
@@ -325,25 +405,93 @@ export class SaveToComponent implements OnDestroy {
 
   // --- Private Helpers ---
 
-  private extractDatasetInfo(response: any): { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string } | null {
+  private extractDatasetInfo(response: any): { dsorg: string; recfm: string; lrecl: string; blksize: string; volser: string; space: string; primary: string; secondary: string; dirblk: string } | null {
     try {
       const datasets = response?.datasets || response?.items || [];
       if (datasets.length > 0) {
         const ds = datasets[0];
-        const dsorgObj = ds?.dsorg;
-        const recfmObj = ds?.recfm;
-        const dsorg = typeof dsorgObj === 'string' ? dsorgObj : (dsorgObj?.organization || 'Unknown');
-        const recfm = recfmObj?.recordLength ? `${recfmObj.carriageControl || ''}${recfmObj.isBlocked ? 'B' : ''}` : 'Unknown';
-        const lrecl = recfmObj?.recordLength || ds?.lrecl || 'Unknown';
-        const blksize = (dsorgObj?.totalBlockSize || ds?.blksize || 'Unknown').toString();
-        const volser = ds?.volser || 'Unknown';
-        const space = ds?.space || 'Unknown';
-        const primary = (ds?.prime || 'Unknown').toString();
-        const secondary = (ds?.secnd || 'Unknown').toString();
-        return { dsorg, recfm, lrecl: lrecl.toString(), blksize, volser, space, primary, secondary };
+
+        // --- DSORG ---
+        const dsorgRaw = ds?.dsorg;
+        let dsorg = '—';
+        if (typeof dsorgRaw === 'string' && dsorgRaw) {
+          dsorg = dsorgRaw.toUpperCase();
+        } else if (dsorgRaw?.organization) {
+          dsorg = dsorgRaw.organization.toUpperCase();
+        } else if (dsorgRaw?.isPDSDir || dsorgRaw?.isPDSE) {
+          dsorg = 'PO';
+        }
+
+        // --- RECFM ---
+        const recfmRaw = ds?.recfm;
+        let recfm = '—';
+        if (typeof recfmRaw === 'string' && recfmRaw) {
+          recfm = recfmRaw.toUpperCase();
+        } else if (recfmRaw && typeof recfmRaw === 'object') {
+          // Object form: { format: 'F'|'V'|'U', isBlocked: true, carriageControl: 'A'|'M' }
+          let fmtChar = recfmRaw.format || '';
+          // Only use recordLength as format if it's a single alpha character (F/V/U)
+          if (!fmtChar && typeof recfmRaw.recordLength === 'string' && /^[A-Za-z]$/.test(recfmRaw.recordLength)) {
+            fmtChar = recfmRaw.recordLength;
+          }
+          if (recfmRaw.isBlocked) fmtChar += 'B';
+          if (recfmRaw.carriageControl) fmtChar += recfmRaw.carriageControl;
+          if (recfmRaw.isStandard) fmtChar += 'S';
+          recfm = fmtChar.toUpperCase() || '—';
+        }
+
+        // --- LRECL ---
+        const lrecl = this.extractNumericField(ds, ['lrecl', 'logicalRecordLength']);
+
+        // --- BLKSIZE ---
+        const blksize = this.extractNumericField(ds, ['blksize', 'blockSize', 'blksz']);
+        // Also check nested dsorg object for totalBlockSize
+        const blksizeFinal = blksize !== '—' ? blksize :
+          (dsorgRaw?.totalBlockSize ? dsorgRaw.totalBlockSize.toString() : '—');
+
+        // --- VOLSER ---
+        const volser = ds?.volser || ds?.vol || ds?.volume || '—';
+
+        // --- SPACE ALLOCATION ---
+        const spaceRaw = ds?.spacu || ds?.space || ds?.spaceUnits || '';
+        let space = '—';
+        if (typeof spaceRaw === 'string' && spaceRaw) {
+          // Normalize: TRACKS→TRK, CYLINDERS→CYL, BLOCKS→BLK
+          const upper = spaceRaw.toUpperCase();
+          if (upper.startsWith('TRACK')) space = 'TRK';
+          else if (upper.startsWith('CYL')) space = 'CYL';
+          else if (upper.startsWith('BLOCK')) space = 'BLK';
+          else space = upper;
+        }
+
+        // --- PRIMARY ---
+        const primary = this.extractNumericField(ds, ['prime', 'primary', 'sizex', 'primarySpace']);
+
+        // --- SECONDARY ---
+        const secondary = this.extractNumericField(ds, ['secnd', 'secondary', 'extx', 'secondarySpace']);
+
+        // --- DIRECTORY BLOCKS ---
+        const dirblk = this.extractNumericField(ds, ['dirblk', 'directoryBlocks', 'dsntp']);
+
+        return { dsorg, recfm, lrecl, blksize: blksizeFinal, volser, space, primary, secondary, dirblk };
       }
     } catch (e) { /* ignore */ }
     return null;
+  }
+
+  /** Try multiple field names and return the first valid numeric value, or '—' */
+  private extractNumericField(obj: any, fields: string[]): string {
+    for (const field of fields) {
+      const val = obj?.[field];
+      if (val !== undefined && val !== null && val !== '' && val !== 0) {
+        // Ensure the value is actually numeric (or a numeric string)
+        const num = Number(val);
+        if (!isNaN(num) && num > 0) {
+          return val.toString();
+        }
+      }
+    }
+    return '—';
   }
 
   private checkIfPartitioned(response: any): boolean {

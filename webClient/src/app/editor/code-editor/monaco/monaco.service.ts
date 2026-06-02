@@ -629,11 +629,11 @@ export class MonacoService implements OnDestroy {
 
     this.http.put(requestUrl, allocBody).subscribe(
       () => {
-        this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
-          { duration: MessageDuration.Medium, panelClass: 'center' });
         // If allocating PDS/PDSE with no member name, skip content save 
         // (you can't PUT content directly to a PDS — only to DSN(MEMBER))
         if ((allocProps.organization === 'PO') && !result.memberName) {
+          this.snackBar.open(`Dataset ${datasetName} allocated successfully. Use Save As → Member to save content.`, 'Dismiss',
+            { duration: MessageDuration.Long, panelClass: 'center' });
           fileContext.model.isDataset = true;
           fileContext.model.fileName = datasetName;
           fileContext.model.name = datasetName;
@@ -641,6 +641,8 @@ export class MonacoService implements OnDestroy {
           fileContext.temp = false;
           obs.next('Save');
         } else {
+          this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
+            { duration: MessageDuration.Medium, panelClass: 'center' });
           this.saveAsDatasetMember(fileContext, result, obs);
         }
       },
