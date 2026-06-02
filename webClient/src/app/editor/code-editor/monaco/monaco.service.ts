@@ -599,6 +599,60 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
 
+  private allocateAndSave(fileContext: ProjectContext, result: any, obs: any) {
+    const allocProps = result.allocateProps;
+    const datasetName = result.datasetName;
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
+
+    // Map datasetNameType: LIBRARY → PDSE for the API
+    let dsnt = allocProps.datasetNameType;
+    if (dsnt === 'LIBRARY') {
+      dsnt = 'PDSE';
+    }
+
+    const allocBody: any = {
+      ndisp: 'CATALOG',
+      status: 'NEW',
+      space: allocProps.allocationUnit,
+      dsorg: allocProps.organization,
+      lrecl: parseInt(allocProps.recordLength, 10),
+      recfm: allocProps.recordFormat,
+      dir: parseInt(allocProps.directoryBlocks, 10),
+      prime: parseInt(allocProps.primarySpace, 10),
+      secnd: parseInt(allocProps.secondarySpace, 10),
+      dsnt: dsnt,
+      close: 'true',
+    };
+    if (allocProps.blockSize) {
+      allocBody.blksz = parseInt(allocProps.blockSize, 10);
+    }
+
+    this.http.put(requestUrl, allocBody).subscribe(
+      () => {
+        this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
+          { duration: MessageDuration.Medium, panelClass: 'center' });
+        // If allocating PDS/PDSE with no member name, skip content save 
+        // (you can't PUT content directly to a PDS — only to DSN(MEMBER))
+        if ((allocProps.organization === 'PO') && !result.memberName) {
+          fileContext.model.isDataset = true;
+          fileContext.model.fileName = datasetName;
+          fileContext.model.name = datasetName;
+          fileContext.model.path = datasetName;
+          fileContext.temp = false;
+          obs.next('Save');
+        } else {
+          this.saveAsDatasetMember(fileContext, result, obs);
+        }
+      },
+      (error: any) => {
+        const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
+        this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        obs.next('Error');
+      }
+    );
+  }
+
   private saveAsDatasetMember(fileContext: ProjectContext, result: any, obs: any) {
     const datasetName = result.datasetName;
     const memberName = result.memberName;
@@ -620,7 +674,8 @@ export class MonacoService implements OnDestroy {
         obs.next('Save');
       },
       (error: any) => {
-        this.snackBar.open(`Failed to save to dataset ${fullName}: ${error.error || error.message}`,
+        const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
+        this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.next('Error');
       }
@@ -643,7 +698,7 @@ export class MonacoService implements OnDestroy {
             * "save as" format.
             */
           let saveRef = this.dialog.open(SaveToComponent, {
-            width: '500px',
+            width: '540px',
             data: {
               canBeISO: x,
               fileName: fileContext.model.fileName, ...(fileDirectory && { fileDirectory: fileDirectory })
@@ -657,7 +712,11 @@ export class MonacoService implements OnDestroy {
 
             // Handle "Save as Dataset/Member" option
             if (result.saveType === 'dataset') {
-              this.saveAsDatasetMember(fileContext, result, obs);
+              if (result.allocateNew) {
+                this.allocateAndSave(fileContext, result, obs);
+              } else {
+                this.saveAsDatasetMember(fileContext, result, obs);
+              }
               return;
             }
 

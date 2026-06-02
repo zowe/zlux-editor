@@ -8,8 +8,150 @@
   Copyright Contributors to the Zowe Project.
 */
 
-/* Force checkbox label to be visible against the light dialog background */
-::ng-deep .mat-mdc-checkbox label,
-::ng-deep .mat-checkbox-label {
-  color: rgba(0, 0, 0, 0.87) !important;
+.save-to-dialog {
+  padding: 8px 0;
+  min-width: 480px;
+  max-width: 560px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+  }
+}
+
+/* ─── 3-Mode Segmented Toggle ─── */
+.save-mode-group {
+  width: 100%;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ─── Form Layout ─── */
+.save-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fade-in {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Allocate Section ─── */
+.allocate-section {
+  margin-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+}
+
+.allocate-toggle-btn {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  user-select: none;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.allocate-form {
+  animation: fadeIn 0.2s ease-in;
+}
+
+.template-row {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .template-label {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.half-width {
+  flex: 1 1 50%;
+}
+
+.third-width {
+  flex: 1 1 33%;
+}
+
+/* ─── Hint Colors ─── */
+.hint-success {
+  color: #2e7d32 !important;
+  .fa { color: #2e7d32; }
+}
+
+.hint-warn {
+  color: #e65100 !important;
+}
+
+.hint-error {
+  color: #c62828 !important;
+}
+
+/* ─── Deep overrides for Material inside this dialog ─── */
+::ng-deep .save-to-dialog {
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  .mat-button-toggle-group {
+    width: 100%;
+    display: flex;
+
+    .mat-button-toggle {
+      flex: 1;
+      text-align: center;
+    }
+
+    .mat-button-toggle-button {
+      width: 100%;
+    }
+
+    .mat-button-toggle-checked {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .mat-button-toggle-disabled {
+      opacity: 0.45;
+    }
+  }
+
+  .mat-mdc-chip-listbox {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
 }
