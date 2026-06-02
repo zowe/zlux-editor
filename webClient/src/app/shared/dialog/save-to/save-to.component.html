@@ -61,7 +61,7 @@ Copyright Contributors to the Zowe Project.
           placeholder="e.g. USER.MY.DATA">
         @if (datasetResults.datasetName && !isDatasetNameValid()) {
         <mat-hint class="hint-error">
-          Invalid format. Use A-Z, 0-9, #, $, @, - in dot-separated qualifiers (max 44 chars).
+          Invalid format. Use A-Z, 0-9, #, $, &#64;, - in dot-separated qualifiers (max 44 chars).
         </mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'loading') {
@@ -181,7 +181,7 @@ Copyright Contributors to the Zowe Project.
           placeholder="e.g. USER.MY.PDS">
         @if (datasetResults.datasetName && !isDatasetNameValid()) {
         <mat-hint class="hint-error">
-          Invalid format. Use A-Z, 0-9, #, $, @, - in dot-separated qualifiers (max 44 chars).
+          Invalid format. Use A-Z, 0-9, #, $, &#64;, - in dot-separated qualifiers (max 44 chars).
         </mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'pds') {
@@ -204,7 +204,7 @@ Copyright Contributors to the Zowe Project.
           placeholder="e.g. MYPROG">
         @if (datasetResults.memberName && !isMemberNameValid()) {
         <mat-hint class="hint-error">
-          Must start with A-Z, #, $, or @. Max 8 alphanumeric chars.
+          Must start with A-Z, #, $, or &#64;. Max 8 alphanumeric chars.
         </mat-hint>
         }
         @if (datasetResults.memberName && isMemberNameValid()) {
