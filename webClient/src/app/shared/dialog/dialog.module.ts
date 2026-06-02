@@ -29,9 +29,6 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
     imports: [
@@ -43,9 +40,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
         MatDialogModule,
         MatSelectModule,
         MatButtonModule,
-        MatChipsModule,
-        MatButtonToggleModule,
-        MatTooltipModule,
         ZluxTabbingModule,
     ],
     declarations: [

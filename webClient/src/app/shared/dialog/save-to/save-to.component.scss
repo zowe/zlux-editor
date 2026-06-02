@@ -31,8 +31,32 @@
 .save-mode-group {
   width: 100%;
   margin-bottom: 16px;
+  display: flex;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   overflow: hidden;
+
+  .mode-btn {
+    flex: 1;
+    border-radius: 0;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+
+    &:last-child {
+      border-right: none;
+    }
+
+    &.active {
+      background-color: #e3f2fd;
+      color: #1565c0;
+      font-weight: 500;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+    }
+  }
 }
 
 /* ─── Form Layout ─── */
@@ -120,38 +144,31 @@
   color: #c62828 !important;
 }
 
+/* ─── Template Chips ─── */
+.template-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  .template-chip {
+    font-size: 12px;
+    padding: 4px 12px;
+    min-width: auto;
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 16px;
+    line-height: 1.4;
+
+    &.selected {
+      background-color: #e3f2fd;
+      color: #1565c0;
+      border-color: #1565c0;
+    }
+  }
+}
+
 /* ─── Deep overrides for Material inside this dialog ─── */
 ::ng-deep .save-to-dialog {
   .mat-mdc-form-field {
     width: 100%;
-  }
-
-  .mat-button-toggle-group {
-    width: 100%;
-    display: flex;
-
-    .mat-button-toggle {
-      flex: 1;
-      text-align: center;
-    }
-
-    .mat-button-toggle-button {
-      width: 100%;
-    }
-
-    .mat-button-toggle-checked {
-      background-color: #e3f2fd;
-      color: #1565c0;
-    }
-
-    .mat-button-toggle-disabled {
-      opacity: 0.45;
-    }
-  }
-
-  .mat-mdc-chip-listbox {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
   }
 }
