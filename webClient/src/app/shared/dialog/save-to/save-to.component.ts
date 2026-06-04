@@ -111,7 +111,7 @@ export class SaveToComponent implements OnDestroy {
     if (this.data.canBeISO === false) {
       this.options = ['UTF-8'];
     } else {
-      this.options = ['UTF-8', 'ISO-8859-1', 'IBM-1047'];
+      this.options = ['IBM-1047', 'UTF-8', 'ISO-8859-1'];
     }
     // Default encoding to first option so user doesn't have to pick manually
     this.results.encoding = this.options[0];
