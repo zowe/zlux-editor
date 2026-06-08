@@ -82,7 +82,8 @@ Copyright Contributors to the Zowe Project.
         }
       </mat-form-field>
 
-      <!-- Allocate New Dataset - Collapsible -->
+      <!-- Allocate New Dataset - Collapsible (only for datasets that don't exist yet) -->
+      @if (datasetLookupStatus === 'not-found' || datasetLookupStatus === 'idle') {
       <div class="allocate-section">
         <button mat-button type="button" class="allocate-toggle-btn" (click)="toggleAllocate()">
           <i class="fa" [class.fa-chevron-right]="!showAllocate" [class.fa-chevron-down]="showAllocate"></i>
@@ -170,11 +171,20 @@ Copyright Contributors to the Zowe Project.
               @if (allocateProps.blockSize && +allocateProps.blockSize < 0) {
               <mat-hint class="hint-error">Block size cannot be negative</mat-hint>
               }
+              @if (allocateProps.blockSize && +allocateProps.blockSize > 0 && allocateProps.recordLength && +allocateProps.blockSize < +allocateProps.recordLength) {
+              <mat-hint class="hint-error">Block size must be ≥ record length ({{allocateProps.recordLength}})</mat-hint>
+              }
             </mat-form-field>
           </div>
         </div>
         }
       </div>
+      }
+      @if (datasetLookupStatus === 'sequential' || datasetLookupStatus === 'pds') {
+      <div class="allocate-section">
+        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> Dataset already exists — cannot allocate. Content will be saved directly.</mat-hint>
+      </div>
+      }
     </div>
     }
 
