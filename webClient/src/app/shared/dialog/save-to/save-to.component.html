@@ -166,7 +166,10 @@ Copyright Contributors to the Zowe Project.
           <div class="form-row">
             <mat-form-field class="half-width" appearance="outline">
               <mat-label>Block Size (optional)</mat-label>
-              <input matInput type="number" [(ngModel)]="allocateProps.blockSize">
+              <input matInput type="number" min="0" [(ngModel)]="allocateProps.blockSize">
+              @if (allocateProps.blockSize && +allocateProps.blockSize < 0) {
+              <mat-hint class="hint-error">Block size cannot be negative</mat-hint>
+              }
             </mat-form-field>
           </div>
         </div>

@@ -215,4 +215,10 @@
   .mat-mdc-form-field {
     width: 100%;
   }
+
+  /* Ensure dataset/member name inputs always render uppercase visually */
+  input[type="text"][maxlength="44"],
+  input[type="text"][maxlength="8"] {
+    text-transform: uppercase;
+  }
 }
