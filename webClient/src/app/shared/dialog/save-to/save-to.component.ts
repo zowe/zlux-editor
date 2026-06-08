@@ -384,6 +384,11 @@ export class SaveToComponent implements OnDestroy {
           if (isNaN(secondary) || secondary < 1) return false;
           if (isNaN(recLen) || recLen < 1) return false;
           if (isNaN(dirBlk) || dirBlk < 0) return false;
+          // Block size: if specified, must be positive
+          if (this.allocateProps.blockSize) {
+            const blkSize = parseInt(this.allocateProps.blockSize, 10);
+            if (isNaN(blkSize) || blkSize < 0) return false;
+          }
           return true;
         }
         return true;
