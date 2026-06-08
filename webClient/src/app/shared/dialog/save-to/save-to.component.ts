@@ -197,6 +197,7 @@ export class SaveToComponent implements OnDestroy {
       if (isPDS) {
         this.datasetLookupStatus = 'pds';
         this.memberModeEnabled = true;
+        this.showAllocate = false; // Dataset exists — can't allocate
         // Auto-switch to member mode so user gets the member name field
         if (this.saveMode === 'dataset') {
           this.saveMode = 'member';
@@ -204,6 +205,7 @@ export class SaveToComponent implements OnDestroy {
       } else {
         this.datasetLookupStatus = 'sequential';
         this.memberModeEnabled = false;
+        this.showAllocate = false; // Dataset exists — can't allocate
         // If user was in member mode but dataset isn't PDS, switch them back
         if (this.saveMode === 'member') {
           this.saveMode = 'dataset';
@@ -324,6 +326,7 @@ export class SaveToComponent implements OnDestroy {
     this.allocateProps.secondarySpace = tmpl.secondarySpace;
     this.allocateProps.recordFormat = tmpl.recordFormat;
     this.allocateProps.recordLength = tmpl.recordLength;
+    this.allocateProps.blockSize = ''; // Clear any previously entered block size — let z/OS determine optimal
     this.allocateProps.directoryBlocks = this.allocateProps.organization === 'PS' ? '0' : tmpl.directoryBlocks;
     // Also set dataset type to PDS for templates (templates are typically for PDS members)
     if (this.allocateProps.organization !== 'PS') {
@@ -366,6 +369,8 @@ export class SaveToComponent implements OnDestroy {
         if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
         // Cannot write directly to a PDS — a member name is required
         if (this.datasetLookupStatus === 'pds' && !this.showAllocate) return false;
+        // Cannot allocate if dataset already exists
+        if (this.showAllocate && (this.datasetLookupStatus === 'sequential' || this.datasetLookupStatus === 'pds')) return false;
         if (this.showAllocate) {
           if (!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
@@ -384,10 +389,11 @@ export class SaveToComponent implements OnDestroy {
           if (isNaN(secondary) || secondary < 1) return false;
           if (isNaN(recLen) || recLen < 1) return false;
           if (isNaN(dirBlk) || dirBlk < 0) return false;
-          // Block size: if specified, must be positive
+          // Block size: if specified, must be positive and >= record length
           if (this.allocateProps.blockSize) {
             const blkSize = parseInt(this.allocateProps.blockSize, 10);
             if (isNaN(blkSize) || blkSize < 0) return false;
+            if (!isNaN(recLen) && blkSize > 0 && blkSize < recLen) return false;
           }
           return true;
         }
