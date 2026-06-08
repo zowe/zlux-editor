@@ -74,9 +74,11 @@ export class MonacoService implements OnDestroy {
 
     let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
     this.fileSaveListener = function (e) { // Pure JS, Ctrl-S solution instead...
-      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+      const isMac = (navigator as any).userAgentData?.platform === 'macOS' || /Mac/.test(navigator.userAgent);
+      if (e.key === 's' && (isMac ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
+        if (!fileContext || !fileContext.model) return;
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
         let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
       }
@@ -599,10 +601,102 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
 
+  private allocateAndSave(fileContext: ProjectContext, result: any, obs: any) {
+    const allocProps = result.allocateProps;
+    const datasetName = result.datasetName;
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
+
+    // Map datasetNameType: LIBRARY → PDSE for the API
+    let dsnt = allocProps.datasetNameType;
+    if (dsnt === 'LIBRARY') {
+      dsnt = 'PDSE';
+    }
+
+    const allocBody: any = {
+      ndisp: 'CATALOG',
+      status: 'NEW',
+      space: allocProps.allocationUnit,
+      dsorg: allocProps.organization,
+      lrecl: parseInt(allocProps.recordLength, 10),
+      recfm: allocProps.recordFormat,
+      dir: parseInt(allocProps.directoryBlocks, 10),
+      prime: parseInt(allocProps.primarySpace, 10),
+      secnd: parseInt(allocProps.secondarySpace, 10),
+      dsnt: dsnt,
+      close: 'true',
+    };
+    if (allocProps.blockSize) {
+      allocBody.blksz = parseInt(allocProps.blockSize, 10);
+    }
+
+    this.http.put(requestUrl, allocBody).subscribe({
+      next: () => {
+        // If allocating PDS/PDSE with no member name, skip content save 
+        // (you can't PUT content directly to a PDS — only to DSN(MEMBER))
+        if ((allocProps.organization === 'PO') && !result.memberName) {
+          this.snackBar.open(`Dataset ${datasetName} allocated successfully. Use Save As → Member to save content.`, 'Dismiss',
+            { duration: MessageDuration.Long, panelClass: 'center' });
+          fileContext.model.isDataset = true;
+          fileContext.model.fileName = datasetName;
+          fileContext.model.name = datasetName;
+          fileContext.model.path = datasetName;
+          fileContext.temp = false;
+          this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
+          obs.next('Save');
+        } else {
+          this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
+            { duration: MessageDuration.Medium, panelClass: 'center' });
+          this.saveAsDatasetMember(fileContext, result, obs);
+        }
+      },
+      error: (error: any) => {
+        const raw = error?.error;
+        const errMsg = (typeof raw === 'string') ? raw
+          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+        this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        obs.error(errMsg);
+      }
+    });
+  }
+
+  private saveAsDatasetMember(fileContext: ProjectContext, result: any, obs: any) {
+    const datasetName = result.datasetName;
+    const memberName = result.memberName;
+    const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
+    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
+
+    const contents = fileContext.model.contents ? fileContext.model.contents.replace(/\r\n/g, '\n').split('\n') : [''];
+
+    this.http.put(requestUrl, { records: contents }).subscribe({
+      next: () => {
+        this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
+          { duration: MessageDuration.Medium, panelClass: 'center' });
+        // Update file context to reflect it's now a dataset
+        fileContext.model.isDataset = true;
+        fileContext.model.fileName = fullName;
+        fileContext.model.name = memberName || datasetName;
+        fileContext.model.path = datasetName;
+        fileContext.temp = false;
+        // Notify tab bar of the title change
+        this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
+        obs.next('Save');
+      },
+      error: (error: any) => {
+        const raw = error?.error;
+        const errMsg = (typeof raw === 'string') ? raw
+          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+        this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        obs.error(errMsg);
+      }
+    });
+  }
+
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
-      if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
+      if (fileContext.model.isDataset && !saveAs) {
+        this.editorControl.saveBuffer(fileContext, null, false).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -615,13 +709,30 @@ export class MonacoService implements OnDestroy {
             * "save as" format.
             */
           let saveRef = this.dialog.open(SaveToComponent, {
-            width: '500px',
+            width: '540px',
             data: {
               canBeISO: x,
-              fileName: fileContext.model.fileName, ...(fileDirectory && { fileDirectory: fileDirectory })
+              fileName: fileContext.model.fileName,
+              ...(fileDirectory && { fileDirectory: fileDirectory }),
+              ...(fileContext.model.isDataset && { datasetName: fileContext.model.path, memberName: fileContext.model.name })
             }
           });
           saveRef.afterClosed().subscribe(result => {
+            if (!result) {
+              obs.next('Cancel');
+              return;
+            }
+
+            // Handle "Save as Dataset/Member" option
+            if (result.saveType === 'dataset') {
+              if (result.allocateNew) {
+                this.allocateAndSave(fileContext, result, obs);
+              } else {
+                this.saveAsDatasetMember(fileContext, result, obs);
+              }
+              return;
+            }
+
             // Check if file already exists at destination
             this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
               const title = `"${result.fileName}" already exists. Do you want to replace it?`;
