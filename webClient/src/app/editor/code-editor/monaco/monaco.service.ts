@@ -627,8 +627,8 @@ export class MonacoService implements OnDestroy {
       allocBody.blksz = parseInt(allocProps.blockSize, 10);
     }
 
-    this.http.put(requestUrl, allocBody).subscribe(
-      () => {
+    this.http.put(requestUrl, allocBody).subscribe({
+      next: () => {
         // If allocating PDS/PDSE with no member name, skip content save 
         // (you can't PUT content directly to a PDS — only to DSN(MEMBER))
         if ((allocProps.organization === 'PO') && !result.memberName) {
@@ -646,13 +646,13 @@ export class MonacoService implements OnDestroy {
           this.saveAsDatasetMember(fileContext, result, obs);
         }
       },
-      (error: any) => {
+      error: (error: any) => {
         const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
       }
-    );
+    });
   }
 
   private saveAsDatasetMember(fileContext: ProjectContext, result: any, obs: any) {
@@ -663,8 +663,8 @@ export class MonacoService implements OnDestroy {
 
     const contents = fileContext.model.contents ? fileContext.model.contents.replace(/\r\n/g, '\n').split('\n') : [''];
 
-    this.http.put(requestUrl, { records: contents }).subscribe(
-      (res: any) => {
+    this.http.put(requestUrl, { records: contents }).subscribe({
+      next: () => {
         this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
           { duration: MessageDuration.Medium, panelClass: 'center' });
         // Update file context to reflect it's now a dataset
@@ -675,13 +675,13 @@ export class MonacoService implements OnDestroy {
         fileContext.temp = false;
         obs.next('Save');
       },
-      (error: any) => {
+      error: (error: any) => {
         const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
       }
-    );
+    });
   }
 
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {

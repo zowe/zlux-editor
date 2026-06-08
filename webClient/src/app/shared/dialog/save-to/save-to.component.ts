@@ -219,20 +219,21 @@ export class SaveToComponent implements OnDestroy {
   // --- Event Handlers ---
 
   onDatasetNameInput(): void {
-    let raw = this.datasetResults.datasetName.toUpperCase();
+    const current = this.datasetResults.datasetName || '';
+    const upper = current.toUpperCase();
 
     // Auto-split parenthesized names like DATASET(MEMBER) into separate fields
-    const parenMatch = raw.match(/^([^()]+)\(([^()]+)\)$/);
+    const parenMatch = upper.match(/^([^()]+)\(([^()]+)\)$/);
     if (parenMatch) {
       this.datasetResults.datasetName = parenMatch[1];
       this.datasetResults.memberName = parenMatch[2];
       this.memberModeEnabled = true;
       this.saveMode = 'member';
-    } else {
-      this.datasetResults.datasetName = raw;
     }
+    // Don't reassign the model on every keystroke — avoids cursor jumping.
+    // The uppercased value is used for validation/lookup only.
 
-    this.datasetNameInput$.next(this.datasetResults.datasetName);
+    this.datasetNameInput$.next(upper.replace(/\([^()]*\)$/, ''));
   }
 
   toggleAllocate(): void {
@@ -297,20 +298,23 @@ export class SaveToComponent implements OnDestroy {
   onTemplateSelect(value: string): void {
     if (!value) return;
     const tmpl = TEMPLATES.get(value);
-    if (tmpl) {
-      // Template always overwrites all fields
-      this.allocateProps.allocationUnit = tmpl.allocationUnit;
-      this.allocateProps.primarySpace = tmpl.primarySpace;
-      this.allocateProps.secondarySpace = tmpl.secondarySpace;
-      this.allocateProps.recordFormat = tmpl.recordFormat;
-      this.allocateProps.recordLength = tmpl.recordLength;
-      this.allocateProps.directoryBlocks = this.allocateProps.organization === 'PS' ? '0' : tmpl.directoryBlocks;
-      // Also set dataset type to PDS for templates (templates are typically for PDS members)
-      if (this.allocateProps.organization !== 'PS') {
-        this.allocateProps.datasetNameType = 'PDS';
-        this.allocateProps.organization = 'PO';
-        this.allocateProps.directoryBlocks = tmpl.directoryBlocks;
-      }
+    if (!tmpl) {
+      // Unknown template — reset selection, leave fields unchanged
+      this.allocateProps.template = '';
+      return;
+    }
+    // Template always overwrites all fields
+    this.allocateProps.allocationUnit = tmpl.allocationUnit;
+    this.allocateProps.primarySpace = tmpl.primarySpace;
+    this.allocateProps.secondarySpace = tmpl.secondarySpace;
+    this.allocateProps.recordFormat = tmpl.recordFormat;
+    this.allocateProps.recordLength = tmpl.recordLength;
+    this.allocateProps.directoryBlocks = this.allocateProps.organization === 'PS' ? '0' : tmpl.directoryBlocks;
+    // Also set dataset type to PDS for templates (templates are typically for PDS members)
+    if (this.allocateProps.organization !== 'PS') {
+      this.allocateProps.datasetNameType = 'PDS';
+      this.allocateProps.organization = 'PO';
+      this.allocateProps.directoryBlocks = tmpl.directoryBlocks;
     }
   }
 
@@ -345,8 +349,11 @@ export class SaveToComponent implements OnDestroy {
         if (!this.isDatasetNameValid()) return false;
         // If dataset doesn't exist and user hasn't opened Allocate, block save
         if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
-        // Cannot write directly to a PDS — a member name is required
-        if (this.datasetLookupStatus === 'pds') return false;
+        // PDS detected — auto-switch to member mode so user gets the member name field
+        if (this.datasetLookupStatus === 'pds' && !this.showAllocate) {
+          this.saveMode = 'member';
+          return this.isDatasetNameValid() && this.isMemberNameValid();
+        }
         if (this.showAllocate) {
           return !!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
@@ -477,7 +484,9 @@ export class SaveToComponent implements OnDestroy {
 
         return { dsorg, recfm, lrecl, blksize: blksizeFinal, volser, space, primary, secondary, dirblk };
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      console.warn('extractDatasetInfo: failed to parse dataset metadata', e);
+    }
     return null;
   }
 
