@@ -27,8 +27,9 @@ export class TagComponent {
       this.options = ['UTF-8'];
     }
     else {
-      this.options = ['UTF-8', 'ISO-8859-1', 'IBM-1047'];
+      this.options = ['IBM-1047', 'UTF-8', 'ISO-8859-1'];
     }
+    this.results.encoding = this.options[0];
   }
 
   ngOnInit() {
