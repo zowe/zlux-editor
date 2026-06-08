@@ -650,7 +650,7 @@ export class MonacoService implements OnDestroy {
         const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-        obs.next('Error');
+        obs.error(errMsg);
       }
     );
   }
@@ -661,7 +661,7 @@ export class MonacoService implements OnDestroy {
     const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
 
-    const contents = fileContext.model.contents ? fileContext.model.contents.split('\n') : [''];
+    const contents = fileContext.model.contents ? fileContext.model.contents.replace(/\r\n/g, '\n').split('\n') : [''];
 
     this.http.put(requestUrl, { records: contents }).subscribe(
       (res: any) => {
@@ -679,7 +679,7 @@ export class MonacoService implements OnDestroy {
         const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-        obs.next('Error');
+        obs.error(errMsg);
       }
     );
   }

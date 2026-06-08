@@ -345,6 +345,8 @@ export class SaveToComponent implements OnDestroy {
         if (!this.isDatasetNameValid()) return false;
         // If dataset doesn't exist and user hasn't opened Allocate, block save
         if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
+        // Cannot write directly to a PDS — a member name is required
+        if (this.datasetLookupStatus === 'pds') return false;
         if (this.showAllocate) {
           return !!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
@@ -479,15 +481,15 @@ export class SaveToComponent implements OnDestroy {
     return null;
   }
 
-  /** Try multiple field names and return the first valid numeric value, or '—' */
+  /** Try multiple field names and return the first valid numeric value (including 0), or '—' */
   private extractNumericField(obj: any, fields: string[]): string {
     for (const field of fields) {
       const val = obj?.[field];
-      if (val !== undefined && val !== null && val !== '' && val !== 0) {
+      if (val !== undefined && val !== null && val !== '') {
         // Ensure the value is actually numeric (or a numeric string)
         const num = Number(val);
-        if (!isNaN(num) && num > 0) {
-          return val.toString();
+        if (!isNaN(num) && num >= 0) {
+          return num.toString();
         }
       }
     }
