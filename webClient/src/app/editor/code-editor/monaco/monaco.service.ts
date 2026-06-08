@@ -27,7 +27,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
-import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpParams } from '@angular/common/http';
 import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
@@ -676,7 +676,12 @@ export class MonacoService implements OnDestroy {
     const rawContent = editorModel ? editorModel.getValue() : fileContext.model.contents;
     const contents = rawContent ? rawContent.replace(/\r\n/g, '\n').split('\n') : [''];
 
-    this.http.put(requestUrl, { records: contents }).subscribe({
+    // Use force=true to overwrite existing members (same as regular save does)
+    let parameters = new HttpParams();
+    parameters = parameters.append('force', true);
+    const options = { params: parameters };
+
+    this.http.put(requestUrl, { records: contents }, options).subscribe({
       next: () => {
         this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
           { duration: MessageDuration.Medium, panelClass: 'center' });
