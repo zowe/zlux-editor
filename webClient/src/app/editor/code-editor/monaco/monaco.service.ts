@@ -625,8 +625,12 @@ export class MonacoService implements OnDestroy {
       dsnt: dsnt,
       close: 'true',
     };
+    // Only include blockSize if it's a valid positive integer; 0 or negative causes ACB errors on z/OS
     if (allocProps.blockSize) {
-      allocBody.blksz = parseInt(allocProps.blockSize, 10);
+      const blkSizeNum = parseInt(allocProps.blockSize, 10);
+      if (!isNaN(blkSizeNum) && blkSizeNum > 0) {
+        allocBody.blksz = blkSizeNum;
+      }
     }
 
     this.http.put(requestUrl, allocBody).subscribe({
@@ -666,7 +670,11 @@ export class MonacoService implements OnDestroy {
     const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
     const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
 
-    const contents = fileContext.model.contents ? fileContext.model.contents.replace(/\r\n/g, '\n').split('\n') : [''];
+    // Always get the latest content from the active editor model to avoid saving stale/empty data
+    const editor = this.editorControl.editor.getValue();
+    const editorModel = editor?.getModel();
+    const rawContent = editorModel ? editorModel.getValue() : fileContext.model.contents;
+    const contents = rawContent ? rawContent.replace(/\r\n/g, '\n').split('\n') : [''];
 
     this.http.put(requestUrl, { records: contents }).subscribe({
       next: () => {
@@ -677,9 +685,15 @@ export class MonacoService implements OnDestroy {
         fileContext.model.fileName = fullName;
         fileContext.model.name = memberName || datasetName;
         fileContext.model.path = datasetName;
+        fileContext.model.contents = rawContent || '';
         fileContext.temp = false;
+        fileContext.changed = false;
         // Notify tab bar of the title change
         this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
+        // Emit bufferSaved so the file tree and other listeners know
+        this.editorControl.bufferSaved.next({ buffer: fileContext.model.contents, file: fileContext.model.name });
+        // Refresh the dataset member list in the file tree so user doesn't have to manually refresh
+        this.editorControl.openDirectory.next(datasetName);
         obs.next('Save');
       },
       error: (error: any) => {
