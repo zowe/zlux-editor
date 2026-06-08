@@ -97,12 +97,14 @@ export class SaveToComponent implements OnDestroy {
 
   // Zowe dataset name: 1-8 char qualifiers separated by dots; each qualifier starts with A-Z, #, $, @;
   // remaining chars allow A-Z, 0-9, #, $, @, -; up to 12 qualifiers; total 3-44 chars
-  private datasetPattern = /^[A-Z$#@][A-Z0-9$#@\-]{0,7}(\.[A-Z$#@][A-Z0-9$#@\-]{0,7}){0,11}$/;
+  // Case-insensitive to avoid flicker when user types lowercase before auto-uppercase kicks in
+  private datasetPattern = /^[A-Za-z$#@][A-Za-z0-9$#@\-]{0,7}(\.[A-Za-z$#@][A-Za-z0-9$#@\-]{0,7}){0,11}$/;
   private datasetMinLength = 3;
   private datasetMaxLength = 44;
 
   // Zowe member name: starts with A-Z, #, $, @; remaining A-Z, 0-9, #, $, @; 1-8 chars total (no hyphens)
-  private memberPattern = /^[A-Z$#@][A-Z0-9$#@]{0,7}$/;
+  // Case-insensitive to prevent validation flicker on keystroke before uppercase normalization
+  private memberPattern = /^[A-Za-z$#@][A-Za-z0-9$#@]{0,7}$/;
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -195,6 +197,10 @@ export class SaveToComponent implements OnDestroy {
       if (isPDS) {
         this.datasetLookupStatus = 'pds';
         this.memberModeEnabled = true;
+        // Auto-switch to member mode so user gets the member name field
+        if (this.saveMode === 'dataset') {
+          this.saveMode = 'member';
+        }
       } else {
         this.datasetLookupStatus = 'sequential';
         this.memberModeEnabled = false;
@@ -234,6 +240,15 @@ export class SaveToComponent implements OnDestroy {
     // The uppercased value is used for validation/lookup only.
 
     this.datasetNameInput$.next(upper.replace(/\([^()]*\)$/, ''));
+  }
+
+  /** Clear stale member name when switching away from member mode */
+  onModeChange(newMode: SaveMode): void {
+    if (newMode !== 'member' && this.saveMode === 'member') {
+      // Clear member name to avoid stale data persisting invisibly
+      this.datasetResults.memberName = '';
+    }
+    this.saveMode = newMode;
   }
 
   toggleAllocate(): void {
@@ -349,11 +364,8 @@ export class SaveToComponent implements OnDestroy {
         if (!this.isDatasetNameValid()) return false;
         // If dataset doesn't exist and user hasn't opened Allocate, block save
         if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
-        // PDS detected — auto-switch to member mode so user gets the member name field
-        if (this.datasetLookupStatus === 'pds' && !this.showAllocate) {
-          this.saveMode = 'member';
-          return this.isDatasetNameValid() && this.isMemberNameValid();
-        }
+        // Cannot write directly to a PDS — a member name is required
+        if (this.datasetLookupStatus === 'pds' && !this.showAllocate) return false;
         if (this.showAllocate) {
           return !!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
