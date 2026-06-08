@@ -59,6 +59,7 @@ Copyright Contributors to the Zowe Project.
         <mat-label>Dataset Name</mat-label>
         <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
           (input)="onDatasetNameInput()"
+          (blur)="datasetResults.datasetName = datasetResults.datasetName.toUpperCase()"
           placeholder="e.g. USER.MY.DATA">
         @if (datasetResults.datasetName && !isDatasetNameValid()) {
         <mat-hint class="hint-error">
@@ -181,6 +182,7 @@ Copyright Contributors to the Zowe Project.
         <mat-label>PDS Dataset Name</mat-label>
         <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
           (input)="onDatasetNameInput()"
+          (blur)="datasetResults.datasetName = datasetResults.datasetName.toUpperCase()"
           placeholder="e.g. USER.MY.PDS">
         @if (datasetResults.datasetName && !isDatasetNameValid()) {
         <mat-hint class="hint-error">
