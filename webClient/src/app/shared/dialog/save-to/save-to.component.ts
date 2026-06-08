@@ -367,12 +367,24 @@ export class SaveToComponent implements OnDestroy {
         // Cannot write directly to a PDS — a member name is required
         if (this.datasetLookupStatus === 'pds' && !this.showAllocate) return false;
         if (this.showAllocate) {
-          return !!(this.allocateProps.allocationUnit &&
+          if (!(this.allocateProps.allocationUnit &&
             this.allocateProps.primarySpace &&
             this.allocateProps.secondarySpace &&
             this.allocateProps.directoryBlocks &&
             this.allocateProps.recordFormat &&
-            this.allocateProps.recordLength);
+            this.allocateProps.recordLength)) {
+            return false;
+          }
+          // Enforce positive numeric values
+          const primary = parseInt(this.allocateProps.primarySpace, 10);
+          const secondary = parseInt(this.allocateProps.secondarySpace, 10);
+          const recLen = parseInt(this.allocateProps.recordLength, 10);
+          const dirBlk = parseInt(this.allocateProps.directoryBlocks, 10);
+          if (isNaN(primary) || primary < 1) return false;
+          if (isNaN(secondary) || secondary < 1) return false;
+          if (isNaN(recLen) || recLen < 1) return false;
+          if (isNaN(dirBlk) || dirBlk < 0) return false;
+          return true;
         }
         return true;
 

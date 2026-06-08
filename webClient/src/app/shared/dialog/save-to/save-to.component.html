@@ -132,11 +132,11 @@ Copyright Contributors to the Zowe Project.
             </mat-form-field>
             <mat-form-field class="third-width" appearance="outline">
               <mat-label>Primary</mat-label>
-              <input matInput type="number" [(ngModel)]="allocateProps.primarySpace">
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.primarySpace">
             </mat-form-field>
             <mat-form-field class="third-width" appearance="outline">
               <mat-label>Secondary</mat-label>
-              <input matInput type="number" [(ngModel)]="allocateProps.secondarySpace">
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.secondarySpace">
             </mat-form-field>
           </div>
 
@@ -152,11 +152,11 @@ Copyright Contributors to the Zowe Project.
             </mat-form-field>
             <mat-form-field class="third-width" appearance="outline">
               <mat-label>Record Len</mat-label>
-              <input matInput type="number" [(ngModel)]="allocateProps.recordLength">
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.recordLength">
             </mat-form-field>
             <mat-form-field class="third-width" appearance="outline">
               <mat-label>Dir Blocks</mat-label>
-              <input matInput type="number" [(ngModel)]="allocateProps.directoryBlocks"
+              <input matInput type="number" min="0" [(ngModel)]="allocateProps.directoryBlocks"
                 placeholder="0 for PS">
             </mat-form-field>
           </div>

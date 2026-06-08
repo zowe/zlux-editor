@@ -74,9 +74,11 @@ export class MonacoService implements OnDestroy {
 
     let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
     this.fileSaveListener = function (e) { // Pure JS, Ctrl-S solution instead...
-      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+      const isMac = (navigator as any).userAgentData?.platform === 'macOS' || /Mac/.test(navigator.userAgent);
+      if (e.key === 's' && (isMac ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
+        if (!fileContext || !fileContext.model) return;
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
         let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
       }
@@ -639,6 +641,7 @@ export class MonacoService implements OnDestroy {
           fileContext.model.name = datasetName;
           fileContext.model.path = datasetName;
           fileContext.temp = false;
+          this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
           obs.next('Save');
         } else {
           this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
@@ -647,7 +650,9 @@ export class MonacoService implements OnDestroy {
         }
       },
       error: (error: any) => {
-        const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
+        const raw = error?.error;
+        const errMsg = (typeof raw === 'string') ? raw
+          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
@@ -673,10 +678,14 @@ export class MonacoService implements OnDestroy {
         fileContext.model.name = memberName || datasetName;
         fileContext.model.path = datasetName;
         fileContext.temp = false;
+        // Notify tab bar of the title change
+        this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
         obs.next('Save');
       },
       error: (error: any) => {
-        const errMsg = error?.error?.message || error?.error || error?.message || 'Unknown error';
+        const raw = error?.error;
+        const errMsg = (typeof raw === 'string') ? raw
+          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
