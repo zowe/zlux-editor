@@ -8,37 +8,253 @@ SPDX-License-Identifier: EPL-2.0
 Copyright Contributors to the Zowe Project.
 -->
 <zlux-tab-trap></zlux-tab-trap>
-<div class="d-flex flex-align-items-start">
-  <div>
+<div class="save-to-dialog">
+  <div class="dialog-header">
     <h2 mat-dialog-title>Save As</h2>
+    <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-</div>
-<mat-dialog-content>
-  <mat-form-field class="w-100">
-    <mat-label>File Name</mat-label>
-    <input matInput type="text" [(ngModel)]="results.fileName">
-  </mat-form-field>
-  <p></p>
-  <mat-form-field class="w-100">
-    <mat-label>Directory</mat-label>
-    <input matInput type="text" [(ngModel)]="results.directory">
-  </mat-form-field>
-  <p></p>
-  <mat-form-field class="w-100">
-    <mat-label>Encoding</mat-label>
-    <mat-select class="select-encoding" tabindex="0" [(ngModel)]="results.encoding">
-      @for (option of options; track option) {
-      <mat-option [value]="option">
-        {{option}}</mat-option>
+
+  <mat-dialog-content>
+    <!-- 3-Mode Segmented Toggle -->
+    <div class="save-mode-group">
+      <button mat-button class="mode-btn" [class.active]="saveMode === 'uss'" (click)="onModeChange('uss')">
+        <i class="fa fa-file-text-o"></i>&nbsp;USS File
+      </button>
+      <button mat-button class="mode-btn" [class.active]="saveMode === 'dataset'" (click)="onModeChange('dataset')">
+        <i class="fa fa-database"></i>&nbsp;Dataset
+      </button>
+      @if (memberModeEnabled) {
+      <button mat-button class="mode-btn" [class.active]="saveMode === 'member'" (click)="onModeChange('member')">
+        <i class="fa fa-file-code-o"></i>&nbsp;Member
+      </button>
       }
-    </mat-select>
-  </mat-form-field>
-</mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="results"
-    [disabled]="!results.fileName || !results.directory || !results.encoding">Save</button>
-</mat-dialog-actions>
+    </div>
+
+    <!-- ═══════════════════════════════ USS FILE MODE ═══════════════════════════════ -->
+    @if (saveMode === 'uss') {
+    <div class="save-form fade-in">
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>File Name</mat-label>
+        <input matInput type="text" [(ngModel)]="results.fileName">
+      </mat-form-field>
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>Directory</mat-label>
+        <input matInput type="text" [(ngModel)]="results.directory">
+      </mat-form-field>
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>Encoding</mat-label>
+        <mat-select tabindex="0" [(ngModel)]="results.encoding">
+          @for (option of options; track option) {
+          <mat-option [value]="option">{{option}}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+    }
+
+    <!-- ═══════════════════════════════ DATASET MODE ═══════════════════════════════ -->
+    @if (saveMode === 'dataset') {
+    <div class="save-form fade-in">
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>Dataset Name</mat-label>
+        <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
+          (input)="onDatasetNameInput()"
+          (blur)="datasetResults.datasetName = datasetResults.datasetName.toUpperCase()"
+          placeholder="e.g. USER.MY.DATA">
+        @if (datasetResults.datasetName && !isDatasetNameValid()) {
+        <mat-hint class="hint-error">
+          Invalid format. Use A-Z, 0-9, #, $, &#64;, - in dot-separated qualifiers (max 44 chars).
+        </mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'loading') {
+        <mat-hint>Checking dataset type...</mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'pds') {
+        <mat-hint class="hint-success">
+          <i class="fa fa-check-circle"></i> Partitioned dataset detected — Member mode available
+        </mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'sequential') {
+        <mat-hint>Sequential dataset — content will be saved directly</mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'not-found') {
+        <mat-hint class="hint-warn">Dataset not found — use Allocate to create it</mat-hint>
+        }
+      </mat-form-field>
+
+      <!-- Allocate New Dataset - Collapsible -->
+      <div class="allocate-section">
+        <button mat-button type="button" class="allocate-toggle-btn" (click)="toggleAllocate()">
+          <i class="fa" [class.fa-chevron-right]="!showAllocate" [class.fa-chevron-down]="showAllocate"></i>
+          Allocate New Dataset
+        </button>
+
+        @if (showAllocate) {
+        <div class="allocate-form fade-in">
+          <!-- Template Quick-Select -->
+          <div class="template-row">
+            <span class="template-label">Quick Template:</span>
+            <div class="template-chips">
+              @for (tmpl of templateOptions; track tmpl) {
+              <button mat-button class="template-chip" [class.selected]="allocateProps.template === tmpl"
+                (click)="allocateProps.template = tmpl; onTemplateSelect(tmpl)">
+                {{tmpl}}
+              </button>
+              }
+            </div>
+          </div>
+
+          <!-- Dataset Type -->
+          <div class="form-row">
+            <mat-form-field class="half-width" appearance="outline">
+              <mat-label>Dataset Type</mat-label>
+              <mat-select [(ngModel)]="allocateProps.datasetNameType"
+                (selectionChange)="onDatasetTypeChange($event.value)">
+                @for (type of datasetNameTypeOptions; track type) {
+                <mat-option [value]="type">{{type}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="half-width" appearance="outline">
+              <mat-label>Organization</mat-label>
+              <input matInput [(ngModel)]="allocateProps.organization" readonly>
+            </mat-form-field>
+          </div>
+
+          <!-- Space Allocation -->
+          <div class="form-row">
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Alloc Unit</mat-label>
+              <mat-select [(ngModel)]="allocateProps.allocationUnit">
+                @for (unit of allocationUnitOptions; track unit) {
+                <mat-option [value]="unit">{{unit}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Primary</mat-label>
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.primarySpace">
+            </mat-form-field>
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Secondary</mat-label>
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.secondarySpace">
+            </mat-form-field>
+          </div>
+
+          <!-- Record Settings -->
+          <div class="form-row">
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Record Fmt</mat-label>
+              <mat-select [(ngModel)]="allocateProps.recordFormat">
+                @for (fmt of recordFormatOptions; track fmt) {
+                <mat-option [value]="fmt">{{fmt}}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Record Len</mat-label>
+              <input matInput type="number" min="1" [(ngModel)]="allocateProps.recordLength">
+            </mat-form-field>
+            <mat-form-field class="third-width" appearance="outline">
+              <mat-label>Dir Blocks</mat-label>
+              <input matInput type="number" min="0" [(ngModel)]="allocateProps.directoryBlocks"
+                placeholder="0 for PS">
+            </mat-form-field>
+          </div>
+
+          <!-- Optional: Block Size -->
+          <div class="form-row">
+            <mat-form-field class="half-width" appearance="outline">
+              <mat-label>Block Size (optional)</mat-label>
+              <input matInput type="number" [(ngModel)]="allocateProps.blockSize">
+            </mat-form-field>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- ═══════════════════════════════ MEMBER MODE ═══════════════════════════════ -->
+    @if (saveMode === 'member') {
+    <div class="save-form fade-in">
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>PDS Dataset Name</mat-label>
+        <input matInput type="text" maxlength="44" [(ngModel)]="datasetResults.datasetName"
+          (input)="onDatasetNameInput()"
+          (blur)="datasetResults.datasetName = datasetResults.datasetName.toUpperCase()"
+          placeholder="e.g. USER.MY.PDS">
+        @if (datasetResults.datasetName && !isDatasetNameValid()) {
+        <mat-hint class="hint-error">
+          Invalid format. Use A-Z, 0-9, #, $, &#64;, - in dot-separated qualifiers (max 44 chars).
+        </mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'pds') {
+        <mat-hint class="hint-success">
+          <i class="fa fa-check-circle"></i> Valid PDS
+        </mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'sequential') {
+        <mat-hint class="hint-error">Not a partitioned dataset — cannot save as member</mat-hint>
+        }
+        @if (isDatasetNameValid() && datasetLookupStatus === 'not-found') {
+        <mat-hint class="hint-warn">Dataset not found</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="w-100" appearance="outline">
+        <mat-label>Member Name</mat-label>
+        <input matInput type="text" maxlength="8" [(ngModel)]="datasetResults.memberName"
+          (input)="datasetResults.memberName = datasetResults.memberName.toUpperCase()"
+          placeholder="e.g. MYPROG">
+        @if (datasetResults.memberName && !isMemberNameValid()) {
+        <mat-hint class="hint-error">
+          Must start with A-Z, #, $, or &#64;. Max 8 alphanumeric chars.
+        </mat-hint>
+        }
+        @if (datasetResults.memberName && isMemberNameValid()) {
+        <mat-hint class="hint-success">
+          <i class="fa fa-check-circle"></i> {{datasetResults.datasetName}}({{datasetResults.memberName}})
+        </mat-hint>
+        }
+      </mat-form-field>
+
+      <!-- Dataset Info (read-only) -->
+      @if (datasetInfo) {
+      <div class="dataset-info-panel fade-in">
+        <div class="dataset-info-header">
+          <i class="fa fa-info-circle"></i> Dataset Properties
+        </div>
+        <div class="dataset-info-grid">
+          <span class="info-label">Organization:</span><span class="info-value" [class.missing]="datasetInfo.dsorg === '\u2014'">{{datasetInfo.dsorg}}</span>
+          <span class="info-label">Record Format:</span><span class="info-value" [class.missing]="datasetInfo.recfm === '\u2014'">{{datasetInfo.recfm}}</span>
+          <span class="info-label">Record Length:</span><span class="info-value" [class.missing]="datasetInfo.lrecl === '\u2014'">{{datasetInfo.lrecl}}</span>
+          <span class="info-label">Block Size:</span><span class="info-value" [class.missing]="datasetInfo.blksize === '\u2014'">{{datasetInfo.blksize}}</span>
+          <span class="info-label">Volume:</span><span class="info-value" [class.missing]="datasetInfo.volser === '\u2014'">{{datasetInfo.volser}}</span>
+          <span class="info-label">Space Unit:</span><span class="info-value" [class.missing]="datasetInfo.space === '\u2014'">{{datasetInfo.space}}</span>
+          <span class="info-label">Primary:</span><span class="info-value" [class.missing]="datasetInfo.primary === '\u2014'">{{datasetInfo.primary}}</span>
+          <span class="info-label">Secondary:</span><span class="info-value" [class.missing]="datasetInfo.secondary === '\u2014'">{{datasetInfo.secondary}}</span>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-flat-button color="primary"
+      [mat-dialog-close]="getDialogResult()"
+      [disabled]="!isValid()">
+      @if (saveMode === 'dataset' && showAllocate) {
+        Allocate & Save
+      } @else if (saveMode === 'member') {
+        Save Member
+      } @else {
+        Save
+      }
+    </button>
+  </mat-dialog-actions>
+</div>
 
 <!--
 This program and the accompanying materials are
