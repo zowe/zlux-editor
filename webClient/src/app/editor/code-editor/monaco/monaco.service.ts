@@ -656,7 +656,7 @@ export class MonacoService implements OnDestroy {
       error: (error: any) => {
         const raw = error?.error;
         const errMsg = (typeof raw === 'string') ? raw
-          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+          : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
         // If error explicitly says "already exists", fall back to direct save
         if (errMsg.includes('already exists')) {
           this.snackBar.open(`Dataset ${datasetName} already exists — saving content directly.`, 'Dismiss',
@@ -689,8 +689,11 @@ export class MonacoService implements OnDestroy {
 
     // Use force=true to overwrite existing members (same as regular save does)
     let parameters = new HttpParams();
-    parameters = parameters.append('force', true);
-    const options = { params: parameters };
+    parameters = parameters.append('force', 'true');
+    const options = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: parameters
+    };
 
     this.http.put(requestUrl, { records: contents }, options).subscribe({
       next: () => {
@@ -715,7 +718,7 @@ export class MonacoService implements OnDestroy {
       error: (error: any) => {
         const raw = error?.error;
         const errMsg = (typeof raw === 'string') ? raw
-          : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+          : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
         this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
