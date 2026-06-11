@@ -592,6 +592,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if(saveAs){
         this.snackBar.open(`${results.fileName} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
         this.openDirectory.next(results.directory);
+        if (_observer != null) { _observer.next(null); }
       }
       /* It was a new file, we
        * can set the new fileName. */
@@ -924,9 +925,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable, saveAs);
-        /** Update the new encoding value, in opeFileList Models */
-          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        /** Update the new encoding value, in openFileList Models (only if not a copy/Save-As) */
+          if (!saveAs) {
+            let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+            this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+          }
           this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
         }, e => {
           this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 

@@ -776,11 +776,10 @@ export class MonacoService implements OnDestroy {
                 if (response == true) {
                   // when user selects to overwrite the file
                   if (result) {
-                    // Use saveFileHandler directly — saveBuffer routes to saveDatasetHandler
-                    // when model.isDataset is true, which doesn't support USS overwrite
-                    this.editorControl.saveFileHandler(fileContext, result).subscribe(() => {
-                      // After successful USS save, clear dataset flag so subsequent Ctrl+S uses USS path
-                      fileContext.model.isDataset = false;
+                    // If file was a dataset member, pass saveAs=true so doSaving treats it
+                    // as a copy (doesn't modify the original file context/tab)
+                    const isCopy = fileContext.model.isDataset;
+                    this.editorControl.saveFileHandler(fileContext, result, isCopy).subscribe(() => {
                       obs.next('Save');
                     });
                   }
@@ -792,10 +791,10 @@ export class MonacoService implements OnDestroy {
             }, error => {
               if (error.status == 404) {// if file does not exist at destination, then try to save it
                 if (result) {
-                  // Use saveFileHandler directly for USS saves (bypasses isDataset check in saveBuffer)
-                  this.editorControl.saveFileHandler(fileContext, result).subscribe(() => {
-                    // After successful USS save, clear dataset flag so subsequent Ctrl+S uses USS path
-                    fileContext.model.isDataset = false;
+                  // If file was a dataset member, pass saveAs=true so doSaving treats it
+                  // as a copy (doesn't modify the original file context/tab)
+                  const isCopy = fileContext.model.isDataset;
+                  this.editorControl.saveFileHandler(fileContext, result, isCopy).subscribe(() => {
                     obs.next('Save');
                   });
                 }
