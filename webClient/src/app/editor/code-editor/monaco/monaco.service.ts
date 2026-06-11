@@ -695,7 +695,7 @@ export class MonacoService implements OnDestroy {
       params: parameters
     };
 
-    this.http.put(requestUrl, { records: contents }, options).subscribe({
+    this.http.post(requestUrl, { records: contents }, options).subscribe({
       next: () => {
         this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
           { duration: MessageDuration.Medium, panelClass: 'center' });
