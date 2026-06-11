@@ -741,12 +741,14 @@ export class MonacoService implements OnDestroy {
           /* Open up a dialog with the standard,
             * "save as" format.
             */
+          // Only pass fileDirectory for USS paths (starts with /); dataset names should not pre-fill USS directory
+          const ussDirectory = fileDirectory && fileDirectory.startsWith('/') ? fileDirectory : undefined;
           let saveRef = this.dialog.open(SaveToComponent, {
             width: '540px',
             data: {
               canBeISO: x,
               fileName: fileContext.model.fileName,
-              ...(fileDirectory && { fileDirectory: fileDirectory }),
+              ...(ussDirectory && { fileDirectory: ussDirectory }),
               ...(fileContext.model.isDataset && { datasetName: fileContext.model.path, memberName: fileContext.model.name })
             }
           });
@@ -772,9 +774,15 @@ export class MonacoService implements OnDestroy {
               const warningMessage = 'Replacing it will overwrite its current contents';
               let response = this.confirmAction(title, warningMessage).subscribe(response => {
                 if (response == true) {
-                  // when user selects to overwite the file
+                  // when user selects to overwrite the file
                   if (result) {
-                    this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                    // Use saveFileHandler directly — saveBuffer routes to saveDatasetHandler
+                    // when model.isDataset is true, which doesn't support USS overwrite
+                    this.editorControl.saveFileHandler(fileContext, result).subscribe(() => {
+                      // After successful USS save, clear dataset flag so subsequent Ctrl+S uses USS path
+                      fileContext.model.isDataset = false;
+                      obs.next('Save');
+                    });
                   }
                 } else {
                   // when user selects not to overwrite or cancel
@@ -784,7 +792,12 @@ export class MonacoService implements OnDestroy {
             }, error => {
               if (error.status == 404) {// if file does not exist at destination, then try to save it
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  // Use saveFileHandler directly for USS saves (bypasses isDataset check in saveBuffer)
+                  this.editorControl.saveFileHandler(fileContext, result).subscribe(() => {
+                    // After successful USS save, clear dataset flag so subsequent Ctrl+S uses USS path
+                    fileContext.model.isDataset = false;
+                    obs.next('Save');
+                  });
                 }
               } else {
                 this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,
