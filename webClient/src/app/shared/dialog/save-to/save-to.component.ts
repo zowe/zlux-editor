@@ -207,18 +207,10 @@ export class SaveToComponent implements OnDestroy {
         this.datasetLookupStatus = 'pds';
         this.memberModeEnabled = true;
         this.showAllocate = false; // Dataset exists — can't allocate
-        // Auto-switch to member mode so user gets the member name field
-        if (this.saveMode === 'dataset') {
-          this.saveMode = 'member';
-        }
       } else {
         this.datasetLookupStatus = 'sequential';
         this.memberModeEnabled = false;
         this.showAllocate = false; // Dataset exists — can't allocate
-        // If user was in member mode but dataset isn't PDS, switch them back
-        if (this.saveMode === 'member') {
-          this.saveMode = 'dataset';
-        }
       }
     });
 
