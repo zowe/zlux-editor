@@ -192,6 +192,15 @@ export class SaveToComponent implements OnDestroy {
       // Extract dataset attributes from response
       this.datasetInfo = this.extractDatasetInfo(response);
 
+      // If no dataset data was found in the response, treat as not-found
+      if (!this.datasetInfo) {
+        this.datasetLookupStatus = 'not-found';
+        if (!this.memberModeFromData) {
+          this.memberModeEnabled = false;
+        }
+        return;
+      }
+
       // Parse response to determine if PDS
       const isPDS = this.checkIfPartitioned(response);
       if (isPDS) {
