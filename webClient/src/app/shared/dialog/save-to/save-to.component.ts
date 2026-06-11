@@ -253,13 +253,13 @@ export class SaveToComponent implements OnDestroy {
     this.datasetNameInput$.next(upper.replace(/\([^()]*\)$/, ''));
   }
 
-  /** Clear stale member name when switching away from member mode */
+  /** Handle tab switching between modes */
   onModeChange(newMode: SaveMode): void {
-    if (newMode !== 'member' && this.saveMode === 'member') {
-      // Clear member name to avoid stale data persisting invisibly
-      this.datasetResults.memberName = '';
-    }
     this.saveMode = newMode;
+    // Re-trigger dataset lookup if switching to dataset/member mode and name is already filled
+    if ((newMode === 'dataset' || newMode === 'member') && this.datasetResults.datasetName && this.isDatasetNameValid()) {
+      this.datasetNameInput$.next(this.datasetResults.datasetName.toUpperCase());
+    }
   }
 
   toggleAllocate(): void {
