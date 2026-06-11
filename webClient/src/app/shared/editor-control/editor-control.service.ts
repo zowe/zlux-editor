@@ -90,6 +90,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   private _projectName = '';
   public isTestLangMode = false;
+  private _newFileCounter = 0;
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
@@ -805,19 +806,28 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     let _observer: Observer<void>;
     let _observable: Observable<void>;
     let sessionID: number;
-    
-    /* A new file is not "untagged"
-     * in this case. I'm referring to
-     * a file as untagged if it is currently
-     * untagged in USS.
-     */
-    let isUntagged: boolean;
 
     if (context != null) {
       _activeFile = context;
     } else {
       _activeFile = _openFile.filter(file => file.active === true)[0];
     }
+
+    // Guard: if this is a temp file with no valid path, abort with a clear message
+    if (_activeFile && _activeFile.temp && !results && !_activeFile.model.path) {
+      return new Observable((observer) => {
+        this.snackBar.open(`"${_activeFile.name}" has not been saved yet. Use File → Save As to choose a destination.`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        observer.error('Temp file has no path — use Save As');
+      });
+    }
+
+    /* A new file is not "untagged"
+     * in this case. I'm referring to
+     * a file as untagged if it is currently
+     * untagged in USS.
+     */
+    let isUntagged: boolean;
     
     let requestUrl: string;
     
@@ -1033,12 +1043,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   getNewFileName() {
     let name:string='new';
-    let num:number= 1;
-    let fileName = `${name}${num}`;
+    // Use a monotonically increasing counter so names are never reused (even after closing tabs)
+    this._newFileCounter++;
+    let fileName = `${name}${this._newFileCounter}`;
     let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
     
     while(openFiles.indexOf(fileName)>=0) {
-      fileName = `${name}${++num}`;
+      fileName = `${name}${++this._newFileCounter}`;
     }
 
     return fileName;

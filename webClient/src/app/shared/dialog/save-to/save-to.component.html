@@ -180,9 +180,14 @@ Copyright Contributors to the Zowe Project.
         }
       </div>
       }
-      @if (datasetLookupStatus === 'sequential' || datasetLookupStatus === 'pds') {
+      @if (datasetLookupStatus === 'sequential') {
       <div class="allocate-section">
         <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> Dataset already exists — cannot allocate. Content will be saved directly.</mat-hint>
+      </div>
+      }
+      @if (datasetLookupStatus === 'pds') {
+      <div class="allocate-section">
+        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> This is a partitioned dataset — switch to the <strong>Member</strong> tab to save to a specific member.</mat-hint>
       </div>
       }
     </div>

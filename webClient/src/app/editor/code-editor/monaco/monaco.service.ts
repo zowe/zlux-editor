@@ -657,11 +657,15 @@ export class MonacoService implements OnDestroy {
         const raw = error?.error;
         const errMsg = (typeof raw === 'string') ? raw
           : raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
-        // If allocation fails because dataset already exists, fall back to direct save
-        if (errMsg.includes('Unable to allocate a DD for ACB') || errMsg.includes('already exists')) {
+        // If error explicitly says "already exists", fall back to direct save
+        if (errMsg.includes('already exists')) {
           this.snackBar.open(`Dataset ${datasetName} already exists — saving content directly.`, 'Dismiss',
             { duration: MessageDuration.Medium, panelClass: 'center' });
           this.saveAsDatasetMember(fileContext, result, obs);
+        } else if (errMsg.includes('Unable to allocate a DD for ACB')) {
+          this.snackBar.open(`Failed to allocate dataset ${datasetName}: The high-level qualifier may not be authorized for this user. Try a different dataset name prefix.`,
+            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+          obs.error(errMsg);
         } else {
           this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
             'Close', { duration: MessageDuration.Long, panelClass: 'center' });
