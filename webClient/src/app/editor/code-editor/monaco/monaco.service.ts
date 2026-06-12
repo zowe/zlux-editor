@@ -717,8 +717,15 @@ export class MonacoService implements OnDestroy {
       },
       error: (error: any) => {
         const raw = error?.error;
-        const errMsg = (typeof raw === 'string') ? raw
+        let errMsg = (typeof raw === 'string') ? raw
           : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+        // Simplify verbose server messages that include full record content
+        // e.g. 'Record #10 with contents "Aaaa..." is longer than the max record length of 80'
+        // → 'Line 10 exceeds the max record length of 80'
+        const recordMatch = errMsg.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
+        if (recordMatch) {
+          errMsg = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
+        }
         this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
           'Close', { duration: MessageDuration.Long, panelClass: 'center' });
         obs.error(errMsg);
@@ -749,7 +756,11 @@ export class MonacoService implements OnDestroy {
               canBeISO: x,
               fileName: fileContext.model.fileName,
               ...(ussDirectory && { fileDirectory: ussDirectory }),
-              ...(fileContext.model.isDataset && { datasetName: fileContext.model.path, memberName: fileContext.model.name })
+              ...(fileContext.model.isDataset && {
+                datasetName: fileContext.model.path,
+                // Only pass memberName if it differs from datasetName (i.e. it's an actual member, not a sequential DS)
+                ...(fileContext.model.name !== fileContext.model.path && { memberName: fileContext.model.name })
+              })
             }
           });
           saveRef.afterClosed().subscribe(result => {

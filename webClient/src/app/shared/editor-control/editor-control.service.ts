@@ -758,7 +758,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             });
           }
         } else {
-          this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
+          // Simplify verbose server messages that include full record content
+          let displayError = error;
+          const recordMatch = error.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
+          if (recordMatch) {
+            displayError = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
+          }
+          this.snackBar.open(`${activeDataset.name} could not be saved! ${displayError}. Error code=${e.status}`,
           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         }
       } else {
