@@ -90,7 +90,6 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
 
   private _projectName = '';
   public isTestLangMode = false;
-  private _newFileCounter = 0;
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
@@ -1060,17 +1059,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
   }
 
   getNewFileName(directoryNames: string[] = []) {
-    let name:string='new';
-    // Use a monotonically increasing counter so names are never reused (even after closing tabs)
-    this._newFileCounter++;
-    let fileName = `${name}${this._newFileCounter}`;
+    const name: string = 'new';
 
     // Build a set of names to avoid: open tabs + files already in the target directory
-    let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
+    const openFiles = this._openFileList.getValue().map((file) => file.model.name);
     const takenNames = new Set([...openFiles, ...directoryNames]);
 
-    while(takenNames.has(fileName)) {
-      fileName = `${name}${++this._newFileCounter}`;
+    // Find the lowest available number (directory-aware: resets per directory context)
+    let counter = 1;
+    let fileName = `${name}${counter}`;
+    while (takenNames.has(fileName)) {
+      fileName = `${name}${++counter}`;
     }
 
     return fileName;
