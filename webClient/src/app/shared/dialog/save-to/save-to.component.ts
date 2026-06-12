@@ -138,6 +138,12 @@ export class SaveToComponent implements OnDestroy {
         }
       }
 
+      // If the pre-populated member name is invalid (e.g. it's a dataset name with dots),
+      // replace it with a safe default
+      if (memName && !this.memberPattern.test(memName)) {
+        memName = 'UNTITLED';
+      }
+
       this.datasetResults.datasetName = dsName;
       if (memName) {
         this.datasetResults.memberName = memName;
