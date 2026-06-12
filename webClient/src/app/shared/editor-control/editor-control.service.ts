@@ -1010,9 +1010,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.editor.getValue().focus();
   }
 
-  createFile(name?: string): ProjectContext {
+  createFile(name?: string, context?: { path?: string; existingNames?: any[] }): ProjectContext {
+    // Extract directory file names from context (FileTreeNode[].label)
+    const dirNames: string[] = context?.existingNames
+      ? context.existingNames.map(n => (typeof n === 'string' ? n : n?.label || '')).filter(Boolean)
+      : [];
+
     if(name===undefined) {
-      name = this.getNewFileName();
+      name = this.getNewFileName(dirNames);
     }
 
     let rootContext = this.rootContext.getValue();
@@ -1025,6 +1030,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     };
     let fileContext = <ProjectContext>this.generateProjectContext(fileStructure, rootContext);
     fileContext.temp = true;
+
+    // Store intended directory path so Save As can default to it
+    // Only set when context came from the toolbar (has existingNames), not from right-click node
+    if (context?.path && context?.existingNames) {
+      fileContext.model.path = context.path;
+    }
+
     if (!rootContext) {
       rootContext = this.initProjectContext('', []);
     }
@@ -1045,19 +1057,19 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.initializedFile.next(fileContext);
     // return file context
     return fileContext;
-    // return new Observable<ProjectContext>((observer) => {
-    //   observer.next(<ProjectContext>fileContext);
-    // });
   }
 
-  getNewFileName() {
+  getNewFileName(directoryNames: string[] = []) {
     let name:string='new';
     // Use a monotonically increasing counter so names are never reused (even after closing tabs)
     this._newFileCounter++;
     let fileName = `${name}${this._newFileCounter}`;
+
+    // Build a set of names to avoid: open tabs + files already in the target directory
     let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
-    
-    while(openFiles.indexOf(fileName)>=0) {
+    const takenNames = new Set([...openFiles, ...directoryNames]);
+
+    while(takenNames.has(fileName)) {
       fileName = `${name}${++this._newFileCounter}`;
     }
 

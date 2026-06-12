@@ -299,8 +299,8 @@ export class ProjectTreeComponent {
     });
   }
 
-  onNewFileClick() {
-    this.editorControl.createFile();
+  onNewFileClick(context?: any) {
+    this.editorControl.createFile(undefined, context);
   }
 
   nodeActivate($event: any) {
