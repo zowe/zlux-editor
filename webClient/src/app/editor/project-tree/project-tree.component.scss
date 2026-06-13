@@ -9,6 +9,9 @@
   Copyright Contributors to the Zowe Project.
 */
 :host {
+  display: block;
+  height: 100%;
+
   .open-project {
     color: white;
     font-size: 12px;
@@ -174,20 +177,17 @@
     }
   }
   
-  .file-explorer-container {
-    margin-left: -5px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-
-
   .dataset-container { //Note: This is temporary and will be removed when Dataset functionality for Explorer gets better.
     padding-left: 10px;
     padding-top: 10px;
     height: 100%;
   }
+}
+
+.file-explorer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 /*
