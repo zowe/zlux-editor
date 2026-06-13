@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, ViewChild, Inject } from '@angular/core';
+import { Component, ViewChild, Inject, HostBinding } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
@@ -32,6 +32,9 @@ import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 })
 
 export class ProjectTreeComponent {
+
+  @HostBinding('style.display') hostDisplay = 'block';
+  @HostBinding('style.height') hostHeight = '100%';
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
