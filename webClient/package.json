@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@zlux/widgets": "github:wadkarsatish/zlux-widgets-angular18#widgets-Angular-Library",
-    "@zowe/zlux-angular-file-tree": "2.0.0-pr-228-505-20260613001211",
+    "@zowe/zlux-angular-file-tree": "2.0.0-pr-228-506-20260613004908",
     "lodash": "4.18.1",
     "material-icons": "1.13.14",
     "monaco-editor": "0.52.2",
