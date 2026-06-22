@@ -22,11 +22,12 @@ import { ConfirmAction } from '../../../shared/dialog/confirm-action/confirm-act
 import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
+import { LimitsService } from '../../../shared/limits.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
-import { finalize, map, switchMap, tap } from 'rxjs/operators';
-import { of, Subject, Observable } from 'rxjs';
+import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
+import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
-import { HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
 import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
@@ -43,10 +44,12 @@ export class MonacoService implements OnDestroy {
   constructor(
     @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private http: HttpService,
+    private httpClient: HttpClient,
     private dataAdapter: DataAdapterService,
     private editorControl: EditorControlService,
     private dialog: MatDialog,
-    private snackBar: SnackBarService
+    private snackBar: SnackBarService,
+    private limitsService: LimitsService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -110,18 +113,152 @@ export class MonacoService implements OnDestroy {
       headers: headers,
       responseType: 'text',
     }
-    return of({}).pipe(
-      tap(() => this.loadingStatusChanged.next('loading')),
-      switchMap(() => this.http.get(requestUrl, options)),
-      map((res: any) => {
-        if (fileNode.model.isDataset) {
-          return this.dataAdapter.convertDatasetContent(res);
+
+    const maxSize = this.limitsService.limits.maxFileSize;
+    const maxSizeLabel = this.limitsService.getFormattedMaxSize();
+
+    // Pre-check to avoid downloading oversized files/datasets.
+    // If the file exceeds the limit, prompt the user with a warning dialog.
+    // If they choose to override, download without a size cap.
+    let preflight$: Observable<boolean>;
+    if (fileNode.model.isDataset) {
+      const isPdsMember = fileNode.model.path && fileNode.model.path.indexOf('(') !== -1;
+      const attrs = fileNode.model.datasetAttrs;
+      const org = attrs && attrs.dsorg ? attrs.dsorg.organization : '';
+
+      if (isPdsMember) {
+        // PDS members share the parent PDS allocation so DASD math would over-estimate;
+        // they are protected by the streaming download abort below instead.
+        preflight$ = of(false);
+      } else if (org === 'vsam') {
+        // VSAM datasets have different allocation semantics (CI/CA sizes, key ranges);
+        // space/prime don't map to data size the same way. Rely on streaming abort.
+        this.log.debug(`Dataset ${fileNode.name} is VSAM, skipping DASD size estimation`);
+        preflight$ = of(false);
+      } else {
+        // Sequential, partitioned (whole PDS), HFS, DA, and other non-VSAM datasets:
+        // estimate size via 3390 DASD geometry using space/prime allocation.
+        const estimatedSize = this.limitsService.estimateDatasetSize(attrs);
+        if (estimatedSize > 0 && estimatedSize > maxSize) {
+          this.log.warn(`Dataset ${fileNode.name} estimated size ${estimatedSize} bytes (org=${org}, space=${attrs.space}, prime=${attrs.prime}) exceeds limit ${maxSize}`);
+          preflight$ = this.confirmLargeFileOpen(fileNode.name,
+            `has an estimated size of ${(estimatedSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
         } else {
-          return this.dataAdapter.convertFileContent(res);
+          preflight$ = of(false);
+        }
+      }
+    } else {
+      // For USS files, check size from the directory listing first (already on the model).
+      // Fall back to a metadata API call only if size is not available (e.g. file opened
+      // outside of a directory listing, or listing did not include size).
+      const knownSize = fileNode.model.size;
+      if (knownSize != null && knownSize > 0) {
+        if (knownSize > maxSize) {
+          this.log.warn(`File ${fileNode.name} size ${knownSize} (from directory listing) exceeds limit ${maxSize}`);
+          preflight$ = this.confirmLargeFileOpen(fileNode.name,
+            `is ${(knownSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
+        } else {
+          preflight$ = of(false);
+        }
+      } else {
+        const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata',
+          filePath + '/' + fileNode.model.fileName);
+        preflight$ = this.http.get(metadataUrl).pipe(
+          switchMap((metadata: any) => {
+            const fileSize = metadata && metadata.size != null ? metadata.size : 0;
+            if (fileSize > maxSize) {
+              this.log.warn(`File ${fileNode.name} size ${fileSize} exceeds limit ${maxSize}`);
+              return this.confirmLargeFileOpen(fileNode.name,
+                `is ${(fileSize / 1048576).toFixed(1)}MB`, maxSizeLabel);
+            }
+            return of(false);
+          })
+        );
+      }
+    }
+
+    // preflight$ emits true if the user overrode the size limit, false if within limits.
+    // If the user cancelled, the observable errors with _fileTooLarge + _userCancelled.
+    return preflight$.pipe(
+      tap(() => this.loadingStatusChanged.next('loading')),
+      switchMap((userOverride: boolean) => {
+        const effectiveMaxSize = userOverride ? Number.MAX_SAFE_INTEGER : maxSize;
+        return this.getSizeLimitedResponse(requestUrl, options, effectiveMaxSize);
+      }),
+      map((res: any) => {
+        try {
+          if (fileNode.model.isDataset) {
+            return this.dataAdapter.convertDatasetContent(res);
+          } else {
+            return this.dataAdapter.convertFileContent(res);
+          }
+        } catch (e) {
+          throw { status: 0, _body: `Failed to parse server response for ${fileNode.name}: ${e.message || e}` };
         }
       }),
       finalize(() => this.loadingStatusChanged.next('complete'))
     );
+  }
+
+  /**
+   * Fetches a URL while monitoring download progress. If the downloaded bytes
+   * exceed maxSize, the request is cancelled immediately. This breaks the server's
+   * socket so it stops streaming and doing CPU-intensive JSON conversion work.
+   * Prevents the jsonConvertAndWriteBuffer() errors from burning server CPU.
+   */
+  private getSizeLimitedResponse(url: string, options: any, maxSize: number): Observable<any> {
+    const maxSizeLabel = this.limitsService.getFormattedMaxSize();
+
+    return new Observable((observer) => {
+      const sub = this.httpClient.get(url, {
+        headers: options.headers,
+        responseType: 'text',
+        reportProgress: true,
+        observe: 'events'
+      }).subscribe({
+        next: (event: HttpEvent<string>) => {
+          if (event.type === HttpEventType.ResponseHeader) {
+            // Check Content-Length header if the server provides it
+            const contentLength = parseInt(event.headers.get('Content-Length') || '0', 10);
+            if (contentLength > maxSize) {
+              this.log.warn(`Response Content-Length ${contentLength} exceeds limit ${maxSize}, aborting download`);
+              sub.unsubscribe(); // Cancels the XMLHttpRequest, breaking the server's socket
+              observer.error({ _fileTooLarge: true,
+                message: `Content is too large (${(contentLength / 1048576).toFixed(1)}MB from Content-Length). Maximum allowed size is ${maxSizeLabel}.` });
+            }
+          } else if (event.type === HttpEventType.DownloadProgress) {
+            // Monitor streaming progress and abort if accumulated bytes exceed limit
+            if (event.loaded > maxSize) {
+              this.log.warn(`Download progress ${event.loaded} bytes exceeds limit ${maxSize}, aborting`);
+              sub.unsubscribe();
+              observer.error({ _fileTooLarge: true,
+                message: `Download exceeded maximum allowed size of ${maxSizeLabel}. Transfer was cancelled to protect server resources.` });
+            }
+          } else if (event.type === HttpEventType.Response) {
+            // Full response received within limits
+            observer.next(event.body);
+            observer.complete();
+          }
+        },
+        error: (err) => {
+          // Normalize HttpErrorResponse so downstream error handlers can use
+          // the same properties (status, _body) they expect from HttpService.
+          if (err && err.status != null && err._body === undefined) {
+            let body = '';
+            if (typeof err.error === 'string' && err.error) {
+              body = err.error;
+            } else if (err.error && typeof err.error === 'object') {
+              body = err.error.message || err.error.error || '';
+            }
+            err._body = body || err.statusText || `Server returned status ${err.status}`;
+          }
+          observer.error(err);
+        }
+      });
+
+      // If the outer observable is unsubscribed, cancel the HTTP request too
+      return () => sub.unsubscribe();
+    });
   }
 
   refreshFile(fileNode: ProjectContext, reload: boolean, line?: number) {
@@ -149,8 +286,14 @@ export class MonacoService implements OnDestroy {
         });
       },
       error: (err) => {
+        if (err._userCancelled) {
+          return; // User cancelled from the large file warning dialog
+        }
         this.log.warn(`${fileNode.name} could not be refreshed, status: `, err.status);
-        if (err.status === 403) {
+        if (err._fileTooLarge) {
+          this.snackBar.open(err.message,
+            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        } else if (err.status === 403) {
           this.snackBar.open(`${fileNode.name} could not be refreshed due to permissions.`,
             'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
         } else if (err.status === 404) {
@@ -179,6 +322,7 @@ export class MonacoService implements OnDestroy {
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
+      this.editorControl.openFileHandler(fileNode);
       this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>{ contents: fileNode.changed ? fileNode.model.contents : '', etag: '', language: '' }, true).subscribe(() => {
         this.editorControl.fileOpened.next({ buffer: fileNode, file: fileNode.name });
         if (line) {
@@ -192,6 +336,8 @@ export class MonacoService implements OnDestroy {
     } else {
       this.getFileRequestObservable(fileNode, reload, line).subscribe({
         next: (response: any) => {
+          // Preflight passed (and user confirmed if oversized) -- now add the tab
+          this.editorControl.openFileHandler(fileNode);
           //network load or switched to currently open file
           const resJson = response;
           this.setMonacoModel(fileNode, <{ contents: string, etag: string, language: string }>resJson, true).subscribe({
@@ -214,9 +360,14 @@ export class MonacoService implements OnDestroy {
           });
         },
         error: (err) => {
-          this.editorControl.closeFileHandler(fileNode);
+          if (err._userCancelled) {
+            return; // User cancelled from the large file warning dialog
+          }
           this.log.warn(`${fileNode.name} could not be opened, status: `, err.status);
-          if (err.status === 403) {
+          if (err._fileTooLarge) {
+            this.snackBar.open(err.message,
+              'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+          } else if (err.status === 403) {
             this.snackBar.open(`${fileNode.name} could not be opened due to permissions.`,
               'Close', { duration: MessageDuration.Medium, panelClass: 'center' });
           } else if (err.status === 404) {
@@ -409,6 +560,35 @@ export class MonacoService implements OnDestroy {
       }
     });
     return dialogRef.afterClosed();
+  }
+
+  /**
+   * Shows a warning dialog for oversized files/datasets.
+   * Returns an Observable that emits true if the user overrides, or throws _fileTooLarge if cancelled.
+   */
+  private confirmLargeFileOpen(fileName: string, sizeDescription: string, maxSizeLabel: string): Observable<boolean> {
+    const dialogRef = this.dialog.open(ConfirmAction, {
+      maxWidth: '480px',
+      data: {
+        title: 'Large File Warning',
+        warningMessage: `"${fileName}" ${sizeDescription} which exceeds the ${maxSizeLabel} limit. `
+          + `Opening very large files in the editor may cause high memory usage or CPU load. `
+          + `We recommend downloading the file and viewing it on your desktop instead.`,
+        confirmLabel: 'Open Anyway',
+        dismissLabel: 'Cancel'
+      }
+    });
+    return dialogRef.afterClosed().pipe(
+      take(1),
+      switchMap((confirmed: boolean) => {
+        if (confirmed) {
+          this.log.info(`User chose to override size limit for ${fileName}`);
+          return of(true);
+        }
+        return throwError({ _fileTooLarge: true, _userCancelled: true,
+          message: `Opening "${fileName}" was cancelled.` });
+      })
+    );
   }
 
   preSaveCheck(fileContext?: ProjectContext): boolean {
