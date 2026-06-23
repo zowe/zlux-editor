@@ -1,4 +1,4 @@
-
+﻿
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -23,6 +23,7 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 import { LimitsService } from '../../../shared/limits.service';
+import { DatasetSaveService, DatasetSaveResult } from './dataset-save.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
@@ -49,7 +50,8 @@ export class MonacoService implements OnDestroy {
     private editorControl: EditorControlService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
-    private limitsService: LimitsService
+    private limitsService: LimitsService,
+    private datasetSaveService: DatasetSaveService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -601,138 +603,6 @@ export class MonacoService implements OnDestroy {
     return canBeISO;
   }
 
-  private allocateAndSave(fileContext: ProjectContext, result: any, obs: any) {
-    const allocProps = result.allocateProps;
-    const datasetName = result.datasetName;
-    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(datasetName);
-
-    // Map datasetNameType: LIBRARY → PDSE for the API
-    let dsnt = allocProps.datasetNameType;
-    if (dsnt === 'LIBRARY') {
-      dsnt = 'PDSE';
-    }
-
-    const allocBody: any = {
-      ndisp: 'CATALOG',
-      status: 'NEW',
-      space: allocProps.allocationUnit,
-      dsorg: allocProps.organization,
-      lrecl: parseInt(allocProps.recordLength, 10),
-      recfm: allocProps.recordFormat,
-      dir: parseInt(allocProps.directoryBlocks, 10),
-      prime: parseInt(allocProps.primarySpace, 10),
-      secnd: parseInt(allocProps.secondarySpace, 10),
-      dsnt: dsnt,
-      close: 'true',
-    };
-    // Only include blockSize if it's a valid positive integer; 0 or negative causes ACB errors on z/OS
-    if (allocProps.blockSize) {
-      const blkSizeNum = parseInt(allocProps.blockSize, 10);
-      if (!isNaN(blkSizeNum) && blkSizeNum > 0) {
-        allocBody.blksz = blkSizeNum;
-      }
-    }
-
-    this.http.put(requestUrl, allocBody).subscribe({
-      next: () => {
-        // If allocating PDS/PDSE with no member name, skip content save 
-        // (you can't PUT content directly to a PDS — only to DSN(MEMBER))
-        if ((allocProps.organization === 'PO') && !result.memberName) {
-          this.snackBar.open(`Dataset ${datasetName} allocated successfully. Use Save As → Member to save content.`, 'Dismiss',
-            { duration: MessageDuration.Long, panelClass: 'center' });
-          fileContext.model.isDataset = true;
-          fileContext.model.fileName = datasetName;
-          fileContext.model.name = datasetName;
-          fileContext.model.path = datasetName;
-          fileContext.temp = false;
-          this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
-          obs.next('Save');
-        } else {
-          this.snackBar.open(`Dataset ${datasetName} allocated successfully`, 'Dismiss',
-            { duration: MessageDuration.Medium, panelClass: 'center' });
-          this.saveAsDatasetMember(fileContext, result, obs);
-        }
-      },
-      error: (error: any) => {
-        const raw = error?.error;
-        const errMsg = (typeof raw === 'string') ? raw
-          : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
-        // If error explicitly says "already exists", fall back to direct save
-        if (errMsg.includes('already exists')) {
-          this.snackBar.open(`Dataset ${datasetName} already exists — saving content directly.`, 'Dismiss',
-            { duration: MessageDuration.Medium, panelClass: 'center' });
-          this.saveAsDatasetMember(fileContext, result, obs);
-        } else if (errMsg.includes('Unable to allocate a DD for ACB')) {
-          this.snackBar.open(`Failed to allocate dataset ${datasetName}: The high-level qualifier may not be authorized for this user. Try a different dataset name prefix.`,
-            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-          obs.error(errMsg);
-        } else {
-          this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
-            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-          obs.error(errMsg);
-        }
-      }
-    });
-  }
-
-  private saveAsDatasetMember(fileContext: ProjectContext, result: any, obs: any) {
-    const datasetName = result.datasetName;
-    const memberName = result.memberName;
-    const fullName = memberName ? `${datasetName}(${memberName})` : datasetName;
-    const requestUrl = ZoweZLUX.uriBroker.datasetContentsUri(fullName);
-
-    // Always get the latest content from the active editor model to avoid saving stale/empty data
-    const editor = this.editorControl.editor.getValue();
-    const editorModel = editor?.getModel();
-    const rawContent = editorModel ? editorModel.getValue() : fileContext.model.contents;
-    const contents = rawContent ? rawContent.replace(/\r\n/g, '\n').split('\n') : [''];
-
-    // Use force=true to overwrite existing members (same as regular save does)
-    let parameters = new HttpParams();
-    parameters = parameters.append('force', 'true');
-    const options = {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-      params: parameters
-    };
-
-    this.http.post(requestUrl, { records: contents }, options).subscribe({
-      next: () => {
-        this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
-          { duration: MessageDuration.Medium, panelClass: 'center' });
-        // Update file context to reflect it's now a dataset
-        fileContext.model.isDataset = true;
-        fileContext.model.fileName = fullName;
-        fileContext.model.name = memberName || datasetName;
-        fileContext.model.path = datasetName;
-        fileContext.model.contents = rawContent || '';
-        fileContext.temp = false;
-        fileContext.changed = false;
-        // Notify tab bar of the title change
-        this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
-        // Emit bufferSaved so the file tree and other listeners know
-        this.editorControl.bufferSaved.next({ buffer: fileContext.model.contents, file: fileContext.model.name });
-        // Refresh the dataset member list in the file tree so user doesn't have to manually refresh
-        this.editorControl.openDirectory.next(datasetName);
-        obs.next('Save');
-      },
-      error: (error: any) => {
-        const raw = error?.error;
-        let errMsg = (typeof raw === 'string') ? raw
-          : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
-        // Simplify verbose server messages that include full record content
-        // e.g. 'Record #10 with contents "Aaaa..." is longer than the max record length of 80'
-        // → 'Line 10 exceeds the max record length of 80'
-        const recordMatch = errMsg.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
-        if (recordMatch) {
-          errMsg = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
-        }
-        this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
-          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-        obs.error(errMsg);
-      }
-    });
-  }
-
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
       if (fileContext.model.isDataset && !saveAs) {
@@ -771,11 +641,14 @@ export class MonacoService implements OnDestroy {
 
             // Handle "Save as Dataset/Member" option
             if (result.saveType === 'dataset') {
-              if (result.allocateNew) {
-                this.allocateAndSave(fileContext, result, obs);
-              } else {
-                this.saveAsDatasetMember(fileContext, result, obs);
-              }
+              const dsResult = result as DatasetSaveResult;
+              const save$ = dsResult.allocateNew
+                ? this.datasetSaveService.allocateAndSave(fileContext, dsResult)
+                : this.datasetSaveService.saveAsDatasetMember(fileContext, dsResult);
+              save$.subscribe({
+                next: (val) => obs.next(val),
+                error: (err) => obs.error(err),
+              });
               return;
             }
 

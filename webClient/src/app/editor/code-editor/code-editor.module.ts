@@ -15,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { MonacoComponent } from './monaco/monaco.component';
 import { MonacoSettingsComponent } from './monaco-settings/monaco-settings.component';
 import { MonacoService } from './monaco/monaco.service';
+import { DatasetSaveService } from './monaco/dataset-save.service';
 import { CodeEditorComponent } from './code-editor.component';
 import { FileTabsComponent, MouseMiddleClickDirective } from './file-tabs/file-tabs.component';
 // import { NgScrollbarModule } from 'ngx-scrollbar';
@@ -40,7 +41,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
     MatCheckboxModule,
     // NgScrollbarModule
   ],
-  providers: [MonacoService, CodeEditorService],
+  providers: [MonacoService, DatasetSaveService, CodeEditorService],
   exports: [CodeEditorComponent],
   declarations: [
     CodeEditorComponent,

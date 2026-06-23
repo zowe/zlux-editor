@@ -1,4 +1,4 @@
-
+﻿
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -155,7 +155,7 @@ export class SaveToComponent implements OnDestroy {
       }
     }
 
-    // Debounced dataset metadata lookup — only fires for syntactically valid dataset names
+    // Debounced dataset metadata lookup -- only fires for syntactically valid dataset names
     this.datasetNameInput$.pipe(
       debounceTime(600),
       takeUntil(this.destroy$),
@@ -212,11 +212,11 @@ export class SaveToComponent implements OnDestroy {
       if (isPDS) {
         this.datasetLookupStatus = 'pds';
         this.memberModeEnabled = true;
-        this.showAllocate = false; // Dataset exists — can't allocate
+        this.showAllocate = false; // Dataset exists -- can't allocate
       } else {
         this.datasetLookupStatus = 'sequential';
         this.memberModeEnabled = false;
-        this.showAllocate = false; // Dataset exists — can't allocate
+        this.showAllocate = false; // Dataset exists -- can't allocate
       }
     });
 
@@ -245,7 +245,7 @@ export class SaveToComponent implements OnDestroy {
       this.memberModeEnabled = true;
       this.saveMode = 'member';
     }
-    // Don't reassign the model on every keystroke — avoids cursor jumping.
+    // Don't reassign the model on every keystroke -- avoids cursor jumping.
     // The uppercased value is used for validation/lookup only.
 
     this.datasetNameInput$.next(upper.replace(/\([^()]*\)$/, ''));
@@ -273,31 +273,31 @@ export class SaveToComponent implements OnDestroy {
     if (!this.datasetInfo) return;
 
     // Always overwrite with existing values (if they have real data)
-    if (this.datasetInfo.space !== '—') {
+    if (this.datasetInfo.space !== '--') {
       this.allocateProps.allocationUnit = this.datasetInfo.space;
     }
-    if (this.datasetInfo.primary !== '—') {
+    if (this.datasetInfo.primary !== '--') {
       this.allocateProps.primarySpace = this.datasetInfo.primary;
     }
-    if (this.datasetInfo.secondary !== '—') {
+    if (this.datasetInfo.secondary !== '--') {
       this.allocateProps.secondarySpace = this.datasetInfo.secondary;
     }
-    if (this.datasetInfo.recfm !== '—') {
+    if (this.datasetInfo.recfm !== '--') {
       // Ensure the recfm value is in the dropdown options; if not, add it dynamically
       if (!this.recordFormatOptions.includes(this.datasetInfo.recfm)) {
         this.recordFormatOptions = [...this.recordFormatOptions, this.datasetInfo.recfm];
       }
       this.allocateProps.recordFormat = this.datasetInfo.recfm;
     }
-    if (this.datasetInfo.lrecl !== '—') {
+    if (this.datasetInfo.lrecl !== '--') {
       this.allocateProps.recordLength = this.datasetInfo.lrecl;
     }
-    if (this.datasetInfo.blksize !== '—') {
+    if (this.datasetInfo.blksize !== '--') {
       this.allocateProps.blockSize = this.datasetInfo.blksize;
     }
 
     // Set directory blocks from existing dataset or use safe defaults
-    if (this.datasetInfo.dirblk !== '—') {
+    if (this.datasetInfo.dirblk !== '--') {
       this.allocateProps.directoryBlocks = this.datasetInfo.dirblk;
     } else {
       // Default: 20 for PDS, 0 for sequential
@@ -323,7 +323,7 @@ export class SaveToComponent implements OnDestroy {
     if (!value) return;
     const tmpl = TEMPLATES.get(value);
     if (!tmpl) {
-      // Unknown template — reset selection, leave fields unchanged
+      // Unknown template -- reset selection, leave fields unchanged
       this.allocateProps.template = '';
       return;
     }
@@ -333,7 +333,7 @@ export class SaveToComponent implements OnDestroy {
     this.allocateProps.secondarySpace = tmpl.secondarySpace;
     this.allocateProps.recordFormat = tmpl.recordFormat;
     this.allocateProps.recordLength = tmpl.recordLength;
-    this.allocateProps.blockSize = ''; // Clear any previously entered block size — let z/OS determine optimal
+    this.allocateProps.blockSize = ''; // Clear any previously entered block size -- let z/OS determine optimal
     this.allocateProps.directoryBlocks = this.allocateProps.organization === 'PS' ? '0' : tmpl.directoryBlocks;
     // Also set dataset type to PDS for templates (templates are typically for PDS members)
     if (this.allocateProps.organization !== 'PS') {
@@ -374,7 +374,7 @@ export class SaveToComponent implements OnDestroy {
         if (!this.isDatasetNameValid()) return false;
         // If dataset doesn't exist and user hasn't opened Allocate, block save
         if (this.datasetLookupStatus === 'not-found' && !this.showAllocate) return false;
-        // Cannot write directly to a PDS — a member name is required
+        // Cannot write directly to a PDS -- a member name is required
         if (this.datasetLookupStatus === 'pds' && !this.showAllocate) return false;
         // Cannot allocate if dataset already exists
         if (this.showAllocate && (this.datasetLookupStatus === 'sequential' || this.datasetLookupStatus === 'pds')) return false;
@@ -464,7 +464,7 @@ export class SaveToComponent implements OnDestroy {
 
         // --- DSORG ---
         const dsorgRaw = ds?.dsorg;
-        let dsorg = '—';
+        let dsorg = '--';
         if (typeof dsorgRaw === 'string' && dsorgRaw) {
           dsorg = dsorgRaw.toUpperCase();
         } else if (dsorgRaw?.organization) {
@@ -475,7 +475,7 @@ export class SaveToComponent implements OnDestroy {
 
         // --- RECFM ---
         const recfmRaw = ds?.recfm;
-        let recfm = '—';
+        let recfm = '--';
         if (typeof recfmRaw === 'string' && recfmRaw) {
           recfm = recfmRaw.toUpperCase();
         } else if (recfmRaw && typeof recfmRaw === 'object') {
@@ -488,7 +488,7 @@ export class SaveToComponent implements OnDestroy {
           if (recfmRaw.isBlocked) fmtChar += 'B';
           if (recfmRaw.carriageControl) fmtChar += recfmRaw.carriageControl;
           if (recfmRaw.isStandard) fmtChar += 'S';
-          recfm = fmtChar.toUpperCase() || '—';
+          recfm = fmtChar.toUpperCase() || '--';
         }
 
         // --- LRECL ---
@@ -497,17 +497,17 @@ export class SaveToComponent implements OnDestroy {
         // --- BLKSIZE ---
         const blksize = this.extractNumericField(ds, ['blksize', 'blockSize', 'blksz']);
         // Also check nested dsorg object for totalBlockSize
-        const blksizeFinal = blksize !== '—' ? blksize :
-          (dsorgRaw?.totalBlockSize ? dsorgRaw.totalBlockSize.toString() : '—');
+        const blksizeFinal = blksize !== '--' ? blksize :
+          (dsorgRaw?.totalBlockSize ? dsorgRaw.totalBlockSize.toString() : '--');
 
         // --- VOLSER ---
-        const volser = ds?.volser || ds?.vol || ds?.volume || '—';
+        const volser = ds?.volser || ds?.vol || ds?.volume || '--';
 
         // --- SPACE ALLOCATION ---
         const spaceRaw = ds?.spacu || ds?.space || ds?.spaceUnits || '';
-        let space = '—';
+        let space = '--';
         if (typeof spaceRaw === 'string' && spaceRaw) {
-          // Normalize: TRACKS→TRK, CYLINDERS→CYL, BLOCKS→BLK
+          // Normalize: TRACKS->TRK, CYLINDERS->CYL, BLOCKS->BLK
           const upper = spaceRaw.toUpperCase();
           if (upper.startsWith('TRACK')) space = 'TRK';
           else if (upper.startsWith('CYL')) space = 'CYL';
@@ -532,7 +532,7 @@ export class SaveToComponent implements OnDestroy {
     return null;
   }
 
-  /** Try multiple field names and return the first valid numeric value (including 0), or '—' */
+  /** Try multiple field names and return the first valid numeric value (including 0), or '--' */
   private extractNumericField(obj: any, fields: string[]): string {
     for (const field of fields) {
       const val = obj?.[field];
@@ -544,7 +544,7 @@ export class SaveToComponent implements OnDestroy {
         }
       }
     }
-    return '—';
+    return '--';
   }
 
   private checkIfPartitioned(response: any): boolean {

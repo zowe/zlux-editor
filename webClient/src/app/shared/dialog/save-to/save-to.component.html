@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 This program and the accompanying materials are
 made available under the terms of the Eclipse Public License v2.0 which accompanies
 this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
@@ -30,7 +30,7 @@ Copyright Contributors to the Zowe Project.
       }
     </div>
 
-    <!-- ═══════════════════════════════ USS FILE MODE ═══════════════════════════════ -->
+    <!-- =============================== USS FILE MODE =============================== -->
     @if (saveMode === 'uss') {
     <div class="save-form fade-in">
       <mat-form-field class="w-100" appearance="outline">
@@ -52,7 +52,7 @@ Copyright Contributors to the Zowe Project.
     </div>
     }
 
-    <!-- ═══════════════════════════════ DATASET MODE ═══════════════════════════════ -->
+    <!-- =============================== DATASET MODE =============================== -->
     @if (saveMode === 'dataset') {
     <div class="save-form fade-in">
       <mat-form-field class="w-100" appearance="outline">
@@ -71,14 +71,14 @@ Copyright Contributors to the Zowe Project.
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'pds') {
         <mat-hint class="hint-success">
-          <i class="fa fa-check-circle"></i> Partitioned dataset detected — Member mode available
+          <i class="fa fa-check-circle"></i> Partitioned dataset detected -- Member mode available
         </mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'sequential') {
-        <mat-hint>Sequential dataset — content will be saved directly</mat-hint>
+        <mat-hint>Sequential dataset -- content will be saved directly</mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'not-found') {
-        <mat-hint class="hint-warn">Dataset not found — use Allocate to create it</mat-hint>
+        <mat-hint class="hint-warn">Dataset not found -- use Allocate to create it</mat-hint>
         }
       </mat-form-field>
 
@@ -172,7 +172,7 @@ Copyright Contributors to the Zowe Project.
               <mat-hint class="hint-error">Block size cannot be negative</mat-hint>
               }
               @if (allocateProps.blockSize && +allocateProps.blockSize > 0 && allocateProps.recordLength && +allocateProps.blockSize < +allocateProps.recordLength) {
-              <mat-hint class="hint-error">Block size must be ≥ record length ({{allocateProps.recordLength}})</mat-hint>
+              <mat-hint class="hint-error">Block size must be >= record length ({{allocateProps.recordLength}})</mat-hint>
               }
             </mat-form-field>
           </div>
@@ -182,18 +182,18 @@ Copyright Contributors to the Zowe Project.
       }
       @if (datasetLookupStatus === 'sequential') {
       <div class="allocate-section">
-        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> Dataset already exists — cannot allocate. Content will be saved directly.</mat-hint>
+        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> Dataset already exists -- cannot allocate. Content will be saved directly.</mat-hint>
       </div>
       }
       @if (datasetLookupStatus === 'pds') {
       <div class="allocate-section">
-        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> This is a partitioned dataset — switch to the <strong>Member</strong> tab to save to a specific member.</mat-hint>
+        <mat-hint class="hint-warn"><i class="fa fa-exclamation-triangle"></i> This is a partitioned dataset -- switch to the <strong>Member</strong> tab to save to a specific member.</mat-hint>
       </div>
       }
     </div>
     }
 
-    <!-- ═══════════════════════════════ MEMBER MODE ═══════════════════════════════ -->
+    <!-- =============================== MEMBER MODE =============================== -->
     @if (saveMode === 'member') {
     <div class="save-form fade-in">
       <mat-form-field class="w-100" appearance="outline">
@@ -213,7 +213,7 @@ Copyright Contributors to the Zowe Project.
         </mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'sequential') {
-        <mat-hint class="hint-error">Not a partitioned dataset — cannot save as member</mat-hint>
+        <mat-hint class="hint-error">Not a partitioned dataset -- cannot save as member</mat-hint>
         }
         @if (isDatasetNameValid() && datasetLookupStatus === 'not-found') {
         <mat-hint class="hint-warn">Dataset not found</mat-hint>
@@ -244,14 +244,14 @@ Copyright Contributors to the Zowe Project.
           <i class="fa fa-info-circle"></i> Dataset Properties
         </div>
         <div class="dataset-info-grid">
-          <span class="info-label">Organization:</span><span class="info-value" [class.missing]="datasetInfo.dsorg === '\u2014'">{{datasetInfo.dsorg}}</span>
-          <span class="info-label">Record Format:</span><span class="info-value" [class.missing]="datasetInfo.recfm === '\u2014'">{{datasetInfo.recfm}}</span>
-          <span class="info-label">Record Length:</span><span class="info-value" [class.missing]="datasetInfo.lrecl === '\u2014'">{{datasetInfo.lrecl}}</span>
-          <span class="info-label">Block Size:</span><span class="info-value" [class.missing]="datasetInfo.blksize === '\u2014'">{{datasetInfo.blksize}}</span>
-          <span class="info-label">Volume:</span><span class="info-value" [class.missing]="datasetInfo.volser === '\u2014'">{{datasetInfo.volser}}</span>
-          <span class="info-label">Space Unit:</span><span class="info-value" [class.missing]="datasetInfo.space === '\u2014'">{{datasetInfo.space}}</span>
-          <span class="info-label">Primary:</span><span class="info-value" [class.missing]="datasetInfo.primary === '\u2014'">{{datasetInfo.primary}}</span>
-          <span class="info-label">Secondary:</span><span class="info-value" [class.missing]="datasetInfo.secondary === '\u2014'">{{datasetInfo.secondary}}</span>
+          <span class="info-label">Organization:</span><span class="info-value" [class.missing]="datasetInfo.dsorg === '--'">{{datasetInfo.dsorg}}</span>
+          <span class="info-label">Record Format:</span><span class="info-value" [class.missing]="datasetInfo.recfm === '--'">{{datasetInfo.recfm}}</span>
+          <span class="info-label">Record Length:</span><span class="info-value" [class.missing]="datasetInfo.lrecl === '--'">{{datasetInfo.lrecl}}</span>
+          <span class="info-label">Block Size:</span><span class="info-value" [class.missing]="datasetInfo.blksize === '--'">{{datasetInfo.blksize}}</span>
+          <span class="info-label">Volume:</span><span class="info-value" [class.missing]="datasetInfo.volser === '--'">{{datasetInfo.volser}}</span>
+          <span class="info-label">Space Unit:</span><span class="info-value" [class.missing]="datasetInfo.space === '--'">{{datasetInfo.space}}</span>
+          <span class="info-label">Primary:</span><span class="info-value" [class.missing]="datasetInfo.primary === '--'">{{datasetInfo.primary}}</span>
+          <span class="info-label">Secondary:</span><span class="info-value" [class.missing]="datasetInfo.secondary === '--'">{{datasetInfo.secondary}}</span>
         </div>
       </div>
       }
