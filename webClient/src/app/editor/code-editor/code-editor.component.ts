@@ -18,7 +18,9 @@ import { ProjectContext, ProjectContextType } from '../../shared/model/project-c
 import { CodeEditorService } from './code-editor.service';
 import { EditorKeybindingService } from '../../shared/editor-keybinding.service';
 import { KeyCode } from '../../shared/keycode-enum';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { EditorSessionService, EditorSession, SessionTab, SessionIndexEntry } from '../../shared/session/editor-session.service';
 
 const DEFAULT_TITLE = 'Editor';
 
@@ -69,14 +71,19 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   /* TODO: This can be extended to persist in future server storage mechanisms. 
   (For example, when a user re-opens the Editor they are plopped back into their workflow of tabs) */
   private previousSessionData: any = {};
+  private sessionAutoSave$ = new Subject<void>();
+  private sessionRestoring = false;
+  public recentSessions: SessionIndexEntry[] = [];
 
   constructor(private http: HttpService,
     private editorControl: EditorControlService,
     private monacoService: MonacoService,
     private appKeyboard: EditorKeybindingService,
+    private sessionService: EditorSessionService,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_EVENTS) private windowEvents: Angular2PluginWindowEvents,
     @Optional() @Inject(Angular2InjectionTokens.WINDOW_ACTIONS) private windowActions: Angular2PluginWindowActions,
     @Inject(Angular2InjectionTokens.PLUGIN_DEFINITION) private pluginDefinition: ZLUX.ContainerPluginDefinition,
+    @Inject(Angular2InjectionTokens.LOGGER) private log: ZLUX.ComponentLogger,
     private codeEditorService: CodeEditorService) {
 
     // TODO: If I wanted to spawn opened tabs from localStorage, like "Resume opened files when reopening Editor" feature
@@ -113,6 +120,8 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       list.length === 0 ? this.noOpenFile = true : this.noOpenFile = false;
       // update editor title
       this.updateEditorTitle();
+      // auto-save session on tab list change
+      this.scheduleSessionSave();
     });
 
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
@@ -216,6 +225,16 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       this.compareContents(fileContext);
       this.editorControl.compareDataset = true;
     })
+
+    // -- Session persistence --
+
+    // Debounced auto-save: triggers 2s after last tab change
+    this.sessionAutoSave$.pipe(debounceTime(2000)).subscribe(() => {
+      this.autoSaveSession();
+    });
+
+    // Load session index for welcome screen display
+    this.initSessionRestore();
 
   }
 
@@ -360,7 +379,178 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Save session before destroying
+    this.autoSaveSession();
     this.keyBindingSub.unsubscribe();
+  }
+
+  // -- Session persistence methods --
+
+  /**
+   * On startup: load session index and populate the welcome screen list.
+   * Does NOT auto-restore — user picks from the welcome screen.
+   */
+  private initSessionRestore(): void {
+    this.sessionService.loadIndex().subscribe((index) => {
+      // Only show sessions that actually have tabs
+      this.recentSessions = (index.sessions || []).slice()
+        .filter(s => s.tabCount > 0)
+        .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      // Start a fresh session with unique ID — don't persist until tabs are opened
+      this.startFreshSession();
+    });
+  }
+
+  /**
+   * Create a fresh session with a unique ID.
+   * NOT persisted until the user opens files (auto-save handles that).
+   */
+  private startFreshSession(): void {
+    const session = this.sessionService.createSession();
+    this.sessionService.setCurrentSession(session);
+  }
+
+  /**
+   * Restore tabs from a session object.
+   */
+  private restoreSession(session: EditorSession): void {
+    this.sessionRestoring = true;
+    this.sessionService.setCurrentSession(session);
+
+    // Close all current tabs
+    this.editorControl.closeAllHandler();
+    this.noOpenFile = true;
+    this.editorFile = undefined;
+
+    // Re-open each tab from the session
+    if (session.tabs.length === 0) {
+      this.sessionRestoring = false;
+      return;
+    }
+
+    // Open tabs sequentially with a small delay to let monaco process each
+    let tabIndex = 0;
+    const openNext = () => {
+      if (tabIndex >= session.tabs.length) {
+        this.sessionRestoring = false;
+        // Select the previously active tab
+        const activeTab = session.tabs.find(t => t.active) || session.tabs[0];
+        if (activeTab) {
+          const match = this.editorControl.openFileList.getValue().find(
+            f => f.model.fileName === activeTab.fileName && f.model.path === activeTab.path
+          );
+          if (match) {
+            this.selectFile(match, true);
+          }
+        }
+        return;
+      }
+
+      const tab = session.tabs[tabIndex];
+      tabIndex++;
+
+      const fileStructure: ProjectStructure = {
+        id: tab.fileName + ':' + tab.path,
+        name: tab.name,
+        fileName: tab.fileName,
+        path: tab.path,
+        isDataset: tab.isDataset,
+        hasChildren: false,
+        language: tab.language,
+        encoding: tab.encoding
+      };
+
+      this.editorControl.openFileEmitter.emit(fileStructure);
+
+      // Small delay to let the file open before opening the next
+      setTimeout(openNext, 200);
+    };
+
+    openNext();
+  }
+
+  /**
+   * Auto-save the current session's tab list to the config dataservice.
+   */
+  private autoSaveSession(): void {
+    if (this.sessionRestoring) return;
+
+    const session = this.sessionService.currentSession;
+    if (!session) return;
+
+    session.tabs = this.sessionService.buildTabsFromOpenFiles(
+      this.editorControl.openFileList.getValue()
+    );
+
+    // Don't persist empty sessions — avoids accumulating empty files on disk
+    if (session.tabs.length === 0) return;
+
+    session.name = this.sessionService.autoNameFromTabs(session.tabs);
+    this.sessionService.saveSession(session).subscribe({
+      error: (err) => this.log.warn('Session auto-save failed', err)
+    });
+  }
+
+  /**
+   * Trigger a debounced session auto-save (called when tabs change).
+   */
+  private scheduleSessionSave(): void {
+    this.sessionAutoSave$.next();
+  }
+
+  /**
+   * Restore a session by ID — called from the welcome screen.
+   */
+  public restoreSessionById(sessionId: string): void {
+    this.sessionService.loadSession(sessionId).subscribe((session) => {
+      if (session) {
+        this.restoreSession(session);
+      } else {
+        this.sessionService.recoverSession(sessionId).subscribe((recovered) => {
+          if (recovered) {
+            this.log.info('Session recovered from backup');
+            this.restoreSession(recovered);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Delete a single session by ID.
+   */
+  public deleteSession(sessionId: string, event: Event): void {
+    event.stopPropagation();
+    this.sessionService.deleteSession(sessionId).subscribe(() => {
+      this.recentSessions = this.recentSessions.filter(s => s.id !== sessionId);
+    });
+  }
+
+  /**
+   * Clear all saved sessions.
+   */
+  public clearAllSessions(): void {
+    this.sessionService.clearAllSessions().subscribe(() => {
+      this.recentSessions = [];
+    });
+  }
+
+  /**
+   * Format a date for display on the welcome screen.
+   */
+  public formatSessionDate(isoString: string): string {
+    if (!isoString) return '';
+    const d = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return d.toLocaleDateString();
   }
 }
 
