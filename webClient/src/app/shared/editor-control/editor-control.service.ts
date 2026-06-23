@@ -1263,6 +1263,10 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       // TODO: Once we expand editor themes, we can think about how we handle languages like JCL
       // for ex. maybe have ispf, ispf-dark, and ispf-black that groups multiple commonly used languages
       // in ISPF that we decide to create syntax highlighting for,
+      case 'attls': {
+        monaco.editor.setTheme('attls-dark');
+        break;
+      }
       case 'jcl': { 
         monaco.editor.setTheme('jcl-dark');
         break; 
@@ -1353,6 +1357,17 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                   break;
                 }
               }
+            }
+          }
+          // Content-based detection for languages that cannot be identified by filename
+          // or extension alone (e.g. AT-TLS policy files have no fixed extension).
+          // Test the full file contents so that files beginning with comment lines are
+          // also detected correctly.
+          if (buffer.model?.contents) {
+            const content = buffer.model.contents;
+            // AT-TLS policy files declare TTLSRule blocks starting at column 0.
+            if (!results.includes('attls') && /^TTLSRule\b/m.test(content)) {
+              results.push('attls');
             }
           }
           obs.next(results);
