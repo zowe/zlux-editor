@@ -7,9 +7,10 @@
     - **Dataset names** (e.g. `DSNAME=A.B`, `//'A.B'`, `//'A.B(MEMBER)'`): opens the dataset or member in the editor.
     - **URLs** (e.g. `https://example.com`): prompts the user before opening in a new browser tab.
     - Each of these behaviors can be individually enabled or disabled in the editor Settings menu (`Click Links File Path`, `Click Links Dataset`, `Click Links Url`), and all default to enabled.
+- Enhancement: Added AT-TLS (Application Transparent Transport Layer Security) language mode for IBM z/OS Policy Agent files. Files containing `TTLSRule` declarations are automatically detected and syntax-highlighted. Hovering over a cross-reference value (any property ending in `Ref`) displays the full declaration block of the referenced item, making it easier to understand the complete meaning of a rule without manual searching. Hovering over any AT-TLS keyword displays a brief description of its purpose.
+- Enhancement: AT-TLS language mode — added **Go to Definition** (Ctrl+Click) and **Find All References** (Shift+F12) for cross-reference values and declaration names. Go to Definition navigates directly to the referenced item's declaration. Find All References lists every `*Ref` usage of a named item across the policy file, including its declaration.
 
 ## `3.5.0`
-
 - Enhancement: Added CEEDUMP language mode. Files named `CEEDUMP.*` are automatically detected. It provides syntax highlighting and hover-help for headers, common messages, registers and more. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis.
 - Enhancement: HLASM language mode now has hover-help and improved syntax highlighting
 - Enhancement: Added configurable file/dataset size limit (default 50MB) with a warning dialog and user override option to prevent high memory and CPU usage when opening very large files or datasets.
