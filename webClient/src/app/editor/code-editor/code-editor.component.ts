@@ -477,6 +477,10 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
     session.tabs = this.sessionService.buildTabsFromOpenFiles(
       this.editorControl.openFileList.getValue()
     );
+
+    // Don't persist empty sessions — avoids accumulating empty files on disk
+    if (session.tabs.length === 0) return;
+
     session.name = this.sessionService.autoNameFromTabs(session.tabs);
     this.sessionService.saveSession(session).subscribe({
       error: (err) => this.log.warn('Session auto-save failed', err)

@@ -10,8 +10,8 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpService } from '../http/http.service';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { map, catchError, concatMap, tap } from 'rxjs/operators';
 
 /**
  * Represents a single tab's persistent state — enough info to re-open the file.
@@ -168,51 +168,18 @@ export class EditorSessionService {
     const mainUri = this.configUri(`session-${session.id}.json`);
     const bkpUri = this.configUri(`session-${session.id}.bkp.json`);
 
-    // Write backup first, then main file, then update index
-    return new Observable(observer => {
-      // Step 1: Write backup
-      this.http.put(bkpUri, session).subscribe({
-        next: () => {
-          // Step 2: Write main file
-          this.http.put(mainUri, session).subscribe({
-            next: () => {
-              // Step 3: Update index
-              this.updateIndexEntry(session);
-              observer.next(session);
-              observer.complete();
-            },
-            error: (err) => {
-              this.log.warn('Failed to write session file, backup is available', err);
-              // Backup was written, so we're not in a totally broken state
-              this.updateIndexEntry(session);
-              observer.next(session);
-              observer.complete();
-            }
-          });
-        },
-        error: (err) => {
-          this.log.warn('Failed to write session backup', err);
-          // Try writing main file anyway
-          this.http.put(mainUri, session).subscribe({
-            next: () => {
-              this.updateIndexEntry(session);
-              observer.next(session);
-              observer.complete();
-            },
-            error: (err2) => {
-              this.log.warn('Failed to write session', err2);
-              observer.error(err2);
-            }
-          });
-        }
-      });
-    });
+    return this.http.put(bkpUri, session).pipe(
+      catchError(() => of(null)),  // backup failure is non-fatal
+      concatMap(() => this.http.put(mainUri, session)),
+      concatMap(() => this.updateIndexEntry(session)),
+      tap(() => this.log.debug('Session saved', session.id))
+    );
   }
 
   /**
    * Update the index entry for a session and persist the index.
    */
-  private updateIndexEntry(session: EditorSession): void {
+  private updateIndexEntry(session: EditorSession): Observable<any> {
     let index = this._sessionIndex.getValue();
     if (!index) {
       index = this.createDefaultIndex();
@@ -230,9 +197,12 @@ export class EditorSessionService {
       index.sessions.push(entry);
     }
     index.lastSessionId = session.id;
-    this.saveIndex(index).subscribe({
-      error: (err) => this.log.warn('Failed to save session index', err)
-    });
+    return this.saveIndex(index).pipe(
+      catchError((err) => {
+        this.log.warn('Failed to save session index', err);
+        return of(null);
+      })
+    );
   }
 
   /**
@@ -241,33 +211,22 @@ export class EditorSessionService {
   deleteSession(sessionId: string): Observable<any> {
     const uri = this.configUri(`session-${sessionId}.json`);
     const bkpUri = this.configUri(`session-${sessionId}.bkp.json`);
-    return new Observable(observer => {
-      // Delete main file
-      this.http.delete(uri).subscribe({
-        next: () => {
-          // Delete backup (best effort)
-          this.http.delete(bkpUri).subscribe({ error: () => {} });
-          // Remove from index
-          let index = this._sessionIndex.getValue();
-          if (index) {
-            index.sessions = index.sessions.filter(s => s.id !== sessionId);
-            if (index.lastSessionId === sessionId) {
-              index.lastSessionId = index.sessions.length > 0 ? index.sessions[0].id : undefined;
-            }
-            this.saveIndex(index).subscribe();
+    return this.http.delete(uri).pipe(
+      concatMap(() => this.http.delete(bkpUri).pipe(catchError(() => of(null)))),
+      tap(() => {
+        let index = this._sessionIndex.getValue();
+        if (index) {
+          index.sessions = index.sessions.filter(s => s.id !== sessionId);
+          if (index.lastSessionId === sessionId) {
+            index.lastSessionId = index.sessions.length > 0 ? index.sessions[0].id : undefined;
           }
-          if (this._currentSession.getValue()?.id === sessionId) {
-            this._currentSession.next(null);
-          }
-          observer.next(true);
-          observer.complete();
-        },
-        error: (err) => {
-          this.log.warn(`Failed to delete session ${sessionId}`, err);
-          observer.error(err);
+          this.saveIndex(index).subscribe();
         }
-      });
-    });
+        if (this._currentSession.getValue()?.id === sessionId) {
+          this._currentSession.next(null);
+        }
+      })
+    );
   }
 
   /**
@@ -278,25 +237,21 @@ export class EditorSessionService {
     if (!index || index.sessions.length === 0) {
       return of(true);
     }
-    return new Observable(observer => {
-      let remaining = index.sessions.length;
-      const onDone = () => {
-        remaining--;
-        if (remaining <= 0) {
-          const freshIndex = this.createDefaultIndex();
-          this.saveIndex(freshIndex).subscribe({
-            next: () => { observer.next(true); observer.complete(); },
-            error: (err) => { observer.next(true); observer.complete(); }
-          });
-        }
-      };
-      for (const entry of index.sessions) {
-        const uri = this.configUri(`session-${entry.id}.json`);
-        const bkpUri = this.configUri(`session-${entry.id}.bkp.json`);
-        this.http.delete(uri).subscribe({ next: onDone, error: onDone });
-        this.http.delete(bkpUri).subscribe({ error: () => {} });
-      }
+    const deletions = index.sessions.map(entry => {
+      const uri = this.configUri(`session-${entry.id}.json`);
+      const bkpUri = this.configUri(`session-${entry.id}.bkp.json`);
+      return this.http.delete(uri).pipe(
+        concatMap(() => this.http.delete(bkpUri).pipe(catchError(() => of(null)))),
+        catchError(() => of(null))
+      );
     });
+    return forkJoin(deletions).pipe(
+      concatMap(() => {
+        const freshIndex = this.createDefaultIndex();
+        return this.saveIndex(freshIndex).pipe(catchError(() => of(null)));
+      }),
+      map(() => true)
+    );
   }
 
   /**
