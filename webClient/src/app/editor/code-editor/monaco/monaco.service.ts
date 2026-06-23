@@ -421,11 +421,17 @@ export class MonacoService implements OnDestroy {
               };
               this.editorControl.setThemeForLanguage(fileLang);
               const duplicate: boolean = this.fileDuplicateChecker(model.uri);
+              // Parse the URI string to a proper monaco.Uri so that model.uri
+              // returns a Uri object with a defined fsPath.  The reference
+              // provider returns model.uri as a Location.uri; Monaco's label
+              // service then calls uri.fsPath, which is undefined when the
+              // stored value is a plain string rather than a Uri object.
+              const modelUri = monaco.Uri.parse(model.uri);
               let newModel;
               if (!duplicate) {
-                newModel = editorCore.createModel(model.value, model.language, model.uri);
+                newModel = editorCore.createModel(model.value, model.language, modelUri);
               } else {
-                newModel = editorCore.getModel(model.uri);
+                newModel = editorCore.getModel(modelUri);
               }
               if (!makeActiveModel) {
                 newModel.setValue(fileNode.model.contents);
