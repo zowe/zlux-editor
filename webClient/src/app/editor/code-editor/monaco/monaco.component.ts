@@ -480,6 +480,10 @@ export class MonacoComponent implements OnInit, OnChanges {
         return null;
       }
     });
+
+    // F12 is commonly used to open browser developer tools; suppress Monaco's
+    // built-in "Go To Definition" binding so the browser action is not blocked.
+    editor.addCommand(monaco.KeyCode.F12, () => {});
   }
 
   copyPermalink(event: any) {
