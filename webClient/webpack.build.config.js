@@ -14,6 +14,7 @@ const webpack = require("webpack");
 const webpackConfig = require('webpack-config');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CompressionPlugin = require('compression-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const AotPlugin = require('@ngtools/webpack').AngularWebpackPlugin;
 
@@ -23,6 +24,58 @@ if (process.env.MVD_DESKTOP_DIR == null) {
 
 const pubPath = "../../../plugins/org.zowe.editor/web/v3/";
 process.env.ASSET_PATH = pubPath;
+
+// Post-build cleanup: consolidates per-chunk .js.LICENSE.txt files into a
+// single THIRD_PARTY_LICENSES.txt, and removes uncompressed files that have
+// a .gz equivalent (since the server serves pre-compressed assets).
+// Both run via compiler.hooks.done (after all files are written to disk)
+// to avoid webpack asset-pipeline conflict errors.
+class PostBuildCleanupPlugin {
+  apply(compiler) {
+    const fs = require('fs');
+    compiler.hooks.done.tapAsync('PostBuildCleanupPlugin', (stats, callback) => {
+      const outDir = compiler.options.output.path;
+      let files;
+      try {
+        files = fs.readdirSync(outDir);
+      } catch (e) {
+        callback(e);
+        return;
+      }
+
+      // Consolidate .js.LICENSE.txt files into one THIRD_PARTY_LICENSES.txt
+      const licenseFiles = files.filter(f => f.endsWith('.LICENSE.txt')).sort();
+      if (licenseFiles.length > 0) {
+        const seen = new Set();
+        const parts = [];
+        for (const file of licenseFiles) {
+          const content = fs.readFileSync(path.join(outDir, file), 'utf8');
+          if (!seen.has(content)) {
+            seen.add(content);
+            parts.push(content);
+          }
+          fs.unlinkSync(path.join(outDir, file));
+        }
+        fs.writeFileSync(
+          path.join(outDir, 'ATTRIBUTION.txt'),
+          parts.join('\n\n')
+        );
+      }
+
+      // Remove uncompressed files that have a .gz equivalent
+      const gzNames = new Set(
+        files.filter(f => f.endsWith('.gz')).map(f => f.slice(0, -3))
+      );
+      for (const file of files) {
+        if (gzNames.has(file)) {
+          fs.unlinkSync(path.join(outDir, file));
+        }
+      }
+
+      callback();
+    });
+  }
+}
 
 const config = {
   entry: {
@@ -82,10 +135,6 @@ const config = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, './src/mock'),
-          to: path.resolve('../web/v3/mock')
-        },
-        {
           from: path.resolve(__dirname, './node_modules/monaco-editor/min/vs/base'),
           to: path.resolve('../web/v3/assets/monaco/base')
         },
@@ -100,7 +149,8 @@ const config = {
     }),
     new CompressionPlugin({
       threshold: 500000,
-      minRatio: 0.8
+      minRatio: 0.8,
+      deleteOriginalAssets: true
     }),
     new MonacoWebpackPlugin({ publicPath: pubPath }),
     new AotPlugin({
