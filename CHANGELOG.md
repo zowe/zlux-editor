@@ -2,6 +2,8 @@
 
 ## `3.6.0`
 
+- Bugfix: Fixed dialog input label overlap by switching mat-form-field to outline appearance across all dialogs.
+- Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: The editor now recognizes and highlights clickable strings in file content. Ctrl+Click (Cmd+Click on macOS) on any of the following will trigger an action:
     - **Unix file paths** (e.g. `/u/user/file.txt`): checks if the path is a file or directory; opens files in a new editor tab, and prompts to navigate the file explorer to directories.
     - **Dataset names** (e.g. `DSNAME=A.B`, `//'A.B'`, `//'A.B(MEMBER)'`): opens the dataset or member in the editor.

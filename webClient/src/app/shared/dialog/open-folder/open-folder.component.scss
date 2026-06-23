@@ -1,0 +1,427 @@
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+*/
+
+$accent: #2563eb;
+$accent-hover: #1d4ed8;
+$border: #e2e8f0;
+$bg-header: #f8fafc;
+$bg-toolbar: #ffffff;
+$bg-body: #ffffff;
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$text-muted: #94a3b8;
+$row-hover: #f1f5f9;
+$row-selected: #2563eb;
+$folder-color: #f59e0b;
+$radius: 8px;
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.open-dir-dialog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: -24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: $bg-body;
+  position: relative;
+  border-radius: $radius;
+  overflow: hidden;
+}
+
+// ── Resize edges ──
+.resize-edge {
+  position: absolute;
+  z-index: 100;
+
+  &.edge-top { top: -3px; left: 6px; right: 6px; height: 6px; cursor: ns-resize; }
+  &.edge-bottom { bottom: -3px; left: 6px; right: 6px; height: 6px; cursor: ns-resize; }
+  &.edge-left { left: -3px; top: 6px; bottom: 6px; width: 6px; cursor: ew-resize; }
+  &.edge-right { right: -3px; top: 6px; bottom: 6px; width: 6px; cursor: ew-resize; }
+  &.edge-top-left { top: -3px; left: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+  &.edge-top-right { top: -3px; right: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+  &.edge-bottom-left { bottom: -3px; left: -3px; width: 12px; height: 12px; cursor: nesw-resize; }
+  &.edge-bottom-right { bottom: -3px; right: -3px; width: 12px; height: 12px; cursor: nwse-resize; }
+}
+
+// ── Header ──
+.dialog-header {
+  display: flex;
+  align-items: center;
+  padding: 6px 6px 6px 10px;
+  background: $bg-header;
+  border-bottom: 1px solid $border;
+  gap: 2px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.nav-btn {
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: $text-secondary;
+  }
+
+  &:disabled mat-icon {
+    color: $text-muted;
+  }
+}
+
+.header-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  gap: 1px;
+  padding: 0 6px;
+}
+
+.crumb {
+  font-size: 12px;
+  color: $accent;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 3px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba($accent, 0.08);
+  }
+
+  &.crumb-active {
+    color: $text-primary;
+    font-weight: 600;
+    cursor: default;
+    &:hover { background: transparent; }
+  }
+}
+
+.crumb-sep {
+  font-size: 14px !important;
+  width: 14px !important;
+  height: 14px !important;
+  color: $text-muted;
+  flex-shrink: 0;
+}
+
+.close-btn {
+  width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+
+  ::ng-deep .mat-mdc-button-persistent-ripple,
+  ::ng-deep .mat-ripple {
+    border-radius: 50%;
+  }
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: $text-secondary;
+  }
+
+  &:hover mat-icon {
+    color: $text-primary;
+  }
+}
+
+// ── Toolbar ──
+.dialog-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  gap: 8px;
+  background: $bg-toolbar;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.path-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+  color: $text-primary;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba($accent, 0.1);
+    background: #fff;
+  }
+}
+
+.filter-input {
+  width: 110px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: $text-primary;
+  background: #f8fafc;
+  outline: none;
+  flex-shrink: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    border-color: $accent;
+    box-shadow: 0 0 0 3px rgba($accent, 0.1);
+    background: #fff;
+  }
+
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+// ── Column headers ──
+.column-headers {
+  display: flex;
+  align-items: center;
+  padding: 5px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.col-header {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  gap: 2px;
+  user-select: none;
+  transition: color 0.15s;
+
+  &:hover {
+    color: $text-primary;
+  }
+}
+
+.sort-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  color: $accent;
+}
+
+.col-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.col-date {
+  width: 150px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 12px;
+}
+
+.col-size {
+  width: 65px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+// ── Browser ──
+.browser-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.browser-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 10px;
+  color: $text-muted;
+  font-size: 13px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+    color: #cbd5e1;
+  }
+
+  &.error mat-icon {
+    color: #ef4444;
+  }
+}
+
+.browser-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.browser-row {
+  display: flex;
+  align-items: center;
+  padding: 7px 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover {
+    background: $row-hover;
+  }
+
+  &.selected {
+    background: $row-selected;
+
+    .row-name,
+    .row-meta {
+      color: #fff;
+    }
+
+    .row-icon {
+      color: #fde68a !important;
+    }
+  }
+
+  & + .browser-row {
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+.row-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+
+  &.folder {
+    color: $folder-color;
+  }
+}
+
+.row-name {
+  flex: 1;
+  font-size: 13px;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.row-meta {
+  font-size: 12px;
+  color: $text-secondary;
+  white-space: nowrap;
+}
+
+// ── Footer ──
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-top: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.footer-count {
+  font-size: 12px;
+  color: $text-secondary;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.footer-btn {
+  font-size: 13px !important;
+  border-radius: 6px !important;
+  padding: 5px 16px !important;
+  min-height: 30px !important;
+  line-height: 20px !important;
+}
+
+.cancel-btn {
+  color: $text-secondary !important;
+}
+
+.open-btn {
+  background: $accent !important;
+  color: #fff !important;
+
+  &:hover {
+    background: $accent-hover !important;
+  }
+
+  &:disabled {
+    background: #cbd5e1 !important;
+    color: #fff !important;
+  }
+}
+
+// ── Animation ──
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/*
+  This program and the accompanying materials are
+  made available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at https://www.eclipse.org/legal/epl-v20.html
+  
+  SPDX-License-Identifier: EPL-2.0
+  
+  Copyright Contributors to the Zowe Project.
+*/

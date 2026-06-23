@@ -286,7 +286,10 @@ export class ProjectTreeComponent {
 
   openDirectory() {
     let openDirectoryRef = this.dialog.open(OpenFolderComponent, {
-      width: '500px'
+      width: '650px',
+      height: '480px',
+      panelClass: 'open-dir-panel',
+      data: { directory: this.editorControl.activeDirectory || '/' }
     });
 
     openDirectoryRef.afterClosed().subscribe(result => {

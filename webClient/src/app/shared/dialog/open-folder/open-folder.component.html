@@ -7,28 +7,123 @@ SPDX-License-Identifier: EPL-2.0
 
 Copyright Contributors to the Zowe Project.
 -->
-<zlux-tab-trap></zlux-tab-trap>
-<div class="d-flex flex-align-items-start">
-  <div>
-    <h2 mat-dialog-title>Open Directory</h2>
-  </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
-</div>
-<mat-dialog-content>
-  <mat-form-field>
-    <mat-label>Directory</mat-label>
-    <input matInput type="text" tabindex="2" [(ngModel)]="value">
-    @if (value) {
-    <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="open-dir-clear">
-      <mat-icon tabindex="-1">close</mat-icon>
+<div class="open-dir-dialog" id="open-dir-dialog">
+  <!-- Resize edges (all borders) -->
+  <div class="resize-edge edge-top" (mousedown)="onResizeStart($event, 't')"></div>
+  <div class="resize-edge edge-bottom" (mousedown)="onResizeStart($event, 'b')"></div>
+  <div class="resize-edge edge-left" (mousedown)="onResizeStart($event, 'l')"></div>
+  <div class="resize-edge edge-right" (mousedown)="onResizeStart($event, 'r')"></div>
+  <div class="resize-edge edge-top-left" (mousedown)="onResizeStart($event, 'tl')"></div>
+  <div class="resize-edge edge-top-right" (mousedown)="onResizeStart($event, 'tr')"></div>
+  <div class="resize-edge edge-bottom-left" (mousedown)="onResizeStart($event, 'bl')"></div>
+  <div class="resize-edge edge-bottom-right" (mousedown)="onResizeStart($event, 'br')"></div>
+
+  <!-- Header: drag handle + nav + breadcrumbs + close -->
+  <div class="dialog-header" id="open-dir-header" (mousedown)="onDragStart($event)">
+    <button mat-icon-button class="nav-btn" (click)="goBack()" [disabled]="!canGoBack()" id="open-dir-back">
+      <mat-icon>chevron_left</mat-icon>
     </button>
+    <button mat-icon-button class="nav-btn" (click)="goForward()" [disabled]="!canGoForward()" id="open-dir-forward">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+    <div class="header-breadcrumbs" id="open-dir-breadcrumb">
+      @for (crumb of breadcrumbs; track crumb.path) {
+      <span class="crumb" (click)="navigateTo(crumb.path); $event.stopPropagation()"
+        [class.crumb-active]="$last"
+        [attr.id]="'open-dir-crumb-' + $index">{{crumb.name}}</span>
+      @if (!$last) {
+      <mat-icon class="crumb-sep">chevron_right</mat-icon>
+      }
+      }
+    </div>
+    <button mat-icon-button class="close-btn" mat-dialog-close id="open-dir-close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Toolbar: path + filter -->
+  <div class="dialog-toolbar" id="open-dir-toolbar">
+    <input class="path-input" type="text" [(ngModel)]="value" (keydown.enter)="navigateTo(value)"
+      placeholder="/path/to/directory" spellcheck="false" id="open-dir-input">
+    <input class="filter-input" type="text" [(ngModel)]="filterText"
+      placeholder="Filter..." id="open-dir-filter">
+  </div>
+
+  <!-- Column headers -->
+  <div class="column-headers" id="open-dir-columns">
+    <div class="col-name col-header" (click)="sortBy('name')" id="open-dir-sort-name">
+      <span>Name</span>
+      @if (sortField === 'name') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
+      }
+    </div>
+    <div class="col-date col-header" (click)="sortBy('date')" id="open-dir-sort-date">
+      <span>Date Modified</span>
+      @if (sortField === 'date') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
+      }
+    </div>
+    <div class="col-size col-header" (click)="sortBy('size')" id="open-dir-sort-size">
+      <span>Size</span>
+      @if (sortField === 'size') {
+      <mat-icon class="sort-icon">{{sortDir === 'asc' ? 'arrow_drop_up' : 'arrow_drop_down'}}</mat-icon>
+      }
+    </div>
+  </div>
+
+  <!-- File browser -->
+  <div class="browser-container" id="open-dir-browser">
+    @if (loading) {
+    <div class="browser-status" id="open-dir-loading">
+      <mat-icon class="spin">sync</mat-icon>
+      <span>Loading...</span>
+    </div>
     }
-  </mat-form-field>
-</mat-dialog-content>
-<mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
-    [disabled]="!value">Open</button>
-</mat-dialog-actions>
+    @if (!loading && errorMsg) {
+    <div class="browser-status error" id="open-dir-error">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{errorMsg}}</span>
+    </div>
+    }
+    @if (!loading && !errorMsg && filteredEntries.length === 0) {
+    <div class="browser-status" id="open-dir-empty">
+      <mat-icon>folder_off</mat-icon>
+      <span>Empty folder</span>
+    </div>
+    }
+    @if (!loading && !errorMsg) {
+    <div class="browser-list" id="open-dir-list">
+      @for (entry of filteredEntries; track entry.name) {
+      <div class="browser-row" [class.selected]="selectedEntry === entry"
+          [attr.id]="'open-dir-item-' + entry.name"
+          (click)="selectEntry(entry)"
+          (dblclick)="navigateInto(entry)">
+        <div class="col-name">
+          <mat-icon class="row-icon folder">folder</mat-icon>
+          <span class="row-name">{{entry.name}}</span>
+        </div>
+        <div class="col-date">
+          <span class="row-meta">{{entry.dateModified || '—'}}</span>
+        </div>
+        <div class="col-size">
+          <span class="row-meta">{{entry.directory ? '—' : formatSize(entry.size)}}</span>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="dialog-footer" id="open-dir-footer">
+    <span class="footer-count" id="open-dir-count">{{filteredEntries.length}} items</span>
+    <div class="footer-actions">
+      <button mat-button class="footer-btn cancel-btn" mat-dialog-close id="open-dir-cancel">Cancel</button>
+      <button mat-flat-button class="footer-btn open-btn" [mat-dialog-close]="value"
+        [disabled]="!value" id="open-dir-submit">Open</button>
+    </div>
+  </div>
+</div>
 
 <!--
 This program and the accompanying materials are

@@ -65,6 +65,8 @@
     padding-top: 8px !important;
     padding-bottom: 8px !important;
     min-height: 30px !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   .mdc-text-field {
@@ -77,6 +79,21 @@
 
   .mat-mdc-select-value {
     padding-top: 10px !important;
+  }
+
+  .open-dir-panel {
+    overflow: visible !important;
+
+    .mat-mdc-dialog-container {
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    .mdc-dialog__surface {
+      overflow: visible !important;
+      border-radius: 8px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    }
   }
 
   /*
