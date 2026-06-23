@@ -116,11 +116,11 @@ export class DatasetSaveService {
         } else if (errMsg.includes('Unable to allocate a DD for ACB')) {
           this.snackBar.open(`Failed to allocate dataset ${datasetName}: The high-level qualifier may not be authorized for this user. Try a different dataset name prefix.`,
             'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-          return throwError(errMsg);
+          return throwError(() => errMsg);
         } else {
           this.snackBar.open(`Failed to allocate dataset ${datasetName}: ${errMsg}`,
             'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-          return throwError(errMsg);
+          return throwError(() => errMsg);
         }
       })
     );
@@ -150,45 +150,42 @@ export class DatasetSaveService {
       params: parameters
     };
 
-    return new Observable<string>((observer) => {
-      this.http.post(requestUrl, { records: contents }, options).subscribe({
-        next: () => {
-          this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
-            { duration: MessageDuration.Medium, panelClass: 'center' });
-          // Update file context to reflect it's now a dataset
-          fileContext.model.isDataset = true;
-          fileContext.model.fileName = fullName;
-          fileContext.model.name = memberName || datasetName;
-          fileContext.model.path = datasetName;
-          fileContext.model.contents = rawContent || '';
-          fileContext.temp = false;
-          fileContext.changed = false;
-          // Notify tab bar of the title change
-          this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
-          // Emit bufferSaved so the file tree and other listeners know
-          this.editorControl.bufferSaved.next({ buffer: fileContext.model.contents, file: fileContext.model.name });
-          // Refresh the dataset member list in the file tree so user doesn't have to manually refresh
-          this.editorControl.openDirectory.next(datasetName);
-          observer.next('Save');
-          observer.complete();
-        },
-        error: (error: any) => {
-          const raw = error?.error;
-          let errMsg = (typeof raw === 'string') ? raw
-            : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
-          // Simplify verbose server messages that include full record content
-          // e.g. 'Record #10 with contents "Aaaa..." is longer than the max record length of 80'
-          // -> 'Line 10 exceeds the max record length of 80'
-          const recordMatch = errMsg.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
-          if (recordMatch) {
-            errMsg = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
-          }
-          this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
-            'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-          observer.error(errMsg);
+    return this.http.post(requestUrl, { records: contents }, options).pipe(
+      switchMap(() => {
+        this.snackBar.open(`Saved to dataset: ${fullName}`, 'Dismiss',
+          { duration: MessageDuration.Medium, panelClass: 'center' });
+        // Update file context to reflect it's now a dataset
+        fileContext.model.isDataset = true;
+        fileContext.model.fileName = fullName;
+        fileContext.model.name = memberName || datasetName;
+        fileContext.model.path = datasetName;
+        fileContext.model.contents = rawContent || '';
+        fileContext.temp = false;
+        fileContext.changed = false;
+        // Notify tab bar of the title change
+        this.editorControl._openFileList.next(this.editorControl._openFileList.getValue());
+        // Emit bufferSaved so the file tree and other listeners know
+        this.editorControl.bufferSaved.next({ buffer: fileContext.model.contents, file: fileContext.model.name });
+        // Refresh the dataset member list in the file tree so user doesn't have to manually refresh
+        this.editorControl.openDirectory.next(datasetName);
+        return of('Save');
+      }),
+      catchError((error: any) => {
+        const raw = error?.error;
+        let errMsg = (typeof raw === 'string') ? raw
+          : raw?.error || raw?.msg || raw?.message || JSON.stringify(raw) || error?.message || 'Unknown error';
+        // Simplify verbose server messages that include full record content
+        // e.g. 'Record #10 with contents "Aaaa..." is longer than the max record length of 80'
+        // -> 'Line 10 exceeds the max record length of 80'
+        const recordMatch = errMsg.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
+        if (recordMatch) {
+          errMsg = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
         }
-      });
-    });
+        this.snackBar.open(`Failed to save to dataset ${fullName}: ${errMsg}`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        return throwError(() => errMsg);
+      })
+    );
   }
 }
 

@@ -27,7 +27,7 @@
   }
 }
 
-/* ─── 3-Mode Segmented Toggle ─── */
+/* --- 3-Mode Segmented Toggle --- */
 .save-mode-group {
   width: 100%;
   margin-bottom: 16px;
@@ -59,7 +59,7 @@
   }
 }
 
-/* ─── Form Layout ─── */
+/* --- Form Layout --- */
 .save-form {
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ─── Allocate Section ─── */
+/* --- Allocate Section --- */
 .allocate-section {
   margin-top: 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -130,7 +130,7 @@
   flex: 1 1 33%;
 }
 
-/* ─── Hint Colors ─── */
+/* --- Hint Colors --- */
 .hint-success {
   color: #2e7d32 !important;
   .fa { color: #2e7d32; }
@@ -144,7 +144,7 @@
   color: #c62828 !important;
 }
 
-/* ─── Template Chips ─── */
+/* --- Template Chips --- */
 .template-chips {
   display: flex;
   gap: 6px;
@@ -166,7 +166,7 @@
   }
 }
 
-/* ─── Dataset Info Panel (read-only) ─── */
+/* --- Dataset Info Panel (read-only) --- */
 .dataset-info-panel {
   margin-top: 12px;
   padding: 10px 12px;
@@ -210,7 +210,7 @@
   }
 }
 
-/* ─── Deep overrides for Material inside this dialog ─── */
+/* --- Deep overrides for Material inside this dialog --- */
 ::ng-deep .save-to-dialog {
   .mat-mdc-form-field {
     width: 100%;
