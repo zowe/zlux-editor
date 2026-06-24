@@ -11,9 +11,25 @@ Copyright Contributors to the Zowe Project.
 @if (noOpenFile && !showSettings) {
   <div class="editor-instruction" id="editor-welcome-screen">
     <div class="instruction">
-      <span class="welcome" style="color: #6ba4ff" id="editor-welcome-title">Zowe Editor</span>
-      <p>Use the explorer on the left-hand side to start your journey!
-      </p>
+      <span class="welcome" style="color: #6ba4ff">Zowe Editor</span>
+      <p>Use the explorer on the left-hand side to start your journey!</p>
+      @if (recentSessions.length > 0) {
+        <div class="recent-sessions">
+          <div class="recent-sessions-header">
+            <span class="recent-sessions-title">Recent Sessions</span>
+            <button class="clear-all-btn" (click)="clearAllSessions()">Clear All</button>
+          </div>
+          <div class="session-list">
+            @for (session of recentSessions; track session.id) {
+              <div class="session-item" (click)="restoreSessionById(session.id)">
+                <span class="session-name">{{ session.name }}</span>
+                <span class="session-meta">{{ session.tabCount }} tab{{ session.tabCount !== 1 ? 's' : '' }} &middot; {{ formatSessionDate(session.updatedAt) }}</span>
+                <button class="session-delete-btn" (click)="deleteSession(session.id, $event)" title="Remove session">&times;</button>
+              </div>
+            }
+          </div>
+        </div>
+      }
     </div>
   </div>
 }
