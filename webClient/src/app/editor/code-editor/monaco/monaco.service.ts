@@ -323,6 +323,10 @@ export class MonacoService implements OnDestroy {
         this.editorControl.saveCursorPosition = false;
       }
     });
+    // Capture the previously active file before selectFileHandler deactivates all entries.
+    // If the open request fails, we must restore this file's active state so that
+    // Save / Save As and other operations that depend on fetchActiveFile() continue to work.
+    const previousActiveFile = this.editorControl.fetchActiveFile();
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
@@ -364,6 +368,24 @@ export class MonacoService implements OnDestroy {
           });
         },
         error: (err) => {
+          // Restore the previously active file's state so that operations like
+          // Save / Save As don't break with "no content found" after a failed open.
+          // We directly restore the active/opened flags instead of calling
+          // selectFileHandler(), which would create a dangling fileOpened
+          // subscription (it never fires on the error path) and redundantly
+          // save cursor state.
+          if (previousActiveFile) {
+            for (const file of this.editorControl._openFileList.getValue()) {
+              if (file.model.fileName === previousActiveFile.model.fileName
+                  && file.model.path === previousActiveFile.model.path) {
+                file.opened = true;
+                file.active = true;
+              } else {
+                file.opened = false;
+                file.active = false;
+              }
+            }
+          }
           if (err._userCancelled) {
             return; // User cancelled from the large file warning dialog
           }
