@@ -648,12 +648,17 @@ export class MonacoService implements OnDestroy {
             */
           // Only pass fileDirectory for USS paths (starts with /); dataset names should not pre-fill USS directory
           const ussDirectory = fileDirectory && fileDirectory.startsWith('/') ? fileDirectory : undefined;
+          // Pass activeDirectory as a fallback USS directory for datasets (used if ZSS home lookup fails)
+          const fallbackUssDirectory = !ussDirectory && fileContext.model.isDataset
+            ? (this.editorControl.activeDirectory || undefined)
+            : undefined;
           let saveRef = this.dialog.open(SaveToComponent, {
             width: '540px',
             data: {
               canBeISO: x,
               fileName: fileContext.model.fileName,
               ...(ussDirectory && { fileDirectory: ussDirectory }),
+              ...(fallbackUssDirectory && { fallbackDirectory: fallbackUssDirectory }),
               ...(fileContext.model.isDataset && {
                 datasetName: fileContext.model.path,
                 // Only pass memberName if it differs from datasetName (i.e. it's an actual member, not a sequential DS)

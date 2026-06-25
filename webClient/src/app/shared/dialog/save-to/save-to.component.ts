@@ -124,6 +124,17 @@ export class SaveToComponent implements OnDestroy {
     if (this.data.fileDirectory && !this.data.datasetName) {
       this.results.directory = this.data.fileDirectory;
     }
+    // When the source file is a dataset, pre-fill the USS tab with the user's
+    // home directory so they have a sensible default if they switch to USS mode.
+    if (this.data.datasetName) {
+      // Pre-fill a sensible USS filename derived from the dataset/member name
+      const memberOrDs = this.data.memberName || this.data.fileName || '';
+      if (memberOrDs) {
+        this.results.fileName = memberOrDs.toLowerCase();
+      }
+      // Resolve the user's USS home directory for pre-filling the directory field
+      this.fetchUserHomeDirectory();
+    }
     // Pre-populate dataset fields if file was opened from a dataset
     if (this.data.datasetName) {
       let dsName = this.data.datasetName.toUpperCase();
@@ -581,6 +592,57 @@ export class SaveToComponent implements OnDestroy {
       return false;
     }
     return false;
+  }
+
+  /**
+   * Resolves the user's USS home directory for pre-filling the Save As USS tab.
+   * 
+   * Strategy (in order of reliability):
+   * 1. If `fallbackDirectory` is provided (last browsed USS directory), use it.
+   * 2. Derive home directory from the dataset HLQ (high-level qualifier):
+   *    On z/OS, the convention is that a user's USS home is /u/<userid>,
+   *    and their dataset HLQ matches their userid (e.g. TS6330 → /u/ts6330).
+   *    We validate this by making a lightweight metadata call against the derived path.
+   * 3. If validation fails, leave the field empty for the user to fill manually.
+   *
+   * This avoids relying on tilde (~) expansion in the REST API, which ZSS's
+   * POSIX-based file services do not support.
+   */
+  private fetchUserHomeDirectory(): void {
+    // Only fetch if USS directory is not already set
+    if (this.results.directory) return;
+
+    // Use fallbackDirectory (activeDirectory from the editor) if provided
+    const fallback = this.data.fallbackDirectory || '';
+    if (fallback) {
+      this.results.directory = fallback;
+      return;
+    }
+
+    // Derive a candidate home path from the dataset HLQ (first qualifier = userid)
+    const dsName = this.data.datasetName || '';
+    const hlq = dsName.split('.')[0]; // e.g. "TS6330.MY.DATA" → "TS6330"
+    if (!hlq) return;
+
+    // Standard z/OS convention: /u/<userid_lowercase>
+    const candidatePath = `/u/${hlq.toLowerCase()}`;
+
+    try {
+      // Validate the candidate path exists via a lightweight metadata check
+      const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata', candidatePath.substring(1));
+      this.http.get(metadataUrl).pipe(
+        takeUntil(this.destroy$),
+        catchError(() => of(null))
+      ).subscribe((response: any) => {
+        if (response && !this.results.directory) {
+          // Metadata returned successfully — path exists, use it
+          this.results.directory = candidatePath;
+        }
+        // If metadata fails, field stays empty — user types manually
+      });
+    } catch (e) {
+      // ZoweZLUX may not be available in dev/test environments — fail silently
+    }
   }
 }
 
