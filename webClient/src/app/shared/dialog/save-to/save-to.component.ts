@@ -80,6 +80,10 @@ export class SaveToComponent implements OnDestroy {
     blockSize: '',
   };
 
+  // --- USS directory validation state ---
+  directoryLookupStatus: 'idle' | 'checking' | 'valid' | 'not-found' = 'idle';
+  private directoryInput$ = new Subject<string>();
+
   // --- Dataset lookup state ---
   memberModeEnabled = false;
   datasetLookupStatus: DatasetLookupStatus = 'idle';
@@ -123,6 +127,8 @@ export class SaveToComponent implements OnDestroy {
     }
     if (this.data.fileDirectory && !this.data.datasetName) {
       this.results.directory = this.data.fileDirectory;
+      // Directory came from the file's current path -- it's known to exist
+      this.directoryLookupStatus = 'valid';
     }
     // When the source file is a dataset, pre-fill the USS tab with the user's
     // home directory so they have a sensible default if they switch to USS mode.
@@ -164,6 +170,41 @@ export class SaveToComponent implements OnDestroy {
       } else {
         this.saveMode = 'dataset';
       }
+    }
+
+    // Debounced USS directory validation -- same pattern as dataset lookup above
+    this.directoryInput$.pipe(
+      debounceTime(600),
+      takeUntil(this.destroy$),
+      switchMap((dir: string) => {
+        const trimmed = dir.trim();
+        if (!trimmed) {
+          this.directoryLookupStatus = 'idle';
+          return of(null);
+        }
+        if (!trimmed.startsWith('/')) {
+          this.directoryLookupStatus = 'not-found';
+          return of(null);
+        }
+        this.directoryLookupStatus = 'checking';
+        const pathForUri = trimmed.substring(1);
+        const url = ZoweZLUX.uriBroker.unixFileUri('metadata', pathForUri);
+        return this.http.get(url).pipe(
+          catchError(() => of({ _notFound: true }))
+        );
+      })
+    ).subscribe((response: any) => {
+      if (!response) return;
+      if (response._notFound) {
+        this.directoryLookupStatus = 'not-found';
+      } else {
+        this.directoryLookupStatus = 'valid';
+      }
+    });
+
+    // If directory was pre-filled and not yet validated, trigger check
+    if (this.results.directory && this.directoryLookupStatus === 'idle') {
+      this.directoryInput$.next(this.results.directory);
     }
 
     // Debounced dataset metadata lookup -- only fires for syntactically valid dataset names
@@ -269,6 +310,11 @@ export class SaveToComponent implements OnDestroy {
     if ((newMode === 'dataset' || newMode === 'member') && this.datasetResults.datasetName && this.isDatasetNameValid()) {
       this.datasetNameInput$.next(this.datasetResults.datasetName.toUpperCase());
     }
+  }
+
+  /** Triggered on USS directory input -- fires validation via debounced Subject */
+  onDirectoryInput(): void {
+    this.directoryInput$.next(this.results.directory || '');
   }
 
   toggleAllocate(): void {
@@ -379,7 +425,10 @@ export class SaveToComponent implements OnDestroy {
   isValid(): boolean {
     switch (this.saveMode) {
       case 'uss':
-        return !!(this.results.fileName && this.results.directory && this.results.encoding);
+        if (!this.results.fileName || !this.results.directory || !this.results.encoding) return false;
+        // Block save if directory was confirmed as non-existent
+        if (this.directoryLookupStatus === 'not-found') return false;
+        return true;
 
       case 'dataset':
         if (!this.isDatasetNameValid()) return false;
@@ -596,17 +645,11 @@ export class SaveToComponent implements OnDestroy {
 
   /**
    * Resolves the user's USS home directory for pre-filling the Save As USS tab.
-   * 
-   * Strategy (in order of reliability):
-   * 1. If `fallbackDirectory` is provided (last browsed USS directory), use it.
-   * 2. Derive home directory from the dataset HLQ (high-level qualifier):
-   *    On z/OS, the convention is that a user's USS home is /u/<userid>,
-   *    and their dataset HLQ matches their userid (e.g. TS6330 → /u/ts6330).
-   *    We validate this by making a lightweight metadata call against the derived path.
-   * 3. If validation fails, leave the field empty for the user to fill manually.
    *
-   * This avoids relying on tilde (~) expansion in the REST API, which ZSS's
-   * POSIX-based file services do not support.
+   * Strategy:
+   * 1. If fallbackDirectory is provided (last browsed USS directory), use it.
+   * 2. Derive home from dataset HLQ: /u/<hlq_lowercase> (z/OS convention).
+   * 3. Validate via metadata call; if it fails, leave field empty.
    */
   private fetchUserHomeDirectory(): void {
     // Only fetch if USS directory is not already set
@@ -616,32 +659,33 @@ export class SaveToComponent implements OnDestroy {
     const fallback = this.data.fallbackDirectory || '';
     if (fallback) {
       this.results.directory = fallback;
+      this.directoryInput$.next(fallback);
       return;
     }
 
     // Derive a candidate home path from the dataset HLQ (first qualifier = userid)
     const dsName = this.data.datasetName || '';
-    const hlq = dsName.split('.')[0]; // e.g. "TS6330.MY.DATA" → "TS6330"
+    const hlq = dsName.split('.')[0]; // e.g. "TS6330.MY.DATA" -> "TS6330"
     if (!hlq) return;
 
     // Standard z/OS convention: /u/<userid_lowercase>
     const candidatePath = `/u/${hlq.toLowerCase()}`;
 
     try {
-      // Validate the candidate path exists via a lightweight metadata check
       const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata', candidatePath.substring(1));
       this.http.get(metadataUrl).pipe(
         takeUntil(this.destroy$),
         catchError(() => of(null))
       ).subscribe((response: any) => {
         if (response && !this.results.directory) {
-          // Metadata returned successfully — path exists, use it
+          // Metadata returned successfully -- path exists, use it
           this.results.directory = candidatePath;
+          this.directoryLookupStatus = 'valid';
         }
-        // If metadata fails, field stays empty — user types manually
+        // If metadata fails, field stays empty -- user types manually
       });
     } catch (e) {
-      // ZoweZLUX may not be available in dev/test environments — fail silently
+      // ZoweZLUX may not be available in dev/test environments -- fail silently
     }
   }
 }
