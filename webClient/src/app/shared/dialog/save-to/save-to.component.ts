@@ -648,44 +648,88 @@ export class SaveToComponent implements OnDestroy {
    *
    * Strategy:
    * 1. If fallbackDirectory is provided (last browsed USS directory), use it.
-   * 2. Derive home from dataset HLQ: /u/<hlq_lowercase> (z/OS convention).
-   * 3. Validate via metadata call; if it fails, leave field empty.
+   * 2. Try to get the actual logged-in username from ZoweZLUX and validate /u/<username>.
+   * 3. If that fails, derive home from dataset HLQ: /u/<hlq_lowercase> (z/OS convention).
+   * 4. Validate via metadata call; if it fails, leave field empty.
    */
   private fetchUserHomeDirectory(): void {
     // Only fetch if USS directory is not already set
     if (this.results.directory) return;
 
     // Use fallbackDirectory (activeDirectory from the editor) if provided
+    // Only use it if it's a valid USS path (starts with /) -- it could be a dataset name
     const fallback = this.data.fallbackDirectory || '';
-    if (fallback) {
+    if (fallback && fallback.startsWith('/')) {
       this.results.directory = fallback;
       this.directoryInput$.next(fallback);
       return;
     }
 
-    // Derive a candidate home path from the dataset HLQ (first qualifier = userid)
-    const dsName = this.data.datasetName || '';
-    const hlq = dsName.split('.')[0]; // e.g. "TS6330.MY.DATA" -> "TS6330"
-    if (!hlq) return;
+    // Build candidate paths to try (in priority order)
+    const candidates: string[] = [];
 
-    // Standard z/OS convention: /u/<userid_lowercase>
-    const candidatePath = `/u/${hlq.toLowerCase()}`;
+    // 1. Try to get the actual logged-in username from ZoweZLUX
+    try {
+      // pluginConfigForScopeUri with 'user' scope embeds the logged-in userId in the URL.
+      // Format: /ZLUX/plugins/{id}/services/data/_current/user/{userId}/{component}/{resource}
+      // We generate a dummy URL just to parse the username out of it — no HTTP call is made.
+      const probePlugin = ZoweZLUX.pluginManager.getPlugin('org.zowe.editor');
+      if (probePlugin) {
+        const probeUri = ZoweZLUX.uriBroker.pluginConfigForScopeUri(probePlugin, 'user', '_probe', '_probe');
+        const userMatch = probeUri.match(/\/user\/([^/]+)\//i);
+        if (userMatch && userMatch[1]) {
+          const username = userMatch[1].toLowerCase();
+          candidates.push(`/u/${username}`);
+        }
+      }
+    } catch (e) {
+      // ZoweZLUX not available or API changed -- skip, fall through to HLQ
+    }
+
+    // 2. Derive from dataset HLQ (first qualifier = often userid)
+    const dsName = this.data.datasetName || '';
+    const hlq = dsName.split('.')[0];
+    if (hlq) {
+      const hlqPath = `/u/${hlq.toLowerCase()}`;
+      // Avoid duplicates if username === hlq
+      if (!candidates.includes(hlqPath)) {
+        candidates.push(hlqPath);
+      }
+    }
+
+    if (candidates.length === 0) return;
+
+    // Try candidates in order -- use the first one that exists
+    this.tryNextCandidate(candidates, 0);
+  }
+
+  /**
+   * Recursively try candidate home directories until one is found or all fail.
+   */
+  private tryNextCandidate(candidates: string[], index: number): void {
+    if (index >= candidates.length) return; // All failed -- leave empty
+    if (this.results.directory) return; // Already set by user interaction
+
+    const candidate = candidates[index];
 
     try {
-      const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata', candidatePath.substring(1));
+      const metadataUrl = ZoweZLUX.uriBroker.unixFileUri('metadata', candidate.substring(1));
       this.http.get(metadataUrl).pipe(
         takeUntil(this.destroy$),
         catchError(() => of(null))
       ).subscribe((response: any) => {
         if (response && !this.results.directory) {
-          // Metadata returned successfully -- path exists, use it
-          this.results.directory = candidatePath;
+          // Path exists -- use it
+          this.results.directory = candidate;
           this.directoryLookupStatus = 'valid';
+        } else if (!this.results.directory) {
+          // Try next candidate
+          this.tryNextCandidate(candidates, index + 1);
         }
-        // If metadata fails, field stays empty -- user types manually
       });
     } catch (e) {
-      // ZoweZLUX may not be available in dev/test environments -- fail silently
+      // Try next candidate if ZoweZLUX fails
+      this.tryNextCandidate(candidates, index + 1);
     }
   }
 }
