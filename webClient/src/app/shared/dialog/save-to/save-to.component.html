@@ -39,7 +39,18 @@ Copyright Contributors to the Zowe Project.
       </mat-form-field>
       <mat-form-field class="w-100" appearance="outline">
         <mat-label>Directory</mat-label>
-        <input matInput type="text" [(ngModel)]="results.directory" id="save-as-directory">
+        <input matInput type="text" [(ngModel)]="results.directory" id="save-as-directory"
+          (input)="onDirectoryInput()"
+          placeholder="e.g. /u/userid/mydir">
+        @if (directoryLookupStatus === 'checking') {
+        <mat-hint>Checking directory...</mat-hint>
+        }
+        @if (directoryLookupStatus === 'not-found') {
+        <mat-hint class="hint-error">Directory does not exist. Please enter a valid USS path.</mat-hint>
+        }
+        @if (directoryLookupStatus === 'valid') {
+        <mat-hint class="hint-success"><i class="fa fa-check-circle"></i> Directory verified</mat-hint>
+        }
       </mat-form-field>
       <mat-form-field class="w-100" appearance="outline">
         <mat-label>Encoding</mat-label>
