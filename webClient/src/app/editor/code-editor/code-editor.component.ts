@@ -449,6 +449,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
       const tab = session.tabs[tabIndex];
       tabIndex++;
 
+      // Skip tabs with no path (unsaved temp files from older sessions)
+      if (!tab.path) {
+        openNext();
+        return;
+      }
+
       const fileStructure: ProjectStructure = {
         id: tab.fileName + ':' + tab.path,
         name: tab.name,
