@@ -2,6 +2,8 @@
 
 ## `3.6.0`
 
+- Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. The payload is now built with `JSON.stringify`, which properly escapes special characters.
+
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
 - Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
