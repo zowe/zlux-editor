@@ -2,6 +2,8 @@
 
 ## `3.6.0`
 
+- Bugfix: Removed internal development hostnames (`rs22:5000`, `wal-vm-db2zos1:5000`) and plain-HTTP schemes from the bundled `ENDPOINTS` constants. These absolute dev URLs were shipped in `main.js`, disclosing internal infrastructure and risking cleartext transmission if any of their (currently dead) call sites were wired up. The affected endpoints now use same-origin relative paths.
+
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
 - Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
