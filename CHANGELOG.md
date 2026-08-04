@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.18.6`
+
+- Bugfix: Removed internal development hostnames (`rs22:5000`, `wal-vm-db2zos1:5000`) and plain-HTTP schemes from the bundled `ENDPOINTS` constants. These absolute dev URLs were shipped in `main.js`, disclosing internal infrastructure and risking cleartext transmission if any of their (currently dead) call sites were wired up. The affected endpoints now use same-origin relative paths.
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
