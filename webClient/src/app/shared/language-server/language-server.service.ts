@@ -15,7 +15,7 @@ import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 @Injectable()
 export class LanguageServerService {
 
-  config = { domain: 'ws://localhost:3000', endpoint: { hlasm: 'asmServer', json: 'jsonServer' } };
+  config = { domain: 'wss://localhost:3000', endpoint: { hlasm: 'asmServer', json: 'jsonServer' } };
   connections: { name: string, connection: MessageConnection }[] = [];
   enabled: boolean = true;
 
@@ -35,6 +35,16 @@ export class LanguageServerService {
     } else {
       try{
         var serverConfig = JSON.parse(langSettings.config);
+        let domainIsSecure = false;
+        try {
+          domainIsSecure = new URL(serverConfig.domain).protocol === 'wss:';
+        } catch(e) {
+          domainIsSecure = false;
+        }
+        if (!domainIsSecure) {
+          this.log.warn("Language server domain rejected: it must use the secure 'wss://' scheme");
+          return;
+        }
         this.config = serverConfig;
         this.enabled = langSettings.enable;
       }catch(e){

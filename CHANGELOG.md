@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.18.6`
+
+- Bugfix: Hardened the language server (LSP) configuration. The default connection domain now uses the encrypted `wss://` scheme instead of `ws://`, and `LanguageServerService.updateSettings()` now rejects any configured domain that does not use the secure `wss://` scheme. The LSP connection path itself remains disabled; this addresses residual risk from future re-enablement.
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
