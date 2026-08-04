@@ -20,7 +20,7 @@ export const environment = {
 };
 
 export const ENDPOINTS: Endpoints = {
-  projectStructure: 'http://rs22:5000/projects/{name}',
+  projectStructure: '/projects/{name}',
   jsonFile: './mock/jsonFile.json',
   xmlFile: './mock/xmlFile.json',
   asmFile: './mock/file.json',
@@ -31,6 +31,11 @@ export const ENDPOINTS: Endpoints = {
   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
   searchInFile: 'http://rs22:5000/projects/GCE/search?pattern={pattern}',
   jobs: 'http://rs22:5000/jobs'
+  projectFile: '/datasets/{name}/members',
+  file: '/datasets/{dataset}/members/{member}',
+  saveFile: '/datasets/{dataset}/members/{member}',
+  searchInFile: '/projects/GCE/search?pattern={pattern}',
+  jobs: '/jobs'
 };
 
 /*
