@@ -30,7 +30,6 @@ export const ENDPOINTS: Endpoints = {
   file: 'http://rs22:5000/datasets/{dataset}/members/{member}',
   saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
   searchInFile: 'http://rs22:5000/projects/GCE/search?pattern={pattern}',
-  diagram: 'http://wal-vm-db2zos1:5000/genflow',
   jobs: 'http://rs22:5000/jobs'
 };
 
