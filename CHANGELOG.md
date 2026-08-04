@@ -2,8 +2,7 @@
 
 ## `3.6.0`
 
-- Bugfix: Hardened the language server (LSP) configuration. The default connection domain now uses the encrypted `wss://` scheme instead of `ws://`, and `LanguageServerService.updateSettings()` now rejects any configured domain that does not use the secure `wss://` scheme. The LSP connection path itself remains disabled; this addresses residual risk from future re-enablement.
-
+- Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#400](https://github.com/zowe/zlux-editor/pull/400))
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
 - Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
