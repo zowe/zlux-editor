@@ -32,29 +32,6 @@ import { KeyCode } from '../../shared/keycode-enum';
 import * as _ from 'lodash';
 import { ProjectContext, ProjectContextType } from '../../shared/model/project-context';
 
-function initMenu(menuItems) {
-  menuItems.forEach(function(menuItem) {
-    if (menuItem.action && !menuItem.action.func && menuItem.action.functionString) {
-      menuItem.action.func = new Function('context', menuItem.action.functionString);
-    }
-    if (!menuItem.isDisabled && menuItem.isDisabledString) {
-      menuItem.isDisabled = new Function('context', menuItem.isDisabledString);
-    }
-  });
-  return menuItems;
-}
-function initMenus(menus) {
-  if (menus.isArray) {
-    return initMenu(menus);
-  } else {
-    const keys = (Object as any).keys(menus);
-    for (let i = 0; i < keys.length; i++){
-      menus[keys[i]] = initMenu(menus[keys[i]]);
-    }
-    return menus;
-  }
-}
-
 // Where el is the DOM element you'd like to test for visibility
 function isHidden(el) {
   return (el.offsetParent === null)
@@ -116,7 +93,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     this.addFileTreeMenus(this.menuList);
     this.addDiffViewerMenus(this.menuList);
     this.addToggleTreeMenus(this.menuList);
-    this.languagesMenu = initMenus(this.languagesMenu);
 
     this.editorControl.languageRegistered.subscribe((languageDefinition)=> {
       this.resetLanguageSelectionMenu();

@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.18.6`
+
+- Bugfix: Removed runtime `new Function(...)` compilation of menu-action strings. Menu `functionString`/`isDisabledString` entries in the menu config are now defined as real TypeScript functions, and the string-to-function conversion (`initMenu`/`initMenus`) was removed. This eliminates an `eval`-equivalent code path (which would have become stored-config code execution if menus were ever loaded from plugin config) and removes the `unsafe-eval` requirement for CSP.
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
