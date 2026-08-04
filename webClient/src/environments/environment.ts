@@ -26,11 +26,6 @@ export const ENDPOINTS: Endpoints = {
   asmFile: './mock/file.json',
   htmlFile: './mock/htmlFile.json',
   project: '../../com.rs.mvd.ide/web/mock/project.json',
-  projectFile: 'http://rs22:5000/datasets/{name}/members',
-  file: 'http://rs22:5000/datasets/{dataset}/members/{member}',
-  saveFile: 'http://rs22:5000/datasets/{dataset}/members/{member}',
-  searchInFile: 'http://rs22:5000/projects/GCE/search?pattern={pattern}',
-  jobs: 'http://rs22:5000/jobs'
   projectFile: '/datasets/{name}/members',
   file: '/datasets/{dataset}/members/{member}',
   saveFile: '/datasets/{dataset}/members/{member}',
