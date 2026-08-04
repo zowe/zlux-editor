@@ -629,41 +629,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     return `${item.name}`;
   }
 
-  submitJob() {
-    let file = this.editorControl.fetchActiveFile();
-    if (!file || (file.model.language !== 'jcl')) {
-      this.snackBar.open(`Please open a JCL file before you submit job.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-    } this.http.post(ENDPOINTS.jobs, { contents: file.model.contents }).subscribe(r => {
-      let jobId = r.jobid;
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.name = 'copy';
-      input.value = jobId;
-      input.style.position = 'absolute';
-      input.style.left = '-9999px';
-      document.body.appendChild(input);
-      // open snack bar
-      let snackBarRef = this.snackBar.open(
-        `Please copy this job id (${jobId}) and check it in terminal.`,
-        'Copy',
-        {
-          duration: MessageDuration.ExtraLong, panelClass: 'center'
-        });
-      // get snack bar button
-      const button = document.getElementsByClassName('mat-simple-snackbar-action')[0];
-      button.addEventListener('click', () => {
-        input.select();
-        document.execCommand('copy');
-        document.body.removeChild(input);
-      });
-      snackBarRef.afterDismissed().subscribe(action => {
-        if (action.dismissedByAction) {
-          // do something
-        }
-      });
-    });
-  }
-
   setEditorLanguage(language: string) {
     let fileContext = this.editorControl.fetchActiveFile();
     this.editorControl.setHighlightingModeForBuffer(fileContext, language);

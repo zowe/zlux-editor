@@ -29,8 +29,7 @@ export const ENDPOINTS: Endpoints = {
   projectFile: '/datasets/{name}/members',
   file: '/datasets/{dataset}/members/{member}',
   saveFile: '/datasets/{dataset}/members/{member}',
-  searchInFile: '/projects/GCE/search?pattern={pattern}',
-  jobs: '/jobs'
+  searchInFile: '/projects/GCE/search?pattern={pattern}'
 };
 
 /*
