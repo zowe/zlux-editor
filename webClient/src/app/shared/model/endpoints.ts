@@ -19,7 +19,6 @@ export interface Endpoints {
     file: string;
     saveFile: string;
     searchInFile: string;
-    diagram: string;
 }
 
 /*

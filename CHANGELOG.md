@@ -2,6 +2,11 @@
 
 ## `3.6.0`
 
+- Bugfix: Changed initialization of menu action and disabled functions. Now, functions are used as opposed to strings that were evaluated into functions. ([#401](https://github.com/zowe/zlux-editor/pull/401))
+- Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#400](https://github.com/zowe/zlux-editor/pull/400))
+- Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. ([#396](https://github.com/zowe/zlux-editor/pull/396))
+- Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#398](https://github.com/zowe/zlux-editor/pull/398))
+- Bugfix: Removed the module-load mutation of the shared lodash singleton's `_.templateSettings.interpolate` and the use of `_.template` (an eval-equivalent) in `UtilsService.formatUrl`. The global mutation silently changed template interpolation syntax for every other zLUX plugin sharing the same lodash instance. ([#397](https://github.com/zowe/zlux-editor/pull/397))
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
 - Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
