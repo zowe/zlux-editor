@@ -20,7 +20,6 @@ export interface Endpoints {
     saveFile: string;
     searchInFile: string;
     diagram: string;
-    jobs: string;
 }
 
 /*
