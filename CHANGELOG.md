@@ -2,7 +2,7 @@
 
 ## `3.6.0`
 
-- Bugfix: Removed runtime `new Function(...)` compilation of menu-action strings. Menu `functionString`/`isDisabledString` entries in the menu config are now defined as real TypeScript functions, and the string-to-function conversion (`initMenu`/`initMenus`) was removed. This eliminates an `eval`-equivalent code path (which would have become stored-config code execution if menus were ever loaded from plugin config) and removes the `unsafe-eval` requirement for CSP.
+- Bugfix: Removed runtime `new Function(...)` compilation of menu-action strings. Menu `functionString`/`isDisabledString` entries in the menu config are now defined as real TypeScript functions, and the string-to-function conversion (`initMenu`/`initMenus`) was removed. This eliminates an `eval`-equivalent code path (which would have become stored-config code execution if menus were ever loaded from plugin config) and removes the `unsafe-eval` requirement for CSP. ([#401](https://github.com/zowe/zlux-editor/pull/401))
 
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
