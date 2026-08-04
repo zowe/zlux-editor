@@ -629,17 +629,6 @@ export class MenuBarComponent implements OnInit, OnDestroy {
     return `${item.name}`;
   }
 
-  graphicDiagram() {
-    let file = this.editorControl.fetchActiveFile();
-    if (!file) {
-      this.snackBar.open(`Please open a file before you generate a diagram.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-    }
-    this.http.post(ENDPOINTS.diagram, { member: file.name, content: file.model.contents }).subscribe(r => {
-      window.open(r.url, '_blank');
-    });
-    this.snackBar.open(`A new window will open after the diagram generated.`, 'Close', { duration: MessageDuration.Long, panelClass: 'center' });
-  }
-
   submitJob() {
     let file = this.editorControl.fetchActiveFile();
     if (!file || (file.model.language !== 'jcl')) {
