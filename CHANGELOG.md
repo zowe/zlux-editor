@@ -2,8 +2,6 @@
 
 ## `3.6.0`
 
-- Bugfix: Removed the unreachable `submitJob()` method, which POSTed the entire active JCL buffer (including job-card credentials) to an internal `ENDPOINTS.jobs` endpoint. The method had no menu entry and was never wired into the shipped UI; the actual JCL submit feature uses the z/OSMF jobs API. The now-orphaned `jobs` endpoint was also removed.
-
 - Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
 - Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
 - Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
