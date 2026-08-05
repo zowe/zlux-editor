@@ -1,22 +1,5 @@
 # Zlux Editor Changelog
 
-## `3.0.1`
- 
-- Bugfix: Added a few rules for JCL syntax highlighter
-- Bugfix: Set USS path to correct directory, when opening the directory or file in new browser tab respectively
-- Added the feature to copy the line content and copy URL link to open a file at a specific line
-- Bugfix: Getting 400 BAD REQUEST in browser when opening the file or dataset in a new browser tab
-- Bugfix: When opening New File, editor keeps on using the earlier opened file and its model
-- Bugfix: Fix app2app 'openDataset' function
-- Rename 'openFile' to 'openBuffer' in editor-control.serverice.ts
-
-## `3.0.0`
-
-- Breaking change: The app now uses angular 12, making it compatible with Zowe v2 desktop and incompatible with v1 desktop.
-- Enhancement: The app now contains a manifest file so that it can be installed with `zwe components install`
-- Enhancement: Remove the opened file or dataset from Editor when deleted from file-tree.
-- BugFix: Editor keeps the content of the file, after an opened file is closed.
-
 ## `2.9.0`
 
 - Added the feature to update the dataset in the editor
