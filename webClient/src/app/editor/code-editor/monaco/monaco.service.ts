@@ -749,9 +749,16 @@ export class MonacoService implements OnDestroy {
   }
 
   fileDuplicateChecker(uri: string): boolean {
+    // Normalize the incoming uri the same way models are created/looked up
+    // (via monaco.Uri.parse). Models are registered under their parsed
+    // Uri.toString(), which can differ from the raw generateUri() string;
+    // comparing the raw string here would miss an existing model and cause
+    // createModel() to throw "model already exists", leaving the editor on
+    // the previous buffer when switching tabs.
+    const normalizedUri = monaco.Uri.parse(uri).toString();
     const models = this.editorControl.editorCore.getValue().editor.getModels();
     for (const model of models) {
-      if (model.uri.toString() === uri) {
+      if (model.uri.toString() === normalizedUri) {
         return true;
       }
     }
