@@ -1,9 +1,5 @@
 # Zlux Editor Changelog
 
-## `2.18.6`
-
-- Bugfix: Removed the unreachable `graphicDiagram()` menu action, which opened a URL returned by a remote HTTP endpoint in a new browser window without `noopener`/`noreferrer` or origin allow-listing. The method had no menu entry and is no longer compiled into the bundle.
-
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
