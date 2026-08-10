@@ -2,7 +2,8 @@
 
 ## `2.18.6`
 
-- Bugfix: Removed internal development hostnames (`rs22:5000`, `wal-vm-db2zos1:5000`) and plain-HTTP schemes from the bundled `ENDPOINTS` constants. These absolute dev URLs were shipped in `main.js`, disclosing internal infrastructure and risking cleartext transmission if any of their (currently dead) call sites were wired up. The affected endpoints now use same-origin relative paths.
+
+- Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#403](https://github.com/zowe/zlux-editor/pull/403))
 
 ## `3.0.1`
  
