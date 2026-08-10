@@ -1,5 +1,12 @@
 # Zlux Editor Changelog
 
+## `2.18.6`
+
+- Bugfix: Changed initialization of menu action and disabled functions. Now, functions are used as opposed to strings that were evaluated into functions. ([#406](https://github.com/zowe/zlux-editor/pull/406))
+- Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#405](https://github.com/zowe/zlux-editor/pull/405))
+- Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#403](https://github.com/zowe/zlux-editor/pull/403))
+- Bugfix: Removed the module-load mutation of the shared lodash singleton's `_.templateSettings.interpolate` and the use of `_.template` (an eval-equivalent) in `UtilsService.formatUrl`. The global mutation silently changed template interpolation syntax for every other zLUX plugin sharing the same lodash instance. ([#402](https://github.com/zowe/zlux-editor/pull/402))
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
