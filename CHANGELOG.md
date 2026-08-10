@@ -2,8 +2,7 @@
 
 ## `3.6.0`
 
-- Bugfix: Fixed switching editor tabs not updating the displayed content (the previously active buffer stayed on screen). `fileDuplicateChecker` compared the raw `generateUri()` string while models are created and looked up via `monaco.Uri.parse()`, so an already-open buffer was misdetected as new and `createModel()` threw "model already exists", preventing `setModel()`. The duplicate check now normalizes the URI the same way.
-
+- Bugfix: Fixed switching editor tabs not updating the displayed content (the previously active buffer stayed on screen) ([#410](https://github.com/zowe/zlux-editor/pull/410))
 - Bugfix: Changed initialization of menu action and disabled functions. Now, functions are used as opposed to strings that were evaluated into functions. ([#401](https://github.com/zowe/zlux-editor/pull/401))
 - Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#400](https://github.com/zowe/zlux-editor/pull/400))
 - Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. ([#396](https://github.com/zowe/zlux-editor/pull/396))
