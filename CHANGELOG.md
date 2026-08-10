@@ -2,7 +2,7 @@
 
 ## `2.18.6`
 
-- Bugfix: Hardened the language server (LSP) configuration. The default connection domain now uses the encrypted `wss://` scheme instead of `ws://`, and `LanguageServerService.updateSettings()` now rejects any configured domain that does not use the secure `wss://` scheme. The LSP connection path itself remains disabled; this addresses residual risk from future re-enablement.
+- Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#405](https://github.com/zowe/zlux-editor/pull/405))
 
 ## `3.0.1`
  
