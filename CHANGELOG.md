@@ -2,7 +2,7 @@
 
 ## `2.18.6`
 
-- Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. The payload is now built with `JSON.stringify`, which properly escapes special characters.
+- Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. ([#408](https://github.com/zowe/zlux-editor/pull/408))
 
 ## `3.0.1`
  
