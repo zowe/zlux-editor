@@ -9,16 +9,19 @@
   Copyright Contributors to the Zowe Project.
 */
 import { Injectable } from '@angular/core';
-import * as _ from 'lodash';
 
-_.templateSettings.interpolate = /{([\s\S]+?)}/g;
 @Injectable()
 export class UtilsService {
   constructor() { }
 
   formatUrl(url: string, options?: any): string {
-    const compiled = _.template(url);
-    return compiled(options);
+    if (!options) {
+      return url;
+    }
+    return url.replace(/{([\s\S]+?)}/g, (match, key) => {
+      const value = options[key.trim()];
+      return value !== undefined ? String(value) : match;
+    });
   }
 
   getDatasetName(dirName) {

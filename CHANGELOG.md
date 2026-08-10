@@ -1,5 +1,9 @@
 # Zlux Editor Changelog
 
+## `2.18.6`
+
+- Bugfix: Removed the module-load mutation of the shared lodash singleton's `_.templateSettings.interpolate` and the use of `_.template` (an eval-equivalent) in `UtilsService.formatUrl`. The global mutation silently changed template interpolation syntax for every other zLUX plugin sharing the same lodash instance. ([#402](https://github.com/zowe/zlux-editor/pull/402))
+
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
