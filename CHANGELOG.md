@@ -1,9 +1,5 @@
 # Zlux Editor Changelog
 
-## `2.18.6`
-
-- Bugfix: Removed the unreachable `submitJob()` method, which POSTed the entire active JCL buffer (including job-card credentials) to an internal `ENDPOINTS.jobs` endpoint. The method had no menu entry and was never wired into the shipped UI. The now-orphaned `jobs` endpoint was also removed.
-
 ## `3.0.1`
  
 - Bugfix: Added a few rules for JCL syntax highlighter
