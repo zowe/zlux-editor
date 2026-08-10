@@ -2,6 +2,7 @@
 
 ## `2.18.6`
 
+- Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#403](https://github.com/zowe/zlux-editor/pull/403))
 - Bugfix: Removed the module-load mutation of the shared lodash singleton's `_.templateSettings.interpolate` and the use of `_.template` (an eval-equivalent) in `UtilsService.formatUrl`. The global mutation silently changed template interpolation syntax for every other zLUX plugin sharing the same lodash instance. ([#402](https://github.com/zowe/zlux-editor/pull/402))
 
 ## `3.0.1`
