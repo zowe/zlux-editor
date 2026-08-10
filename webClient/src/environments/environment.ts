@@ -30,8 +30,7 @@ export const ENDPOINTS: Endpoints = {
   file: '/datasets/{dataset}/members/{member}',
   saveFile: '/datasets/{dataset}/members/{member}',
   searchInFile: '/projects/GCE/search?pattern={pattern}',
-  diagram: '/genflow',
-  jobs: '/jobs'
+  diagram: '/genflow'
 };
 
 /*
