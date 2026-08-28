@@ -2,6 +2,7 @@
 
 ## `2.18.6`
 
+- Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. ([#408](https://github.com/zowe/zlux-editor/pull/408))
 - Bugfix: Changed initialization of menu action and disabled functions. Now, functions are used as opposed to strings that were evaluated into functions. ([#406](https://github.com/zowe/zlux-editor/pull/406))
 - Bugfix: Hardened the language server (LSP) configuration to demand "wss://" urls rather than permitting "ws://". ([#405](https://github.com/zowe/zlux-editor/pull/405))
 - Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#403](https://github.com/zowe/zlux-editor/pull/403))
