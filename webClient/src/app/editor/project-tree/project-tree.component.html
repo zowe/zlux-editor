@@ -16,7 +16,8 @@
     (openInNewTab)="onOpenInNewTab($event)"
     (deleteClick)="onDeleteClick($event)"
     (pathChanged)="onPathChanged($event)"
-    [style]="{'height': '100%', 'padding-bottom': '100px'}"
+    (newFileClick)="onNewFileClick($event)"
+    [style]="{'flex': '1', 'min-height': '0', 'overflow': 'hidden'}"
   >
   </zlux-file-tree>
 </div>

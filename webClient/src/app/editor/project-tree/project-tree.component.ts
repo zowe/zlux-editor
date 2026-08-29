@@ -8,7 +8,7 @@
   
   Copyright Contributors to the Zowe Project.
 */
-import { Component, ViewChild, Inject } from '@angular/core';
+import { Component, ViewChild, Inject, HostBinding } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TreeNode } from '@circlon/angular-tree-component';
 import { OpenProjectComponent } from '../../shared/dialog/open-project/open-project.component';
@@ -21,15 +21,20 @@ import { EditorService } from '../editor.service';
 import { UtilsService } from '../../shared/utils.service';
 import { DataAdapterService } from '../../shared/http/http.data.adapter.service';
 import { SnackBarService } from '../../shared/snack-bar.service';
+import { MessageDuration } from '../../shared/message-duration';
 import { Angular2InjectionTokens } from 'pluginlib/inject-resources';
 import { ZluxFileTreeComponent } from '@zowe/zlux-angular-file-tree';
 
 @Component({
   selector: 'app-project-tree',
   templateUrl: './project-tree.component.html',
-  styleUrls: ['./project-tree.component.scss'],
+  styleUrls: ['./project-tree.component.scss']
 })
+
 export class ProjectTreeComponent {
+
+  @HostBinding('style.display') hostDisplay = 'block';
+  @HostBinding('style.height') hostHeight = '100%';
 
   @ViewChild(ZluxFileTreeComponent)
   private fileExplorer: ZluxFileTreeComponent;
@@ -297,6 +302,10 @@ export class ProjectTreeComponent {
     });
   }
 
+  onNewFileClick(context?: any) {
+    this.editorControl.createFile(undefined, context);
+  }
+
   nodeActivate($event: any) {
     if (!$event.node.data.children && !$event.node.data.hasChildren) {
       const nodeData: ProjectStructure = $event.node.data;
@@ -327,6 +336,7 @@ export class ProjectTreeComponent {
       return 'assignment';
     }
   }
+
 }
 
 /*

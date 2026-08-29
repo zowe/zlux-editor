@@ -519,6 +519,10 @@ export class MonacoComponent implements OnInit, OnChanges {
 
   saveFile() {
     let fileContext = this.editorControl.fetchActiveFile();
+    if (!fileContext || !fileContext.model) {
+      this.snackBar.open('Warning: Cannot save, no content found', 'Dismiss', { duration: MessageDuration.Medium, panelClass: 'center' });
+      return;
+    }
     let directory = fileContext.model.path || this.editorControl.activeDirectory;
     let sub = this.monacoService.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe());
   }

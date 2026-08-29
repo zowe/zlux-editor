@@ -1,4 +1,4 @@
-
+﻿
 /*
   This program and the accompanying materials are
   made available under the terms of the Eclipse Public License v2.0 which accompanies
@@ -23,11 +23,12 @@ import { TagComponent } from '../../../shared/dialog/tag/tag.component';
 import { SnackBarService } from '../../../shared/snack-bar.service';
 import { MessageDuration } from '../../../shared/message-duration';
 import { LimitsService } from '../../../shared/limits.service';
+import { DatasetSaveService, DatasetSaveResult } from './dataset-save.service';
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import { finalize, map, switchMap, tap, take } from 'rxjs/operators';
 import { of, Subject, Observable, throwError } from 'rxjs';
 import { LoadingStatus } from '../loading-status';
-import { HttpClient, HttpHeaders, HttpEventType, HttpEvent } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEventType, HttpEvent, HttpParams } from '@angular/common/http';
 import * as _ from 'lodash';
 
 const DIFF_VIEW_ELEM = "monaco-diff-viewer";
@@ -49,7 +50,8 @@ export class MonacoService implements OnDestroy {
     private editorControl: EditorControlService,
     private dialog: MatDialog,
     private snackBar: SnackBarService,
-    private limitsService: LimitsService
+    private limitsService: LimitsService,
+    private datasetSaveService: DatasetSaveService
   ) {
     this.editorControl.closeFile.subscribe((fileContext: ProjectContext) => {
       this.closeFile(fileContext);
@@ -74,9 +76,11 @@ export class MonacoService implements OnDestroy {
 
     let self = this; // Monaco bug: editor.addAction only works on the left-hand side of the Diff viewer
     this.fileSaveListener = function (e) { // Pure JS, Ctrl-S solution instead...
-      if (e.key === 's' && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
+      const isMac = (navigator as any).userAgentData?.platform === 'macOS' || /Mac/.test(navigator.userAgent);
+      if (e.key === 's' && (isMac ? e.metaKey : e.ctrlKey)) {
         e.preventDefault();
         let fileContext = self.editorControl.fetchActiveFile();
+        if (!fileContext || !fileContext.model) return;
         let directory = fileContext.model.path || self.editorControl.activeDirectory;
         let sub = self.saveFile(fileContext, directory).subscribe(() => sub.unsubscribe()); // Error handling is done up-stream
       }
@@ -319,6 +323,10 @@ export class MonacoService implements OnDestroy {
         this.editorControl.saveCursorPosition = false;
       }
     });
+    // Capture the previously active file before selectFileHandler deactivates all entries.
+    // If the open request fails, we must restore this file's active state so that
+    // Save / Save As and other operations that depend on fetchActiveFile() continue to work.
+    const previousActiveFile = this.editorControl.fetchActiveFile();
     this.editorControl.selectFileHandler(fileNode);
     if (fileNode.temp) {
       //blank new file
@@ -360,6 +368,24 @@ export class MonacoService implements OnDestroy {
           });
         },
         error: (err) => {
+          // Restore the previously active file's state so that operations like
+          // Save / Save As don't break with "no content found" after a failed open.
+          // We directly restore the active/opened flags instead of calling
+          // selectFileHandler(), which would create a dangling fileOpened
+          // subscription (it never fires on the error path) and redundantly
+          // save cursor state.
+          if (previousActiveFile) {
+            for (const file of this.editorControl._openFileList.getValue()) {
+              if (file.model.fileName === previousActiveFile.model.fileName
+                  && file.model.path === previousActiveFile.model.path) {
+                file.opened = true;
+                file.active = true;
+              } else {
+                file.opened = false;
+                file.active = false;
+              }
+            }
+          }
           if (err._userCancelled) {
             return; // User cancelled from the large file warning dialog
           }
@@ -607,8 +633,8 @@ export class MonacoService implements OnDestroy {
 
   saveFile(fileContext: ProjectContext, fileDirectory?: string, saveAs?: boolean): Observable<String> {
     return new Observable((obs) => {
-      if (fileContext.model.isDataset) {
-        this.editorControl.saveBuffer(fileContext, null, saveAs).subscribe(() => obs.next('Save'));
+      if (fileContext.model.isDataset && !saveAs) {
+        this.editorControl.saveBuffer(fileContext, null, false).subscribe(() => obs.next('Save'));
       } else {
         /* Issue a presave check to see if the
           * file can be saved as ISO-8859-1,
@@ -620,23 +646,61 @@ export class MonacoService implements OnDestroy {
           /* Open up a dialog with the standard,
             * "save as" format.
             */
+          // Only pass fileDirectory for USS paths (starts with /); dataset names should not pre-fill USS directory
+          const ussDirectory = fileDirectory && fileDirectory.startsWith('/') ? fileDirectory : undefined;
+          // Pass activeDirectory as a fallback USS directory for datasets (used if ZSS home lookup fails)
+          // Only use it if it's a USS path -- activeDirectory may hold a dataset name when browsing datasets
+          const activeDir = this.editorControl.activeDirectory || '';
+          const fallbackUssDirectory = !ussDirectory && fileContext.model.isDataset && activeDir.startsWith('/')
+            ? activeDir
+            : undefined;
           let saveRef = this.dialog.open(SaveToComponent, {
-            width: '500px',
+            width: '540px',
             data: {
               canBeISO: x,
-              fileName: fileContext.model.fileName, ...(fileDirectory && { fileDirectory: fileDirectory })
+              fileName: fileContext.model.fileName,
+              ...(ussDirectory && { fileDirectory: ussDirectory }),
+              ...(fallbackUssDirectory && { fallbackDirectory: fallbackUssDirectory }),
+              ...(fileContext.model.isDataset && {
+                datasetName: fileContext.model.path,
+                // Only pass memberName if it differs from datasetName (i.e. it's an actual member, not a sequential DS)
+                ...(fileContext.model.name !== fileContext.model.path && { memberName: fileContext.model.name })
+              })
             }
           });
           saveRef.afterClosed().subscribe(result => {
+            if (!result) {
+              obs.next('Cancel');
+              return;
+            }
+
+            // Handle "Save as Dataset/Member" option
+            if (result.saveType === 'dataset') {
+              const dsResult = result as DatasetSaveResult;
+              const save$ = dsResult.allocateNew
+                ? this.datasetSaveService.allocateAndSave(fileContext, dsResult)
+                : this.datasetSaveService.saveAsDatasetMember(fileContext, dsResult);
+              save$.subscribe({
+                next: (val) => obs.next(val),
+                error: (err) => obs.error(err),
+              });
+              return;
+            }
+
             // Check if file already exists at destination
             this.editorControl.getFileMetadata(result.directory + '/' + result.fileName).subscribe(r => {
               const title = `"${result.fileName}" already exists. Do you want to replace it?`;
               const warningMessage = 'Replacing it will overwrite its current contents';
               let response = this.confirmAction(title, warningMessage).subscribe(response => {
                 if (response == true) {
-                  // when user selects to overwite the file
+                  // when user selects to overwrite the file
                   if (result) {
-                    this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                    // If file was a dataset member, pass saveAs=true so doSaving treats it
+                    // as a copy (doesn't modify the original file context/tab)
+                    const isCopy = fileContext.model.isDataset;
+                    this.editorControl.saveFileHandler(fileContext, result, isCopy).subscribe(() => {
+                      obs.next('Save');
+                    });
                   }
                 } else {
                   // when user selects not to overwrite or cancel
@@ -646,7 +710,12 @@ export class MonacoService implements OnDestroy {
             }, error => {
               if (error.status == 404) {// if file does not exist at destination, then try to save it
                 if (result) {
-                  this.editorControl.saveBuffer(fileContext, result).subscribe(() => obs.next('Save'));
+                  // If file was a dataset member, pass saveAs=true so doSaving treats it
+                  // as a copy (doesn't modify the original file context/tab)
+                  const isCopy = fileContext.model.isDataset;
+                  this.editorControl.saveFileHandler(fileContext, result, isCopy).subscribe(() => {
+                    obs.next('Save');
+                  });
                 }
               } else {
                 this.snackBar.open(`Failed to verify if ${result.directory + '/' + result.fileName} already exists: . Error code=${error.status}`,

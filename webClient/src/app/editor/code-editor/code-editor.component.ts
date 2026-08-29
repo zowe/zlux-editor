@@ -281,16 +281,20 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
     // below logic is nothing to do with code editor (monaco)
     // check if the file user want to open is already opened
-    let exist = false;
+    let existingFile: ProjectContext = null;
 
     for (const file of this.editorControl.openFileList.getValue()) {
       if (file.name === fileContext.name && file.model.path === fileContext.model.path) {
-        exist = true;
+        existingFile = file;
+        break;
       }
     }
 
-    if (exist) {
-      this.selectFile(fileContext, false, fileNode.line);
+    if (existingFile) {
+      // Use the EXISTING object reference from the open list, not the
+      // newly generated one. Using a different object reference causes
+      // selectFileHandler to fail to mark the correct entry as active.
+      this.selectFile(existingFile, false, fileNode.line);
     } else {
       // pass file structure to specific code editor (monaco)
       // trigger code-editor change, let code editor open file.
@@ -444,6 +448,12 @@ export class CodeEditorComponent implements OnInit, OnDestroy {
 
       const tab = session.tabs[tabIndex];
       tabIndex++;
+
+      // Skip tabs with no path (unsaved temp files from older sessions)
+      if (!tab.path) {
+        openNext();
+        return;
+      }
 
       const fileStructure: ProjectStructure = {
         id: tab.fileName + ':' + tab.path,

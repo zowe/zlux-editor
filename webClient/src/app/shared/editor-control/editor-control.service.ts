@@ -591,6 +591,7 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
       if(saveAs){
         this.snackBar.open(`${results.fileName} has been saved!`, 'Close', { duration: MessageDuration.Short, panelClass: 'center' });
         this.openDirectory.next(results.directory);
+        if (_observer != null) { _observer.next(null); }
       }
       /* It was a new file, we
        * can set the new fileName. */
@@ -756,7 +757,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
             });
           }
         } else {
-          this.snackBar.open(`${activeDataset.name} could not be saved! ${error}. Error code=${e.status}`,
+          // Simplify verbose server messages that include full record content
+          let displayError = error;
+          const recordMatch = error.match(/Record #(\d+) with contents .* is longer than the max record length of (\d+)/);
+          if (recordMatch) {
+            displayError = `Line ${recordMatch[1]} exceeds the max record length of ${recordMatch[2]}`;
+          }
+          this.snackBar.open(`${activeDataset.name} could not be saved! ${displayError}. Error code=${e.status}`,
           'Close', { duration: MessageDuration.Long,   panelClass: 'center' });
         }
       } else {
@@ -805,19 +812,28 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     let _observer: Observer<void>;
     let _observable: Observable<void>;
     let sessionID: number;
-    
-    /* A new file is not "untagged"
-     * in this case. I'm referring to
-     * a file as untagged if it is currently
-     * untagged in USS.
-     */
-    let isUntagged: boolean;
 
     if (context != null) {
       _activeFile = context;
     } else {
       _activeFile = _openFile.filter(file => file.active === true)[0];
     }
+
+    // Guard: if this is a temp file with no valid path, abort with a clear message
+    if (_activeFile && _activeFile.temp && !results && !_activeFile.model.path) {
+      return new Observable((observer) => {
+        this.snackBar.open(`"${_activeFile.name}" has not been saved yet. Use File → Save As to choose a destination.`,
+          'Close', { duration: MessageDuration.Long, panelClass: 'center' });
+        observer.error('Temp file has no path — use Save As');
+      });
+    }
+
+    /* A new file is not "untagged"
+     * in this case. I'm referring to
+     * a file as untagged if it is currently
+     * untagged in USS.
+     */
+    let isUntagged: boolean;
     
     let requestUrl: string;
     
@@ -914,9 +930,11 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
                                                       sessionID,
                                                       lastChunk: true });
         this.doSaving(context, requestUrl, _activeFile, results, isUntagged, _observer, _observable, saveAs);
-        /** Update the new encoding value, in opeFileList Models */
-          let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
-          this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+        /** Update the new encoding value, in openFileList Models (only if not a copy/Save-As) */
+          if (!saveAs) {
+            let index = this._openFileList.value.findIndex(item => item.id === _activeFile.id);
+            this._openFileList.value[index].model.encoding = this.getIntEncoding(targetEncoding);
+          }
           this.refreshFileMetadatdaByPath.next('/'+fileDir+'/'+fileName);
         }, e => {
           this.snackBar.open(`${_activeFile.name} could not be saved! There was a problem getting a sessionID. Please try again.`, 
@@ -991,9 +1009,14 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.editor.getValue().focus();
   }
 
-  createFile(name?: string): ProjectContext {
+  createFile(name?: string, context?: { path?: string; existingNames?: any[] }): ProjectContext {
+    // Extract directory file names from context (FileTreeNode[].label)
+    const dirNames: string[] = context?.existingNames
+      ? context.existingNames.map(n => (typeof n === 'string' ? n : n?.label || '')).filter(Boolean)
+      : [];
+
     if(name===undefined) {
-      name = this.getNewFileName();
+      name = this.getNewFileName(dirNames);
     }
 
     let rootContext = this.rootContext.getValue();
@@ -1006,6 +1029,13 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     };
     let fileContext = <ProjectContext>this.generateProjectContext(fileStructure, rootContext);
     fileContext.temp = true;
+
+    // Store intended directory path so Save As can default to it
+    // Only set when context came from the toolbar (has existingNames), not from right-click node
+    if (context?.path && context?.existingNames) {
+      fileContext.model.path = context.path;
+    }
+
     if (!rootContext) {
       rootContext = this.initProjectContext('', []);
     }
@@ -1026,19 +1056,20 @@ export class EditorControlService implements ZLUX.IEditor, ZLUX.IEditorMultiBuff
     this.initializedFile.next(fileContext);
     // return file context
     return fileContext;
-    // return new Observable<ProjectContext>((observer) => {
-    //   observer.next(<ProjectContext>fileContext);
-    // });
   }
 
-  getNewFileName() {
-    let name:string='new';
-    let num:number= 1;
-    let fileName = `${name}${num}`;
-    let openFiles = this._openFileList.getValue().map((file)=>file.model.name);
-    
-    while(openFiles.indexOf(fileName)>=0) {
-      fileName = `${name}${++num}`;
+  getNewFileName(directoryNames: string[] = []) {
+    const name: string = 'new';
+
+    // Build a set of names to avoid: open tabs + files already in the target directory
+    const openFiles = this._openFileList.getValue().map((file) => file.model.name);
+    const takenNames = new Set([...openFiles, ...directoryNames]);
+
+    // Find the lowest available number (directory-aware: resets per directory context)
+    let counter = 1;
+    let fileName = `${name}${counter}`;
+    while (takenNames.has(fileName)) {
+      fileName = `${name}${++counter}`;
     }
 
     return fileName;

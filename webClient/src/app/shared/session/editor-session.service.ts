@@ -313,10 +313,11 @@ export class EditorSessionService {
 
   /**
    * Build the tabs snapshot from the current open file list.
+   * Excludes temp/unsaved files (no path) since they cannot be restored.
    */
   buildTabsFromOpenFiles(openFiles: any[]): SessionTab[] {
     return openFiles
-      .filter(f => f && f.model)
+      .filter(f => f && f.model && !f.temp)
       .map(f => ({
         name: f.name || f.model.name,
         fileName: f.model.fileName || f.model.name,
