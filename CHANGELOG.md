@@ -7,20 +7,20 @@
 - Bugfix: Fixed a JSON injection flaw in "Open in new tab" and "Copy permalink" where USS file/directory names containing `"` or `\` were concatenated directly into the launch payload string. Crafted names could override the `type`/`name`/`lines` keys and cause a different file or dataset to be opened than displayed. ([#396](https://github.com/zowe/zlux-editor/pull/396))
 - Bugfix: Removed internal development hostnames present in `ENDPOINTS` constants. The affected endpoints now use same-origin relative paths. ([#398](https://github.com/zowe/zlux-editor/pull/398))
 - Bugfix: Removed the module-load mutation of the shared lodash singleton's `_.templateSettings.interpolate` and the use of `_.template` (an eval-equivalent) in `UtilsService.formatUrl`. The global mutation silently changed template interpolation syntax for every other zLUX plugin sharing the same lodash instance. ([#397](https://github.com/zowe/zlux-editor/pull/397))
-- Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation.
-- Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened.
-- Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty.
-- Enhancement: Multiple sessions supported — users can organize tabs by project/task and switch between them via Session menu.
-- Enhancement: Automatic backup files (`.bkp`) written before every session save to guard against corruption.
-- Enhancement: Recovery from backup if a session file is corrupted.
-- Enhancement: The editor now recognizes and highlights clickable strings in file content. Ctrl+Click (Cmd+Click on macOS) on any of the following will trigger an action:
+- Enhancement: Added element IDs to all UI components (dialogs, menu bar, tabs, nav, file explorer) for Selenium test automation. ([#387](https://github.com/zowe/zlux-editor/pull/387))
+- Enhancement: Added editor session persistence with named sessions. Open tabs are saved to the Zowe config dataservice and restored when the editor is reopened. ([#386](https://github.com/zowe/zlux-editor/pull/386))
+- Enhancement: Session picker dialog on startup lets users choose which session to restore, create new sessions, or start empty. ([#386](https://github.com/zowe/zlux-editor/pull/386))
+- Enhancement: Multiple sessions supported — users can organize tabs by project/task and switch between them via Session menu. ([#386](https://github.com/zowe/zlux-editor/pull/386))
+- Enhancement: Automatic backup files (`.bkp`) written before every session save to guard against corruption. ([#386](https://github.com/zowe/zlux-editor/pull/386))
+- Enhancement: Recovery from backup if a session file is corrupted. ([#386](https://github.com/zowe/zlux-editor/pull/386))
+- Enhancement: The editor now recognizes and highlights clickable strings in file content. Ctrl+Click (Cmd+Click on macOS) on any of the following will trigger an action: ([#373](https://github.com/zowe/zlux-editor/pull/373))
     - **Unix file paths** (e.g. `/u/user/file.txt`): checks if the path is a file or directory; opens files in a new editor tab, and prompts to navigate the file explorer to directories.
     - **Dataset names** (e.g. `DSNAME=A.B`, `//'A.B'`, `//'A.B(MEMBER)'`): opens the dataset or member in the editor.
     - **URLs** (e.g. `https://example.com`): prompts the user before opening in a new browser tab.
     - Each of these behaviors can be individually enabled or disabled in the editor Settings menu (`Click Links File Path`, `Click Links Dataset`, `Click Links Url`), and all default to enabled.
-- Enhancement: Added AT-TLS (Application Transparent Transport Layer Security) language mode for IBM z/OS Policy Agent files. Files containing `TTLSRule` declarations are automatically detected and syntax-highlighted. Hovering over a cross-reference value (any property ending in `Ref`) displays the full declaration block of the referenced item, making it easier to understand the complete meaning of a rule without manual searching. Hovering over any AT-TLS keyword displays a brief description of its purpose.
-- Enhancement: AT-TLS language mode — added **Go to Definition** (Ctrl+Click) and **Find All References** (Shift+F12) for cross-reference values and declaration names. Go to Definition navigates directly to the referenced item's declaration. Find All References lists every `*Ref` usage of a named item across the policy file, including its declaration.
-- Bugfix: Fixed dialog input label overlap by switching mat-form-field to outline appearance across all dialogs.
+- Enhancement: Added AT-TLS (Application Transparent Transport Layer Security) language mode for IBM z/OS Policy Agent files. Files containing `TTLSRule` declarations are automatically detected and syntax-highlighted. Hovering over a cross-reference value (any property ending in `Ref`) displays the full declaration block of the referenced item, making it easier to understand the complete meaning of a rule without manual searching. Hovering over any AT-TLS keyword displays a brief description of its purpose. ([#380](https://github.com/zowe/zlux-editor/pull/380))
+- Enhancement: AT-TLS language mode — added **Go to Definition** (Ctrl+Click) and **Find All References** (Shift+F12) for cross-reference values and declaration names. Go to Definition navigates directly to the referenced item's declaration. Find All References lists every `*Ref` usage of a named item across the policy file, including its declaration. ([#380](https://github.com/zowe/zlux-editor/pull/380))
+- Bugfix: Fixed dialog input label overlap by switching mat-form-field to outline appearance across all dialogs. ([#387](https://github.com/zowe/zlux-editor/pull/387))
 
 ## `3.5.0`
 - Enhancement: Added CEEDUMP language mode. Files named `CEEDUMP.*` are automatically detected. It provides syntax highlighting and hover-help for headers, common messages, registers and more. 32-bit and 64-bit hex addresses are colored by byte significance to aid in pointer analysis.
