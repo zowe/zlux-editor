@@ -10,18 +10,18 @@ Copyright Contributors to the Zowe Project.
 <zlux-tab-trap></zlux-tab-trap>
 <div class="d-flex flex-align-items-start">
   <div>
-    <h2 mat-dialog-title>New File</h2>
+    <h2 mat-dialog-title id="new-file-title">New File</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <button mat-dialog-close class="close-dialog-btn" id="new-file-close"><i class="fa fa-close"></i></button>
 </div>
 <mat-dialog-content>
   File Name:
-  <mat-form-field>
+  <mat-form-field appearance="outline" style="width: 100%">
     <mat-label>Name</mat-label>
-    <input id="name" name="name" required #name="ngModel" [pattern]="FileName_Pattern" matInput type="text"
+    <input id="new-file-input" name="name" required #name="ngModel" [pattern]="FileName_Pattern" matInput type="text"
       [(ngModel)]="value">
     @if (value) {
-    <button mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''">
+    <button mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''" id="new-file-clear">
       <mat-icon>close</mat-icon>
     </button>
     }
@@ -29,7 +29,7 @@ Copyright Contributors to the Zowe Project.
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
-    [disabled]="!value">Create</button>
+    [disabled]="!value" id="new-file-submit">Create</button>
 </mat-dialog-actions>
 
 <!--

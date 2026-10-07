@@ -10,14 +10,14 @@ Copyright Contributors to the Zowe Project.
 <zlux-tab-trap hiddenIds="open-dataset-clear" hiddenPos="2"></zlux-tab-trap>
 <div class="d-flex flex-align-items-start">
   <div>
-    <h2 mat-dialog-title>Open Dataset</h2>
+    <h2 mat-dialog-title id="open-dataset-title">Open Dataset</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <button mat-dialog-close class="close-dialog-btn" id="open-dataset-close"><i class="fa fa-close"></i></button>
 </div>
 <mat-dialog-content>
-  <mat-form-field>
+  <mat-form-field appearance="outline" style="width: 100%">
     <mat-label>Dataset</mat-label>
-    <input matInput tabindex="2" type="text" [(ngModel)]="value">
+    <input matInput tabindex="2" type="text" [(ngModel)]="value" id="open-dataset-input">
     @if (value) {
     <button tabindex="1" mat-button matSuffix mat-icon-button aria-label="Clear" (click)="value=''"
       id="open-dataset-clear">
@@ -28,7 +28,7 @@ Copyright Contributors to the Zowe Project.
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="value"
-    [disabled]="!value">Open</button>
+    [disabled]="!value" id="open-dataset-submit">Open</button>
 </mat-dialog-actions>
 
 <!--

@@ -9,8 +9,9 @@
   Copyright Contributors to the Zowe Project.
 -->
 
-<div class="file-explorer-container">
+<div class="file-explorer-container" id="editor-file-explorer">
   <zlux-file-tree #fileExplorer
+    id="editor-file-tree"
     (nodeClick)="onNodeClick($event)"
     (openInNewTab)="onOpenInNewTab($event)"
     (deleteClick)="onDeleteClick($event)"

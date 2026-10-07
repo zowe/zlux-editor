@@ -10,23 +10,23 @@
 <zlux-tab-trap></zlux-tab-trap>
 <div class="d-flex flex-align-items-start">
   <div>
-    <h2 mat-dialog-title>Language Server Setting</h2>
+    <h2 mat-dialog-title id="lang-server-title">Language Server Setting</h2>
   </div>
-  <button mat-dialog-close class="close-dialog-btn"><i class="fa fa-close"></i></button>
+  <button mat-dialog-close class="close-dialog-btn" id="lang-server-close"><i class="fa fa-close"></i></button>
 </div>
 <mat-dialog-content>
-  <mat-form-field>
+  <mat-form-field appearance="outline" style="width: 100%">
     <mat-label>Put Your Config Here</mat-label>
     <textarea matInput type="text" [cdkTextareaAutosize]="true"
-      [(ngModel)]="settings.config"></textarea>
+      [(ngModel)]="settings.config" id="lang-server-config"></textarea>
   </mat-form-field>
   <section>
     <label>Enable Language Server:</label>
-    <mat-checkbox color="primary" [(ngModel)]="settings.enable">Enable</mat-checkbox>
+    <mat-checkbox color="primary" [(ngModel)]="settings.enable" id="lang-server-enable">Enable</mat-checkbox>
   </section>
 </mat-dialog-content>
 <mat-dialog-actions>
-  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="settings">Save</button>
+  <button mat-button mat-stroked-button class="right" color="primary" [mat-dialog-close]="settings" id="lang-server-submit">Save</button>
 </mat-dialog-actions>
 
 <!-- 
